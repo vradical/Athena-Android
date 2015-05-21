@@ -67,12 +67,24 @@
             android:id="@+id/stop_updates_button"
             android:layout_gravity="center_horizontal"
             android:onClick="stopUpdatesButtonHandler" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@id/stop_updates_button"
+            android:layout_below="@id/track_location_time"
+            android:text="Emergency"
+            android:id="@+id/emergency_button"
+            android:layout_gravity="center_horizontal"
+            android:onClick="emergencyButtonHandler" />
+
     </RelativeLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_weight="0.4">
+        android:layout_weight="0.4"
+        android:orientation="vertical">
 
         <ListView
             android:id="@+id/list_view"

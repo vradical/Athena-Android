@@ -234,6 +234,23 @@ public class MainActivity extends ActionBarActivity  implements GoogleApiClient.
     }
 
     /**
+     * Trigger emergency view.
+     * Should we set a list of pre-conditions?
+     */
+    public void emergencyButtonHandler(View view) {
+        setContentView(R.layout.activity_emergency);
+        Toast.makeText(this,mAddressOutput, Toast.LENGTH_LONG).show();
+    }
+
+    /**
+     * Retrieve the info of the NOK details from the sqlLite or server
+     * Send a sms to the NOKs with their current location and time
+     **/
+    public void notifyNOK(){
+
+    }
+
+    /**
      * Ensures that only one button is enabled at any time. The Start Updates button is enabled
      * if the user is not requesting location updates. The Stop Updates button is enabled if the
      * user is requesting location updates.
