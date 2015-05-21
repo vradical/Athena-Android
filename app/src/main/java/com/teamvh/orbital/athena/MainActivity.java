@@ -31,6 +31,7 @@ import java.util.Date;
 public class MainActivity extends ActionBarActivity  implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
 
+    //Testing 1 2 3
     protected static final String TAG = "main-activity";
 
     protected static final String ADDRESS_REQUESTED_KEY = "address-request-pending";
