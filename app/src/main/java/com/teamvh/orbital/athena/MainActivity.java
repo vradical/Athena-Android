@@ -30,8 +30,6 @@ import java.util.Date;
 
 public class MainActivity extends ActionBarActivity  implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
-
-    //Testing 1 2 3
     protected static final String TAG = "main-activity";
 
     protected static final String ADDRESS_REQUESTED_KEY = "address-request-pending";
@@ -161,6 +159,7 @@ public class MainActivity extends ActionBarActivity  implements GoogleApiClient.
         mLocationRequest.setInterval(Constants.CHECK_INTERVAL);
         mLocationRequest.setFastestInterval(Constants.CHECK_FAST_INTERVAL);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        mLocationRequest.setSmallestDisplacement(Constants.SMALLEST_DISPLACEMENT);
     }
 
     @Override
