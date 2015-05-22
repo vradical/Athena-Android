@@ -38,8 +38,8 @@ public class MainActivity extends ActionBarActivity  implements GoogleApiClient.
 
     protected GoogleApiClient mGoogleApiClient;
     protected Location mCurrentLocation;
-
     protected boolean mAddressRequested;
+
 
 
     protected String mAddressOutput;
@@ -71,6 +71,16 @@ public class MainActivity extends ActionBarActivity  implements GoogleApiClient.
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //if nok table is empty trigger this when the app has been launched
+        /**
+         *
+         */
+        //else display the main activity
+        if(nokTableisEmpty()){
+
+        }else{
+
+        }
         setContentView(R.layout.activity_main);
 
         //FOR THE DB
