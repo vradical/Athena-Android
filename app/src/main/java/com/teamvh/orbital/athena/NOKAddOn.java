@@ -6,21 +6,13 @@ package com.teamvh.orbital.athena;
 
         import android.content.Intent;
         import android.support.v7.app.ActionBarActivity;
-        import android.support.v7.app.ActionBar;
-        import android.support.v4.app.Fragment;
         import android.os.Bundle;
-        import android.view.LayoutInflater;
         import android.view.Menu;
         import android.view.MenuItem;
         import android.view.View;
-        import android.view.ViewGroup;
-        import android.os.Build;
-        import android.widget.ArrayAdapter;
         import android.widget.Button;
         import android.widget.EditText;
-        import android.widget.ListView;
         import android.widget.Toast;
-        import java.util.ArrayList;
 
 public class NOKAddOn extends ActionBarActivity implements android.view.View.OnClickListener{
 
@@ -29,7 +21,7 @@ public class NOKAddOn extends ActionBarActivity implements android.view.View.OnC
     EditText editTextName;
     EditText editTextEmail;
     EditText editTextAge;
-    private int _Student_Id=0;
+    private int nok_id=0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,16 +41,16 @@ public class NOKAddOn extends ActionBarActivity implements android.view.View.OnC
         btnClose.setOnClickListener(this);
 
 
-        _Student_Id =0;
+        nok_id =0;
         Intent intent = getIntent();
-        _Student_Id =intent.getIntExtra("student_Id", 0);
-        StudentRepo repo = new StudentRepo(this);
-        Student student = new Student();
-        student = repo.getStudentById(_Student_Id);
+        nok_id =intent.getIntExtra("nok_Id", 0);
+        SQLControlllerNOK repo = new SQLControlllerNOK(this);
+        NOKInfo nok = new NOKInfo();
+        nok = repo.getNOKByID(nok_id);
 
-        editTextAge.setText(String.valueOf(student.age));
-        editTextName.setText(student.name);
-        editTextEmail.setText(student.email);
+        editTextAge.setText(String.valueOf(nok.nok_name));
+        editTextName.setText(nok.nok_phone);
+        editTextEmail.setText(nok.nok_email);
     }
 
 
@@ -66,7 +58,7 @@ public class NOKAddOn extends ActionBarActivity implements android.view.View.OnC
     public boolean onCreateOptionsMenu(Menu menu) {
 
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.student_detail, menu);
+        getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
 
@@ -76,34 +68,30 @@ public class NOKAddOn extends ActionBarActivity implements android.view.View.OnC
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            return true;
-        }
         return super.onOptionsItemSelected(item);
     }
 
     public void onClick(View view) {
         if (view == findViewById(R.id.btnSave)){
-            StudentRepo repo = new StudentRepo(this);
-            Student student = new Student();
-            student.age= Integer.parseInt(editTextAge.getText().toString());
-            student.email=editTextEmail.getText().toString();
-            student.name=editTextName.getText().toString();
-            student.student_ID=_Student_Id;
+            SQLControlllerNOK repo = new SQLControlllerNOK(this);
+            NOKInfo nok = new NOKInfo();
+            nok.nok_name= editTextAge.getText().toString();
+            nok.nok_email=editTextEmail.getText().toString();
+            nok.nok_phone= Integer.parseInt(editTextName.getText().toString());
+            nok.nok_ID=nok_id;
 
-            if (_Student_Id==0){
-                _Student_Id = repo.insert(student);
+            if (nok_id==0){
+                nok_id = repo.insert(nok);
 
-                Toast.makeText(this,"New Student Insert",Toast.LENGTH_SHORT).show();
+                Toast.makeText(this,"New Nok Insert",Toast.LENGTH_SHORT).show();
             }else{
-
-                repo.update(student);
-                Toast.makeText(this,"Student Record updated",Toast.LENGTH_SHORT).show();
+                repo.update(nok);
+                Toast.makeText(this,"Nok Record updated",Toast.LENGTH_SHORT).show();
             }
         }else if (view== findViewById(R.id.btnDelete)){
-            StudentRepo repo = new StudentRepo(this);
-            repo.delete(_Student_Id);
-            Toast.makeText(this, "Student Record Deleted", Toast.LENGTH_SHORT);
+            SQLControlllerNOK repo = new SQLControlllerNOK(this);
+            repo.delete(nok_id);
+            Toast.makeText(this, "Nok Record Deleted", Toast.LENGTH_SHORT);
             finish();
         }else if (view== findViewById(R.id.btnClose)){
             finish();

@@ -8,15 +8,19 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.ResultReceiver;
 import android.support.v4.widget.SimpleCursorAdapter;
-import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.app.ListActivity;
+
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -25,10 +29,12 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
 import java.text.DateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 
 
-public class MainActivity extends ActionBarActivity  implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
+public class MainActivity extends ListActivity  implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener, android.view.View.OnClickListener {
 
 
     protected static final String TAG = "main-activity";
@@ -67,6 +73,40 @@ public class MainActivity extends ActionBarActivity  implements GoogleApiClient.
     protected Button mStopUpdatesButton;
     protected TextView mLastUpdateTimeTextView;
 
+    Button btnAdd,btnGetAll;
+    TextView nok_ID;
+
+    @Override
+    public void onClick(View view) {
+        if (view== findViewById(R.id.btnAdd)){
+            Intent intent = new Intent(this,NOKAddOn.class);
+            intent.putExtra("student_Id",0);
+            startActivity(intent);
+
+        }else {
+
+            SQLControlllerNOK repo = new SQLControlllerNOK(this);
+            ArrayList<HashMap<String, String>> nokList =  repo.getNOKList();
+            if(nokList.size()!=0) {
+                ListView lv = getListView();
+                lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view,int position, long id) {
+                        nok_ID = (TextView) view.findViewById(R.id.nok_ID);
+                        String studentId = nok_ID.getText().toString();
+                        Intent objIndent = new Intent(getApplicationContext(),NOKAddOn.class);
+                        objIndent.putExtra("nok_ID", Integer.parseInt( studentId));
+                        startActivity(objIndent);
+                    }
+                });
+                ListAdapter adapter = new SimpleAdapter( MainActivity.this,nokList, R.layout.activity_nok_entry, new String[] { "id","name"}, new int[] {R.id.nok_ID, R.id.nok_name});
+                setListAdapter(adapter);
+            }else{
+                Toast.makeText(this,"No student!",Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,19 +116,14 @@ public class MainActivity extends ActionBarActivity  implements GoogleApiClient.
          *
          */
         //else display the main activity
-        if(nokTableisEmpty()){
 
-        }else{
-
-        }
         setContentView(R.layout.activity_main);
-
         //FOR THE DB
         dbcon = new SQLController(this);
         dbcon.open();
 
-        mTrackListView = (ListView) findViewById(R.id.list_view);
-        mTrackListView.setEmptyView(findViewById(R.id.empty_view));
+        //mTrackListView = (ListView) findViewById(R.id.list_view);
+       //mTrackListView.setEmptyView(findViewById(R.id.empty_view));
 
         //FOR THE CURRENT LOCATION
         mResultReceiver = new AddressResultReceiver(new Handler());
@@ -109,9 +144,50 @@ public class MainActivity extends ActionBarActivity  implements GoogleApiClient.
         updateValuesFromBundle(savedInstanceState);
 
         buildGoogleApiClient();
-
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.homePage:
+                setContentView(R.layout.activity_main);
+                break;
+            case R.id.helpInfo:
+
+                break;
+            case R.id.history:
+
+                break;
+            case R.id.share:
+
+                break;
+            case R.id.sosSignal:
+
+                break;
+            case R.id.nokSettings:
+                setContentView(R.layout.activity_nok_registration);
+
+                btnAdd = (Button) findViewById(R.id.btnAdd);
+                btnAdd.setOnClickListener(this);
+
+                btnGetAll = (Button) findViewById(R.id.btnGetAll);
+                btnGetAll.setOnClickListener(this);
+                break;
+
+            default:
+                break;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
     /**
      * Updates fields based on data stored in the bundle.
      */
@@ -380,27 +456,6 @@ public class MainActivity extends ActionBarActivity  implements GoogleApiClient.
         mGoogleApiClient.connect();
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
 
     /**
      * Shows a toast with the given text.

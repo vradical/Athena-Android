@@ -43,20 +43,16 @@ public class DBHelperNok extends SQLiteOpenHelper {
         super(context, DB_NAME, null, DB_VERSION);
     }
 
-    // Creating table query
-    private static final String CREATE_TABLE = "CREATE TABLE " + TABLE_NAME + "(" + _ID
-            + " INTEGER PRIMARY KEY AUTOINCREMENT, " + TRACK_ADDR + " TEXT NOT NULL, " + TRACK_LONG + " TEXT NOT NULL, " + TRACK_LAT + " TEXT, "  + TRACK_TIME + " TEXT)";
-
     @Override
     public void onCreate(SQLiteDatabase db) {
         //All necessary tables you like to create will create here
 
-        String CREATE_TABLE_STUDENT = "CREATE TABLE " + TABLE_NAME  + "("
+        String CREATE_TABLE_NOK= "CREATE TABLE " + TABLE_NAME  + "("
                 + _ID  + " INTEGER PRIMARY KEY AUTOINCREMENT ,"
                 + NOK_NAME + " TEXT, "
                 + NOK_EMAIL + " TEXT "
                 + NOK_PHONE + " INTEGER )";
-        db.execSQL(CREATE_TABLE_STUDENT);
+        db.execSQL(CREATE_TABLE_NOK);
     }
 
 
