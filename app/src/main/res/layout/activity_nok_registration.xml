@@ -16,12 +16,13 @@
         android:id="@+id/btnAdd"
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        android:onClick="addNOK"/>
 
     <ListView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@android:id/list"
+        android:id="@+id/list_nok"
         android:layout_centerHorizontal="true"
         android:layout_alignParentTop="true"
         android:layout_above="@+id/btnAdd" />
@@ -32,6 +33,7 @@
         android:text="List All"
         android:id="@+id/btnGetAll"
         android:layout_alignParentBottom="true"
-        android:layout_toRightOf="@+id/btnAdd" />
+        android:layout_toRightOf="@+id/btnAdd"
+        android:onClick="listNOK"/>
 
 </RelativeLayout>

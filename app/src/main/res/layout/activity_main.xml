@@ -58,6 +58,7 @@
             android:layout_gravity="center_horizontal"
             android:onClick="startUpdatesButtonHandler" />
 
+
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -78,6 +79,16 @@
             android:layout_gravity="center_horizontal"
             android:onClick="emergencyButtonHandler" />
 
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@id/emergency_button"
+            android:layout_below="@id/track_location_time"
+            android:text="SeeDB"
+            android:onClick="seeDB"
+            android:id="@+id/testingButton"
+            android:layout_gravity="center_horizontal" />
+
     </RelativeLayout>
 
     <LinearLayout
@@ -90,7 +101,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:dividerHeight="1dp"
-            android:id="@android:id/list"
+            android:id="@+id/list_view"
             android:padding="10dp" >
         </ListView>
 

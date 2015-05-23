@@ -8,12 +8,14 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.ResultReceiver;
 import android.support.v4.widget.SimpleCursorAdapter;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
@@ -34,7 +36,7 @@ import java.util.Date;
 import java.util.HashMap;
 
 
-public class MainActivity extends ListActivity  implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener, android.view.View.OnClickListener {
+public class MainActivity extends ActionBarActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener{
 
 
     protected static final String TAG = "main-activity";
@@ -57,8 +59,20 @@ public class MainActivity extends ListActivity  implements GoogleApiClient.Conne
     protected TextView mLongitudeText;
 
     private SQLController dbcon;
+    //private SQLControlllerNOK dbcon2;
     protected ListView mTrackListView;
+    protected ListView nokListView;
     private SimpleCursorAdapter adapter;
+    private SimpleCursorAdapter adapter2;
+
+
+    Button btnSave ,  btnDelete;
+    Button btnClose;
+    EditText editTextName;
+    EditText editTextEmail;
+    EditText editTextPhone;
+    private int _nok_id=0;
+
     final String[] from = new String[] { DBHelper._ID, DBHelper.TRACK_LAT, DBHelper.TRACK_LONG, DBHelper.TRACK_ADDR, DBHelper.TRACK_TIME};
     final int[] to = new int[] {R.id.id, R.id.longi, R.id.lat, R.id.address, R.id.time};
 
@@ -71,42 +85,43 @@ public class MainActivity extends ListActivity  implements GoogleApiClient.Conne
     protected final static String LAST_UPDATED_TIME_STRING_KEY = "last-updated-time-string-key";
     protected Button mStartUpdatesButton;
     protected Button mStopUpdatesButton;
+    protected Button test;
     protected TextView mLastUpdateTimeTextView;
 
-    Button btnAdd,btnGetAll;
-    TextView nok_ID;
 
-    @Override
-    public void onClick(View view) {
-        if (view== findViewById(R.id.btnAdd)){
-            Intent intent = new Intent(this,NOKAddOn.class);
-            intent.putExtra("student_Id",0);
-            startActivity(intent);
-
-        }else {
-
-            SQLControlllerNOK repo = new SQLControlllerNOK(this);
-            ArrayList<HashMap<String, String>> nokList =  repo.getNOKList();
-            if(nokList.size()!=0) {
-                ListView lv = getListView();
-                lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                    @Override
-                    public void onItemClick(AdapterView<?> parent, View view,int position, long id) {
-                        nok_ID = (TextView) view.findViewById(R.id.nok_ID);
-                        String studentId = nok_ID.getText().toString();
-                        Intent objIndent = new Intent(getApplicationContext(),NOKAddOn.class);
-                        objIndent.putExtra("nok_ID", Integer.parseInt( studentId));
-                        startActivity(objIndent);
-                    }
-                });
-                ListAdapter adapter = new SimpleAdapter( MainActivity.this,nokList, R.layout.activity_nok_entry, new String[] { "id","name"}, new int[] {R.id.nok_ID, R.id.nok_name});
-                setListAdapter(adapter);
-            }else{
-                Toast.makeText(this,"No student!",Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-
+//    Button btnAdd,btnGetAll;
+//    TextView nok_ID;
+//
+//    @Override
+//    public void onClick(View view) {
+//        if (view== findViewById(R.id.btnAdd)){
+//            Intent intent = new Intent(this,NOKAddOn.class);
+//            intent.putExtra("student_Id",0);
+//            startActivity(intent);
+//
+//        }else {
+//
+//            SQLControlllerNOK repo = new SQLControlllerNOK(this);
+//            ArrayList<HashMap<String, String>> nokList =  repo.getNOKList();
+//            if(nokList.size()!=0) {
+//                ListView lv = getListView();
+//                lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+//                    @Override
+//                    public void onItemClick(AdapterView<?> parent, View view,int position, long id) {
+//                        nok_ID = (TextView) view.findViewById(R.id.nok_ID);
+//                        String studentId = nok_ID.getText().toString();
+//                        Intent objIndent = new Intent(getApplicationContext(),NOKAddOn.class);
+//                        objIndent.putExtra("nok_ID", Integer.parseInt( studentId));
+//                        startActivity(objIndent);
+//                    }
+//                });
+//                ListAdapter adapter = new SimpleAdapter( MainActivity.this,nokList, R.layout.activity_nok_entry, new String[] { "id","name"}, new int[] {R.id.nok_ID, R.id.nok_name});
+//                setListAdapter(adapter);
+//            }else{
+//                Toast.makeText(this,"No student!",Toast.LENGTH_SHORT).show();
+//            }
+//        }
+//    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -120,10 +135,12 @@ public class MainActivity extends ListActivity  implements GoogleApiClient.Conne
         setContentView(R.layout.activity_main);
         //FOR THE DB
         dbcon = new SQLController(this);
+//        dbcon2 = new SQLControlllerNOK(this);
         dbcon.open();
+//        dbcon2.open();
 
-        //mTrackListView = (ListView) findViewById(R.id.list_view);
-       //mTrackListView.setEmptyView(findViewById(R.id.empty_view));
+        mTrackListView = (ListView) findViewById(R.id.list_view);
+        mTrackListView.setEmptyView(findViewById(R.id.empty_view));
 
         //FOR THE CURRENT LOCATION
         mResultReceiver = new AddressResultReceiver(new Handler());
@@ -134,6 +151,7 @@ public class MainActivity extends ListActivity  implements GoogleApiClient.Conne
         mStartUpdatesButton = (Button) findViewById(R.id.start_updates_button);
         mStopUpdatesButton = (Button) findViewById(R.id.stop_updates_button);
         mLastUpdateTimeTextView = (TextView) findViewById(R.id.track_location_time);
+        test = (Button) findViewById(R.id.testingButton);
 
         mRequestingLocationUpdates = false;
         mLastUpdateTime = "";
@@ -174,12 +192,13 @@ public class MainActivity extends ListActivity  implements GoogleApiClient.Conne
                 break;
             case R.id.nokSettings:
                 setContentView(R.layout.activity_nok_registration);
-
-                btnAdd = (Button) findViewById(R.id.btnAdd);
-                btnAdd.setOnClickListener(this);
-
-                btnGetAll = (Button) findViewById(R.id.btnGetAll);
-                btnGetAll.setOnClickListener(this);
+//
+//                btnAdd = (Button) findViewById(R.id.btnAdd);
+//                btnAdd.setOnClickListener(this);
+//
+//                btnGetAll = (Button) findViewById(R.id.btnGetAll);
+//                btnGetAll.setOnClickListener(this);
+                nokListView = (ListView) findViewById(R.id.list_nok);
                 break;
 
             default:
@@ -188,6 +207,51 @@ public class MainActivity extends ListActivity  implements GoogleApiClient.Conne
 
         return super.onOptionsItemSelected(item);
     }
+
+    public void addNOK(View view){
+        setContentView(R.layout.activity_nok_details);
+//        Intent intent = new Intent(this,NOKAddOn.class);
+//        intent.putExtra("nok_ID",0);
+//        startActivity(intent);
+
+        editTextName = (EditText) findViewById(R.id.editTextName);
+        editTextEmail = (EditText) findViewById(R.id.editTextEmail);
+        editTextPhone = (EditText) findViewById(R.id.editTextPhone);
+
+
+    }
+
+
+    public void saveNOK(View view){
+        DBHelperNok dbHandler = new DBHelperNok(this, null, null, 1);
+
+        int phone =
+                Integer.parseInt(editTextPhone.getText().toString());
+
+        String name =
+                editTextName.getText().toString();
+
+        String email =
+                editTextEmail.getText().toString();
+
+        NOKInfo newNok =
+                new NOKInfo(name, email, phone);
+
+        dbHandler.insert(newNok);
+    }
+
+    public void seeDB(View view){
+                Intent dbmanager = new Intent(getApplicationContext(),AndroidDatabaseManager.class);
+                startActivity(dbmanager);
+
+    }
+
+
+    public void listNOK(){
+
+
+    }
+
     /**
      * Updates fields based on data stored in the bundle.
      */
@@ -270,6 +334,13 @@ public class MainActivity extends ListActivity  implements GoogleApiClient.Conne
         adapter.notifyDataSetChanged();
         mTrackListView.setAdapter(adapter);
     }
+
+//    private void fetchDB2(){
+//        Cursor cursor = dbcon2.fetch();
+//        adapter2 = new SimpleCursorAdapter(this, R.layout.activity_nok_entry, cursor, from, to, 0);
+//        adapter2.notifyDataSetChanged();
+//        nokListView.setAdapter(adapter2);
+//    }
 
     /**
      * Creates an intent, adds location data to it as an extra, and starts the intent service for

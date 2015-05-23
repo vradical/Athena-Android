@@ -34,7 +34,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="Age"
+        android:text="Phone"
         android:id="@+id/textView3"
         android:layout_below="@+id/textView2"
         android:layout_alignParentLeft="true"
@@ -68,7 +68,7 @@
         android:layout_height="wrap_content"
         android:inputType="number"
         android:ems="10"
-        android:id="@+id/editTextAge"
+        android:id="@+id/editTextPhone"
         android:layout_alignBottom="@+id/textView3"
         android:layout_alignLeft="@+id/editTextEmail"
         android:layout_alignStart="@+id/editTextEmail"
@@ -81,7 +81,8 @@
         android:text="Save"
         android:id="@+id/btnSave"
         android:layout_alignParentBottom="true"
-        android:layout_toLeftOf="@+id/btnClose" />
+        android:layout_toLeftOf="@+id/btnClose"
+        android:onClick="saveNOK"/>
 
     <Button
         android:layout_width="wrap_content"
@@ -90,7 +91,8 @@
         android:id="@+id/btnClose"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
+        android:layout_alignParentEnd="true"
+        android:onClick="returnPage"/>
 
     <Button
         android:layout_width="wrap_content"

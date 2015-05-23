@@ -26,7 +26,6 @@ public class SQLController {
         dbHelper = new DBHelper(ourcontext);
         database = dbHelper.getWritableDatabase();
         return this;
-
     }
 
     public void close() {
