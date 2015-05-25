@@ -8,6 +8,8 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -87,12 +89,26 @@ public class SQLControlllerNOK  {
         return cnt;
     }
 
-    public String[] getNOKPhone(){
-        String countQuery = "SELECT " + DBHelperNok.col_PHONE + " FROM " + DBHelperNok.TABLE_NAME;
+    public String[][] getNOKPhone(){
+        String countQuery = "SELECT " + DBHelperNok.col_PHONE  +  " FROM " + DBHelperNok.TABLE_NAME;
         Cursor cursor = database.rawQuery(countQuery, null);
-        ArrayList<Integer> listOfPhone = new ArrayList<Integer>();
-        String[] nokNumbers = cursor.getColumnNames();
-        return nokNumbers;
+        String[][] data = new String[cursor.getCount()][cursor.getColumnCount()];
+
+        if (cursor != null) {
+            int i = 0;
+            while (cursor.moveToNext()) {
+                int j = 0;
+                while (j < cursor.getColumnCount()) {
+                    data[i][j] = cursor.getString(j);
+                    Log.v("testddddddddddddddddd  ", "Type of get count " + data[i][j]);
+                    j++;
+                }
+                i++;
+                cursor.moveToNext();
+            }
+            cursor.close();
+        }
+        return data;
     }
 
 

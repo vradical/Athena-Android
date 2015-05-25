@@ -339,8 +339,11 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
     public void emergencyButtonHandler(View view) {
         setContentView(R.layout.activity_emergency);
         int numberOfNok = dbcon2.getNumOfNOK();
+        String[][] checknum = dbcon2.getNOKPhone();
+       // String test123 = String.valueOf(dbcon2.getNOKPhone());
         String trigger_location = mAddressOutput;
-        Toast.makeText(this,numberOfNok + " " + trigger_location, Toast.LENGTH_LONG).show();
+        Toast.makeText(this,"haha", Toast.LENGTH_LONG).show();
+        //Toast.makeText(this,test123, Toast.LENGTH_LONG).show();
     }
 
     /**
