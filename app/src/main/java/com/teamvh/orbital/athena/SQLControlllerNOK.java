@@ -1,55 +1,101 @@
-//package com.teamvh.orbital.athena;
-//
-///**
-// * Created by YANG on 5/22/2015.
-// */
-//import android.content.ContentValues;
-//import android.content.Context;
-//import android.database.Cursor;
-//import android.database.SQLException;
-//import android.database.sqlite.SQLiteDatabase;
-//import java.util.ArrayList;
-//import java.util.HashMap;
-//
-//public class SQLControlllerNOK  {
-//    private DBHelperNok dbHelperNok;
-//    private Context ourcontext2;
-//    private SQLiteDatabase database;
-//
-//    public SQLControlllerNOK(Context context) {
-//        dbHelperNok = new DBHelperNok(context);
-//    }
-////    public SQLControlllerNOK(Context c) {
-////        ourcontext2 = c;
-////    }
-//
-//    public SQLControlllerNOK open() throws SQLException {
-//        dbHelperNok = new DBHelperNok(ourcontext2);
-//        database = dbHelperNok.getWritableDatabase();
-//        return this;
-//    }
-//    public int insert(NOKInfo nokInfo){
-//        //Open connection to write data
-//        SQLiteDatabase db = dbHelperNok.getWritableDatabase();
-//        ContentValues values = new ContentValues();
-//        values.put(dbHelperNok.col_NAME,nokInfo.get_nokname());
-//        values.put(DBHelperNok.col_NAME,nokInfo.nok_name);
-//        values.put(NOKInfo.NOK_PHONE, nokInfo.nok_phone);
-//
-//        // Inserting Row
-//        long nok_id = db.insert(NOKInfo.TABLE_NAME, null, values);
-//        db.close(); // Closing database connection
-//        return (int) nok_id;
-//    }
-//
-//    public void delete(int nok_id) {
-//
-//        SQLiteDatabase db = dbHelperNok.getWritableDatabase();
-//        // It's a good practice to use parameter ?, instead of concatenate string
-//        db.delete(NOKInfo.TABLE_NAME, NOKInfo._ID + "= ?", new String[] { String.valueOf(nok_id) });
-//        db.close(); // Closing database connection
-//    }
-//
+package com.teamvh.orbital.athena;
+
+/**
+ * Created by YANG on 5/22/2015.
+ */
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+public class SQLControlllerNOK  {
+    private DBHelperNok dbHelperNok;
+    private Context ourcontext;
+    private SQLiteDatabase database;
+
+    public SQLControlllerNOK(Context c) {
+        ourcontext = c;
+    }
+
+    public SQLControlllerNOK open() throws SQLException {
+        dbHelperNok = new DBHelperNok(ourcontext);
+        database = dbHelperNok.getWritableDatabase();
+        return this;
+    }
+
+    public SQLControlllerNOK opnToRead() {
+        dbHelperNok = new DBHelperNok(ourcontext,
+                dbHelperNok.DB_NAME, null, dbHelperNok.DB_VERSION);
+        database = dbHelperNok.getReadableDatabase();
+        return this;
+    }
+
+    public SQLControlllerNOK opnToWrite() {
+        dbHelperNok = new DBHelperNok(ourcontext,
+                dbHelperNok.DB_NAME, null, dbHelperNok.DB_VERSION);
+        database = dbHelperNok.getWritableDatabase();
+        return this;
+    }
+
+    public void Close() {
+        database.close();
+    }
+
+
+    public long insert(NOKInfo nokInfo){
+        //Open connection to write data
+        ContentValues values = new ContentValues();
+        values.put(dbHelperNok.col_NAME,nokInfo.get_nokname());
+        values.put(dbHelperNok.col_EMAIL,nokInfo.get_nokemail());
+        values.put(dbHelperNok.col_PHONE, nokInfo.get_nokphone());
+        // Inserting Row
+        return database.insert(dbHelperNok.TABLE_NAME, null, values);
+    }
+
+    public Cursor fetchAllNOK(){
+
+        String[] cols = {
+                DBHelperNok.col_NAME, DBHelperNok.col_EMAIL, DBHelperNok.col_PHONE};
+        //Cursor mCursor = database.query(DBHelperNok.TABLE_NAME, cols, null, null, null, null, null);
+        Cursor mCursor = database.rawQuery("SELECT " +  DBHelperNok.col_ID + " AS _id " + ","  + DBHelperNok.col_NAME + " , " + DBHelperNok.col_EMAIL
+                                             + " , "  + DBHelperNok.col_PHONE + " FROM " + DBHelperNok.TABLE_NAME, null);
+        opnToWrite();
+        if(mCursor != null){
+            mCursor.moveToFirst();
+        }
+        return mCursor;
+    }
+
+
+    public void delete(int nok_id) {
+
+        SQLiteDatabase db = dbHelperNok.getWritableDatabase();
+        // It's a good practice to use parameter ?, instead of concatenate string
+        db.delete(dbHelperNok.TABLE_NAME, dbHelperNok.col_ID + "= ?", new String[]{String.valueOf(nok_id)});
+        db.close(); // Closing database connection
+    }
+
+    public int getNumOfNOK(){
+        String countQuery = "SELECT  * FROM " + DBHelperNok.TABLE_NAME;
+        Cursor cursor = database.rawQuery(countQuery, null);
+        int cnt = cursor.getCount();
+        cursor.close();
+        return cnt;
+    }
+
+    public String[] getNOKPhone(){
+        String countQuery = "SELECT " + DBHelperNok.col_PHONE + " FROM " + DBHelperNok.TABLE_NAME;
+        Cursor cursor = database.rawQuery(countQuery, null);
+        ArrayList<Integer> listOfPhone = new ArrayList<Integer>();
+        String[] nokNumbers = cursor.getColumnNames();
+        return nokNumbers;
+    }
+
+
 ////    public Cursor fetch() {
 ////        String[] columns = new String[] { DBHelperNok._ID, DBHelperNok.NOK_NAME, DBHelperNok.NOK_EMAIL,
 ////                DBHelperNok.NOK_PHONE};
@@ -132,5 +178,5 @@
 //        return nokinfo;
 //    }
 //
-//
-//}
+
+}

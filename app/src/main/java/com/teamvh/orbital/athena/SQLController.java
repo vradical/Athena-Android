@@ -65,4 +65,6 @@ public class SQLController {
     public void delete(long _id) {
         database.delete(DBHelper.TABLE_NAME, DBHelper._ID + "=" + _id, null);
     }
+
+
 }

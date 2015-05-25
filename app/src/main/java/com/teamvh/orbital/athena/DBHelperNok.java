@@ -16,7 +16,7 @@ import java.util.ArrayList;
 
 public class DBHelperNok extends SQLiteOpenHelper {
 
-    static final String DB_NAME = "NOK_DETAIL.DB";
+    static final String DB_NAME = "NOK_DETAILS.DB";
 
     // database version
     static final int DB_VERSION = 1;
@@ -42,12 +42,16 @@ public class DBHelperNok extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         //All necessary tables you like to create will create here
 
-        String CREATE_TABLE_NOK= "CREATE TABLE " + TABLE_NAME  + "("
+        String CREATE_TABLE_NOK= "CREATE TABLE " + TABLE_NAME  + "( "
                 + col_ID  + " INTEGER PRIMARY KEY AUTOINCREMENT ,"
                 + col_NAME + " TEXT, "
                 + col_EMAIL + " TEXT, "
                 + col_PHONE + " INTEGER " + " )";
         db.execSQL(CREATE_TABLE_NOK);
+
+        String sql = "insert into " + TABLE_NAME + " ( " + col_ID + "," + col_NAME + "," + col_EMAIL + "," + col_PHONE + " ) "
+                + " values ( '3' ,'C01', 'Aji','1234567890' )";
+        db.execSQL(sql);
     }
 
 
@@ -57,19 +61,8 @@ public class DBHelperNok extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    public void insert(NOKInfo nokInfo){
-        //Open connection to write data
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put(col_NAME,nokInfo.get_nokname());
-        values.put(col_EMAIL,nokInfo.get_nokemail());
-        values.put(col_PHONE, nokInfo.get_nokphone());
 
-        // Inserting Row
-        db.insert(TABLE_NAME, null, values);
-        db.close(); // Closing database connection
-    }
-
+    //this is for seeDB
     public ArrayList<Cursor> getData(String Query){
         //get writable database
         SQLiteDatabase sqlDB = this.getWritableDatabase();
@@ -80,7 +73,6 @@ public class DBHelperNok extends SQLiteOpenHelper {
         MatrixCursor Cursor2= new MatrixCursor(columns);
         alc.add(null);
         alc.add(null);
-
 
         try{
             String maxQuery = Query ;
@@ -118,5 +110,15 @@ public class DBHelperNok extends SQLiteOpenHelper {
         }
 
 
+    }
+
+    public Cursor fetchAllNOK(){
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor mCursor = db.query(TABLE_NAME, new String[] {},null,null,null,null,null);
+
+        if(mCursor != null){
+            mCursor.moveToFirst();
+        }
+        return mCursor;
     }
 }
