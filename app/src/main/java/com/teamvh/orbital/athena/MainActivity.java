@@ -9,6 +9,7 @@ import android.os.Handler;
 import android.os.ResultReceiver;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.ActionBarActivity;
+import android.telephony.SmsManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -336,16 +337,36 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
      * Trigger emergency view.
      * Should we set a list of pre-conditions?
      */
+    String[][] checknum = null;
+    int numberOfNok = 0;
+    String sendLocation = null;
     public void emergencyButtonHandler(View view) {
         setContentView(R.layout.activity_emergency);
-        int numberOfNok = dbcon2.getNumOfNOK();
-        String[][] checknum = dbcon2.getNOKPhone();
+        numberOfNok = dbcon2.getNumOfNOK();
+        checknum = dbcon2.getNOKPhone();
        // String test123 = String.valueOf(dbcon2.getNOKPhone());
-        String trigger_location = mAddressOutput;
-        Toast.makeText(this,"haha", Toast.LENGTH_LONG).show();
+        sendLocation = mAddressOutput;
+        Toast.makeText(this,checknum + " " + numberOfNok + " " + sendLocation, Toast.LENGTH_LONG).show();
         //Toast.makeText(this,test123, Toast.LENGTH_LONG).show();
     }
 
+    protected void sendSMSMessage() {
+        for(int i = 0 ; i < numberOfNok ; i++){
+            try {
+                SmsManager smsManager = SmsManager.getDefault();
+                smsManager.sendTextMessage(checknum[0][i], null, "This is an emergency, your friend/relative/child has been compromised please " +
+                        "contact him/her as soon as possible. His/her current location is at " + sendLocation, null, null);
+                Toast.makeText(getApplicationContext(), "SMS sent.",
+                        Toast.LENGTH_LONG).show();
+            } catch (Exception e) {
+                Toast.makeText(getApplicationContext(),
+                        "SMS faild, please try again.",
+                        Toast.LENGTH_LONG).show();
+                e.printStackTrace();
+            }
+        }
+
+    }
     /**
      * Retrieve the info of the NOK details from the sqlLite or server
      * Send a sms to the NOKs with their current location and time
