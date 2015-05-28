@@ -5,18 +5,23 @@ import android.database.Cursor;
 import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.ResultReceiver;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.PopupWindow;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -66,6 +71,12 @@ public class MainActivity extends ActionBarActivity  implements GoogleApiClient.
     protected Button mStopUpdatesButton;
     protected TextView mLastUpdateTimeTextView;
 
+    //high alert function
+    protected Button mStartHighAlertButton;
+    protected TextView mAlertTimeLeft;
+    protected LayoutInflater layoutInflater;
+    protected PopupWindow popupWindow;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,6 +102,10 @@ public class MainActivity extends ActionBarActivity  implements GoogleApiClient.
 
         mRequestingLocationUpdates = false;
         mLastUpdateTime = "";
+
+        //High alert button
+        mStartHighAlertButton = (Button) findViewById(R.id.high_alert_button);
+        mAlertTimeLeft = (Button) findViewById(R.id.alert_time_left);
 
         // Set defaults, then update using values stored in the Bundle.
         mAddressRequested = false;
@@ -150,16 +165,15 @@ public class MainActivity extends ActionBarActivity  implements GoogleApiClient.
                 .addOnConnectionFailedListener(this)
                 .addApi(LocationServices.API)
                 .build();
-        createLocationRequest();
     }
 
     //change to constants
-    protected void createLocationRequest() {
+    protected void createLocationRequest(int interval, int fastInterval) {
         mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(Constants.CHECK_INTERVAL);
-        mLocationRequest.setFastestInterval(Constants.CHECK_FAST_INTERVAL);
+        mLocationRequest.setInterval(interval);
+        mLocationRequest.setFastestInterval(fastInterval);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        mLocationRequest.setSmallestDisplacement(Constants.SMALLEST_DISPLACEMENT);
+       // mLocationRequest.setSmallestDisplacement(Constants.SMALLEST_DISPLACEMENT);
     }
 
     @Override
@@ -248,7 +262,48 @@ public class MainActivity extends ActionBarActivity  implements GoogleApiClient.
         }
     }
 
+    //additionl method for high alert
+
+    public void startHighAlertMode(View view){
+        if(mRequestingLocationUpdates){
+            startHighAlert();
+            mStartHighAlertButton.setEnabled(false);
+        }
+
+    }
+
+    protected void startHighAlert() {
+        LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+        createLocationRequest(5000, 2500);
+        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+        mLatitudeText.setText(String.valueOf(mCurrentLocation.getLatitude()));
+        mLongitudeText.setText(String.valueOf(mCurrentLocation.getLongitude()));
+        mLastUpdateTimeTextView.setText(mLastUpdateTime);
+        updateAddress();
+        fetchDB();
+
+        layoutInflater = (LayoutInflater) getBaseContext().getSystemService(LAYOUT_INFLATER_SERVICE);
+        View popupView = layoutInflater.inflate(R.layout.high_alert_window, null);
+        popupWindow = new PopupWindow(popupView, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        popupWindow.showAtLocation(mStartHighAlertButton, Gravity.CENTER, 0, 0);
+       /* new CountDownTimer(5000, 5000) {
+            public void onTick(long millisUntilFinished) {
+                mAlertTimeLeft.setText("Time Left: " + millisUntilFinished / 1000);
+            }
+
+            public void onFinish() {
+                mAlertTimeLeft.setText("done!");
+            }
+        }.start();*/
+    }
+
+    public void stillSafe(View view) {
+        popupWindow.dismiss();
+    }
+
+    //end of high alert
     protected void startLocationUpdates() {
+        createLocationRequest(Constants.CHECK_INTERVAL, Constants.CHECK_FAST_INTERVAL);
         LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
         mLatitudeText.setText(String.valueOf(mCurrentLocation.getLatitude()));
         mLongitudeText.setText(String.valueOf(mCurrentLocation.getLongitude()));
