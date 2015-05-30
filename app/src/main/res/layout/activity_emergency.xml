@@ -26,7 +26,8 @@
         android:layout_height="wrap_content"
         android:text="Deactivate Emergency"
         android:id="@+id/deactivateButtonHandler"
-        android:layout_gravity="center_horizontal" />
+        android:layout_gravity="center_horizontal"
+        android:onClick="deactivateEmergency"/>
 
 
 </LinearLayout>

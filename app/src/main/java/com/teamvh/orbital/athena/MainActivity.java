@@ -1,5 +1,8 @@
 package com.teamvh.orbital.athena;
 
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.location.Geocoder;
@@ -12,6 +15,7 @@ import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.ActionBarActivity;
 import android.telephony.SmsManager;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -79,6 +83,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
     private SimpleCursorAdapter adapter;
     private SimpleCursorAdapter adapter2;
     private SimpleCursorAdapter adapter3;
+    private SimpleCursorAdapter adapter4;
 
     EditText editTextName;
     EditText editTextEmail;
@@ -91,6 +96,8 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
     final int[] to2 = new int[] { R.id.list_name,R.id.list_email, R.id.list_phone};
     final String[] from3 = new String[] {DBHelperNok.col_PHONE};
     final int[] to3 = new int[] { R.id.list_phone_only};
+    final String[] from4 = new String[] {DBHelperNok.col_NAME};
+    final int[] to4 = new int[] { R.id.list_nok_name};
 
 
     protected boolean mRequestingLocationUpdates;
@@ -231,21 +238,28 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         numberOfNok = dbcon2.getNumOfNOK();
         nokPhoneArray = dbcon2.getNOKPhone();
         sendLocation = mAddressOutput;
-        Toast.makeText(this,"Number of NOK in DB " + nokPhoneArray.length +
-                " Are they the same? " + numberOfNok +
-                " 1st number " + nokPhoneArray[0][0]+
-                " 2nd number " + nokPhoneArray[1][0]+
-//                " 3rd number " + checknum[2][0]+
-//                " 4rd number " + checknum[3][0]+
-//                " 5th number " + checknum[4][0]+
-                " his location " + sendLocation, Toast.LENGTH_LONG).show();
+//        Toast.makeText(this,"Number of NOK in DB " + nokPhoneArray.length +
+//                " Are they the same? " + numberOfNok +
+//                " 1st number " + nokPhoneArray[0][0]+
+//                " 2nd number " + nokPhoneArray[1][0]+
+////                " 3rd number " + checknum[2][0]+
+////                " 4rd number " + checknum[3][0]+
+////                " 5th number " + checknum[4][0]+
+//                " his location " + sendLocation, Toast.LENGTH_LONG).show();
         //Toast.makeText(this,test123, Toast.LENGTH_LONG).show();
-        sendSMSMessage();
+
+
+        //sendSMSMessage();
         //sendEmail();
         eNokPhoneListView = (ListView) findViewById(R.id.emergency_list_view);
         Cursor cscs = dbcon2.fetchAllNOK();
         adapter3 = new SimpleCursorAdapter(this,R.layout.activity_noknumbers,cscs,from3,to3,0);
         eNokPhoneListView.setAdapter(adapter3);
+
+        eNokNameListView = (ListView) findViewById(R.id.emergency_list_view_call);
+        Cursor cscs2 = dbcon2.fetchAllNOK();
+        adapter4 = new SimpleCursorAdapter(this,R.layout.activity_nok_emergency_contact,cscs,from4,to4,0);
+        eNokNameListView.setAdapter(adapter4);
     }
 
     protected void sendSMSMessage() {
@@ -286,16 +300,47 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 
     }
 
+    //OnClick = Trigger by activity_nok_emergency_contact
+    public void callNOK(View view){
+        Intent callIntent = new Intent(Intent.ACTION_CALL);
+        final int positionNOK = eNokNameListView.getPositionForView((View) view.getParent());
+        callIntent.setData(Uri.parse("tel:" + nokPhoneArray[positionNOK][0]));
+        startActivity(callIntent);
+    }
     /**
      * Retrieve the info of the NOK details from the sqlLite or server
      * Send a sms to the NOKs with their current location and time
      **/
-    public void notifyNOK(){
 
+    public void deactivateEmergency(View view){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = LayoutInflater.from(this);
+        final View textEntryView = inflater.inflate(R.layout.activity_password, null);
+        builder.setTitle("Passcode");
+        builder.setMessage("To deactivate please enter your passcode");
+        builder.setView(textEntryView);
+        builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                EditText mUserText;
+                mUserText = (EditText) textEntryView.findViewById(R.id.passcode);
+                String strPinCode = mUserText.getText().toString();
+                if(strPinCode.equals("1234"))
+                    Log.d( TAG, "Yes it is right");
+                else
+                    Log.d( TAG, "Try again");
+            }
+        });
 
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
 
-
+            public void onClick(DialogInterface dialog, int which) {
+                // TODO Auto-generated method stub
+                return;
+            }
+        });
+        builder.show();
     }
+
 
     //------------------------------------------------Location-------------------------------------------------
     /**
