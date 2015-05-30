@@ -50,8 +50,16 @@ public class DBHelperNok extends SQLiteOpenHelper {
         db.execSQL(CREATE_TABLE_NOK);
 
         String sql = "insert into " + TABLE_NAME + " ( " + col_ID + "," + col_NAME + "," + col_EMAIL + "," + col_PHONE + " ) "
-                + " values ( '3' ,'C01', 'Aji','1234567890' )";
+                + " values ( '1' ,'C01', 'w0shiyang@hotmail.com','12345678' )";
         db.execSQL(sql);
+
+        String sql2 = "insert into " + TABLE_NAME + " ( " + col_ID + "," + col_NAME + "," + col_EMAIL + "," + col_PHONE + " ) "
+                + " values ( '2' ,'C02', 'yangjing.yj56@gmail.com','96733834' )";
+        db.execSQL(sql2);
+
+        String sql3 = "insert into " + TABLE_NAME + " ( " + col_ID + "," + col_NAME + "," + col_EMAIL + "," + col_PHONE + " ) "
+                + " values ( '3' ,'C03', 'w0shiyang@hotmail.com','12345678' )";
+        db.execSQL(sql3);
     }
 
 

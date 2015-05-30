@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.location.Geocoder;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ResultReceiver;
@@ -52,6 +53,12 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
     protected boolean mAddressRequested;
 
 
+    public String[][] nokPhoneArray = null;
+    public String[][] nokEmailArray = null;
+
+    public int numberOfNok = 0;
+    public String sendLocation = null;
+
 
     protected String mAddressOutput;
 
@@ -60,29 +67,30 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
     protected TextView mLocationAddressTextView;
     protected TextView mLatitudeText;
     protected TextView mLongitudeText;
-    private DBHelperNok dbHelperNok;
 
     private SQLController dbcon;
     private SQLControlllerNOK dbcon2;
+
     protected ListView mTrackListView;
     protected ListView mNOKListView;
-    protected ListView nokListView;
+    protected ListView eNokPhoneListView;
+    protected ListView eNokNameListView;
+
     private SimpleCursorAdapter adapter;
     private SimpleCursorAdapter adapter2;
-    public Cursor cs;
+    private SimpleCursorAdapter adapter3;
 
-
-    Button btnSave ,  btnDelete;
-    Button btnClose;
     EditText editTextName;
     EditText editTextEmail;
     EditText editTextPhone;
-    private int _nok_id=0;
 
+    //SimpleAdapter variables
     final String[] from = new String[] { DBHelper._ID, DBHelper.TRACK_LAT, DBHelper.TRACK_LONG, DBHelper.TRACK_ADDR, DBHelper.TRACK_TIME};
     final int[] to = new int[] {R.id.id, R.id.longi, R.id.lat, R.id.address, R.id.time};
     final String[] from2 = new String[] {DBHelperNok.col_NAME, DBHelperNok.col_EMAIL, DBHelperNok.col_PHONE};
     final int[] to2 = new int[] { R.id.list_name,R.id.list_email, R.id.list_phone};
+    final String[] from3 = new String[] {DBHelperNok.col_PHONE};
+    final int[] to3 = new int[] { R.id.list_phone_only};
 
 
     protected boolean mRequestingLocationUpdates;
@@ -98,15 +106,30 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
         //FOR THE DB
         dbcon = new SQLController(this);
         dbcon2 = new SQLControlllerNOK(this);
 
+        //START SQLCONTROLLERS
         dbcon.open();
         dbcon2.open();
 
+        displayMain();
+        updateValuesFromBundle(savedInstanceState);
+
+
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
+
+    public void displayMain(){
+        setContentView(R.layout.activity_main);
 
         mTrackListView = (ListView) findViewById(R.id.list_view);
         mTrackListView.setEmptyView(findViewById(R.id.empty_view));
@@ -122,32 +145,20 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         mLastUpdateTimeTextView = (TextView) findViewById(R.id.track_location_time);
         test = (Button) findViewById(R.id.testingButton);
 
-
-
         mRequestingLocationUpdates = false;
         mLastUpdateTime = "";
 
         // Set defaults, then update using values stored in the Bundle.
         mAddressRequested = false;
         mAddressOutput = "";
-        updateValuesFromBundle(savedInstanceState);
-
         buildGoogleApiClient();
     }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
-
+    //MENU SETTINGS
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.homePage:
-                setContentView(R.layout.activity_main);
+                displayMain();
                 break;
             case R.id.helpInfo:
 
@@ -162,11 +173,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 
                 break;
             case R.id.nokSettings:
-                setContentView(R.layout.activity_nok_registration);
-                mNOKListView = (ListView) findViewById(R.id.list_nok);
-                Cursor cscs = dbcon2.fetchAllNOK();
-                SimpleCursorAdapter cAdapter = new SimpleCursorAdapter(this,R.layout.activity_nok_entry,cscs,from2,to2,0);
-                mNOKListView.setAdapter(cAdapter);
+                nokSettings();
                 break;
 
             default:
@@ -176,16 +183,32 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         return super.onOptionsItemSelected(item);
     }
 
+    //View the database, can be deleted at the end of the project, trigger by seeDB button on main page
+    public void seeDB(View view){
+        Intent dbmanager = new Intent(getApplicationContext(),AndroidDatabaseManager.class);
+        startActivity(dbmanager);
+
+    }
+
+    //-------------------------------------------------------NOK Settings----------------------------------------------------
+    //NOK Registration
+    public void nokSettings(){
+        setContentView(R.layout.activity_nok_registration);
+        mNOKListView = (ListView) findViewById(R.id.list_nok);
+        Cursor cscs = dbcon2.fetchAllNOK();
+        adapter2 = new SimpleCursorAdapter(this,R.layout.activity_nok_entry,cscs,from2,to2,0);
+        mNOKListView.setAdapter(adapter2);
+    }
+
+    //OnClick =  TRIGGER BY REGISTRATION "ADD" BUTTON
     public void addNOK(View view){
         setContentView(R.layout.activity_nok_details);
         editTextName = (EditText) findViewById(R.id.editTextName);
         editTextEmail = (EditText) findViewById(R.id.editTextEmail);
         editTextPhone = (EditText) findViewById(R.id.editTextPhone);
-
-
     }
 
-
+    //OnClick = TRIGGER BY REGISTRATION "SAVE" BUTTON
     public void saveNOK(View view){
         int phone = Integer.parseInt(editTextPhone.getText().toString());
         String name = editTextName.getText().toString();
@@ -194,14 +217,87 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         dbcon2.insert(newNok);
         Toast.makeText(this,"New NOK has added ", Toast.LENGTH_LONG).show();
         setContentView(R.layout.activity_nok_details);
+        editTextName = (EditText) findViewById(R.id.editTextName);
+        editTextEmail = (EditText) findViewById(R.id.editTextEmail);
+        editTextPhone = (EditText) findViewById(R.id.editTextPhone);
     }
 
-    public void seeDB(View view){
-                Intent dbmanager = new Intent(getApplicationContext(),AndroidDatabaseManager.class);
-                startActivity(dbmanager);
+
+    //-----------------------------------------------Emergency Functions--------------------------------------
+
+
+    public void emergencyButtonHandler(View view) {
+        setContentView(R.layout.activity_emergency);
+        numberOfNok = dbcon2.getNumOfNOK();
+        nokPhoneArray = dbcon2.getNOKPhone();
+        sendLocation = mAddressOutput;
+        Toast.makeText(this,"Number of NOK in DB " + nokPhoneArray.length +
+                " Are they the same? " + numberOfNok +
+                " 1st number " + nokPhoneArray[0][0]+
+                " 2nd number " + nokPhoneArray[1][0]+
+//                " 3rd number " + checknum[2][0]+
+//                " 4rd number " + checknum[3][0]+
+//                " 5th number " + checknum[4][0]+
+                " his location " + sendLocation, Toast.LENGTH_LONG).show();
+        //Toast.makeText(this,test123, Toast.LENGTH_LONG).show();
+        sendSMSMessage();
+        //sendEmail();
+        eNokPhoneListView = (ListView) findViewById(R.id.emergency_list_view);
+        Cursor cscs = dbcon2.fetchAllNOK();
+        adapter3 = new SimpleCursorAdapter(this,R.layout.activity_noknumbers,cscs,from3,to3,0);
+        eNokPhoneListView.setAdapter(adapter3);
+    }
+
+    protected void sendSMSMessage() {
+        for(int i = 0 ; i < numberOfNok ; i++){
+            try {
+                SmsManager smsManager = SmsManager.getDefault();
+                smsManager.sendTextMessage(nokPhoneArray[i][0], null, "This is an emergency, your friend/relative/child has been compromised please " +
+                        "contact him/her ASAP. His/her current location is at " + sendLocation, null, null);
+                Toast.makeText(getApplicationContext(), "SMS sent.",
+                        Toast.LENGTH_LONG).show();
+            } catch (Exception e) {
+                Toast.makeText(getApplicationContext(),
+                        "SMS faild, please try again.",
+                        Toast.LENGTH_LONG).show();
+                e.printStackTrace();
+            }
+        }
 
     }
 
+
+    protected void sendEmail() {
+        nokEmailArray = dbcon2.getNOKEmail();
+        Intent email = new Intent(Intent.ACTION_SEND, Uri.parse("mailto:"));
+        for(int i = 0 ; i < numberOfNok ; i++) {
+        // prompts email clients only
+        email.setType("message/rfc822");
+        email.putExtra(Intent.EXTRA_EMAIL, nokEmailArray[i][0]);
+        email.putExtra(Intent.EXTRA_SUBJECT, "Emergency");
+        email.putExtra(Intent.EXTRA_TEXT, "testing");
+            try {
+                // the user can choose the email client
+                startActivity(Intent.createChooser(email, "Choose an email client from..."));
+            } catch (android.content.ActivityNotFoundException ex) {
+                Toast.makeText(MainActivity.this, "No email client installed.", Toast.LENGTH_LONG).show();
+            }
+        }
+
+    }
+
+    /**
+     * Retrieve the info of the NOK details from the sqlLite or server
+     * Send a sms to the NOKs with their current location and time
+     **/
+    public void notifyNOK(){
+
+
+
+
+    }
+
+    //------------------------------------------------Location-------------------------------------------------
     /**
      * Updates fields based on data stored in the bundle.
      */
@@ -333,50 +429,6 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         }
     }
 
-    /**
-     * Trigger emergency view.
-     * Should we set a list of pre-conditions?
-     */
-    String[][] checknum = null;
-    int numberOfNok = 0;
-    String sendLocation = null;
-    public void emergencyButtonHandler(View view) {
-        setContentView(R.layout.activity_emergency);
-        numberOfNok = dbcon2.getNumOfNOK();
-        checknum = dbcon2.getNOKPhone();
-       // String test123 = String.valueOf(dbcon2.getNOKPhone());
-        sendLocation = mAddressOutput;
-        Toast.makeText(this,checknum + " " + numberOfNok + " " + sendLocation, Toast.LENGTH_LONG).show();
-        //Toast.makeText(this,test123, Toast.LENGTH_LONG).show();
-    }
-
-    protected void sendSMSMessage() {
-        for(int i = 0 ; i < numberOfNok ; i++){
-            try {
-                SmsManager smsManager = SmsManager.getDefault();
-                smsManager.sendTextMessage(checknum[0][i], null, "This is an emergency, your friend/relative/child has been compromised please " +
-                        "contact him/her as soon as possible. His/her current location is at " + sendLocation, null, null);
-                Toast.makeText(getApplicationContext(), "SMS sent.",
-                        Toast.LENGTH_LONG).show();
-            } catch (Exception e) {
-                Toast.makeText(getApplicationContext(),
-                        "SMS faild, please try again.",
-                        Toast.LENGTH_LONG).show();
-                e.printStackTrace();
-            }
-        }
-
-    }
-    /**
-     * Retrieve the info of the NOK details from the sqlLite or server
-     * Send a sms to the NOKs with their current location and time
-     **/
-    public void notifyNOK(){
-
-
-
-
-    }
 
     /**
      * Ensures that only one button is enabled at any time. The Start Updates button is enabled

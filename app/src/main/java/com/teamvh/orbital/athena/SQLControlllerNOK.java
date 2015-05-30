@@ -93,14 +93,13 @@ public class SQLControlllerNOK  {
         String countQuery = "SELECT " + DBHelperNok.col_PHONE  +  " FROM " + DBHelperNok.TABLE_NAME;
         Cursor cursor = database.rawQuery(countQuery, null);
         String[][] data = new String[cursor.getCount()][cursor.getColumnCount()];
-
         if (cursor != null) {
+            cursor.moveToNext();
             int i = 0;
-            while (cursor.moveToNext()) {
+            while (i < cursor.getCount()) {
                 int j = 0;
                 while (j < cursor.getColumnCount()) {
                     data[i][j] = cursor.getString(j);
-                    Log.v("testddddddddddddddddd  ", "Type of get count " + data[i][j]);
                     j++;
                 }
                 i++;
@@ -111,7 +110,26 @@ public class SQLControlllerNOK  {
         return data;
     }
 
-
+    public String[][] getNOKEmail(){
+        String countQuery = "SELECT " + DBHelperNok.col_EMAIL  +  " FROM " + DBHelperNok.TABLE_NAME;
+        Cursor cursor = database.rawQuery(countQuery, null);
+        String[][] data = new String[cursor.getCount()][cursor.getColumnCount()];
+        if (cursor != null) {
+            cursor.moveToNext();
+            int i = 0;
+            while (i < cursor.getCount()) {
+                int j = 0;
+                while (j < cursor.getColumnCount()) {
+                    data[i][j] = cursor.getString(j);
+                    j++;
+                }
+                i++;
+                cursor.moveToNext();
+            }
+            cursor.close();
+        }
+        return data;
+    }
 ////    public Cursor fetch() {
 ////        String[] columns = new String[] { DBHelperNok._ID, DBHelperNok.NOK_NAME, DBHelperNok.NOK_EMAIL,
 ////                DBHelperNok.NOK_PHONE};
