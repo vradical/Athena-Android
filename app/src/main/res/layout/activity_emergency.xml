@@ -13,19 +13,19 @@
     <ListView
         android:layout_width="match_parent"
         android:layout_height="131dp"
-        android:id="@+id/emergency_list_view" />
+        android:id="@+id/listViewEmergency" />
 
     <ListView
         android:layout_width="match_parent"
         android:layout_height="215dp"
-        android:id="@+id/emergency_list_view_call"
+        android:id="@+id/listViewEmergencyCall"
         android:layout_weight="0.24" />
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Deactivate Emergency"
-        android:id="@+id/deactivateButtonHandler"
+        android:id="@+id/btnDeactivate"
         android:layout_gravity="center_horizontal"
         android:onClick="deactivateEmergency"/>
 

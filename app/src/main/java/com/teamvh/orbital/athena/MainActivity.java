@@ -5,9 +5,12 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
+import android.location.Criteria;
 import android.location.Geocoder;
 import android.location.Location;
+import android.location.LocationManager;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ResultReceiver;
@@ -26,6 +29,7 @@ import android.widget.EditText;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.app.ListActivity;
@@ -36,7 +40,20 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -95,9 +112,9 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
     final String[] from2 = new String[] {DBHelperNok.col_NAME, DBHelperNok.col_EMAIL, DBHelperNok.col_PHONE};
     final int[] to2 = new int[] { R.id.list_name,R.id.list_email, R.id.list_phone};
     final String[] from3 = new String[] {DBHelperNok.col_PHONE};
-    final int[] to3 = new int[] { R.id.list_phone_only};
+    final int[] to3 = new int[] { R.id.textViewListPhone};
     final String[] from4 = new String[] {DBHelperNok.col_NAME};
-    final int[] to4 = new int[] { R.id.list_nok_name};
+    final int[] to4 = new int[] { R.id.textViewListNokName};
 
 
     protected boolean mRequestingLocationUpdates;
@@ -110,10 +127,18 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
     protected Button mStopUpdatesButton;
     protected Button test;
     protected TextView mLastUpdateTimeTextView;
+
+    //--------------------------------------------Nearby----------------------------------------
+    GoogleMap mGoogleMap;
+
+    String mPlacetype = "hospital";
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         //FOR THE DB
+
         dbcon = new SQLController(this);
         dbcon2 = new SQLControlllerNOK(this);
 
@@ -137,7 +162,6 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 
     public void displayMain(){
         setContentView(R.layout.activity_main);
-
         mTrackListView = (ListView) findViewById(R.id.list_view);
         mTrackListView.setEmptyView(findViewById(R.id.empty_view));
 
@@ -251,12 +275,12 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 
         //sendSMSMessage();
         //sendEmail();
-        eNokPhoneListView = (ListView) findViewById(R.id.emergency_list_view);
+        eNokPhoneListView = (ListView) findViewById(R.id.listViewEmergency);
         Cursor cscs = dbcon2.fetchAllNOK();
         adapter3 = new SimpleCursorAdapter(this,R.layout.activity_noknumbers,cscs,from3,to3,0);
         eNokPhoneListView.setAdapter(adapter3);
 
-        eNokNameListView = (ListView) findViewById(R.id.emergency_list_view_call);
+        eNokNameListView = (ListView) findViewById(R.id.listViewEmergencyCall);
         Cursor cscs2 = dbcon2.fetchAllNOK();
         adapter4 = new SimpleCursorAdapter(this,R.layout.activity_nok_emergency_contact,cscs,from4,to4,0);
         eNokNameListView.setAdapter(adapter4);
@@ -322,10 +346,12 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
                 EditText mUserText;
-                mUserText = (EditText) textEntryView.findViewById(R.id.passcode);
+                mUserText = (EditText) textEntryView.findViewById(R.id.editTextPasscode);
                 String strPinCode = mUserText.getText().toString();
-                if(strPinCode.equals("1234"))
-                    Log.d( TAG, "Yes it is right");
+                if(strPinCode.equals("1234")) {
+                    Log.d(TAG, "Yes it is right");
+                    checkTrigger();
+                }
                 else
                     Log.d( TAG, "Try again");
             }
@@ -340,6 +366,206 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         });
         builder.show();
     }
+
+    public void checkTrigger(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = LayoutInflater.from(this);
+        final View textEntryView = inflater.inflate(R.layout.activity_check_trigger, null);
+        builder.setTitle("Status");
+        builder.setMessage("Please choose one");
+        builder.setView(textEntryView);
+
+        builder.setPositiveButton("Safe", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                displayNearby();
+            }
+        });
+
+        builder.setNegativeButton("False Alarm", new DialogInterface.OnClickListener() {
+
+            public void onClick(DialogInterface dialog, int which) {
+                // TODO Auto-generated method stub
+                return;
+            }
+        });
+        builder.show();
+    }
+
+
+    public void displayNearby(){
+        setContentView(R.layout.activity_safe);
+        SupportMapFragment fragment = ( SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.safe_map);
+
+        // Getting Google Map
+        mGoogleMap = fragment.getMap();
+
+        // Enabling MyLocation in Google Map
+        mGoogleMap.setMyLocationEnabled(true);
+
+        StringBuilder sb = new StringBuilder("https://maps.googleapis.com/maps/api/place/nearbysearch/json?");
+        sb.append("location="+mCurrentLocation.getLatitude()+","+mCurrentLocation.getLongitude());
+        sb.append("&radius=5000");
+        sb.append("&types="+ "hospital");
+        sb.append("&sensor=true");
+        sb.append("&key=AIzaSyBqBalrxkaHi9Ld1jDXxNcvxk-m0o44IcU");
+
+
+        // Creating a new non-ui thread task to download Google place json data
+        PlacesTask placesTask = new PlacesTask();
+        Log.v("haha",sb.toString());
+        // Invokes the "doInBackground()" method of the class PlaceTask
+        placesTask.execute(sb.toString());
+
+
+
+    }
+
+    //---------------------------------------------Nearby------------------------------------
+
+    /** A method to download json data from url */
+    private String downloadUrl(String strUrl) throws IOException {
+        String data = "";
+        InputStream iStream = null;
+        HttpURLConnection urlConnection = null;
+        try{
+            URL url = new URL(strUrl);
+
+
+            // Creating an http connection to communicate with url
+            urlConnection = (HttpURLConnection) url.openConnection();
+
+            // Connecting to url
+            urlConnection.connect();
+
+            // Reading data from url
+            iStream = urlConnection.getInputStream();
+
+            BufferedReader br = new BufferedReader(new InputStreamReader(iStream));
+
+            StringBuffer sb  = new StringBuffer();
+
+            String line = "";
+            while( ( line = br.readLine())  != null){
+                sb.append(line);
+            }
+
+            data = sb.toString();
+
+            br.close();
+
+        }catch(Exception e){
+            Log.d("Exception whilding url", e.toString());
+        }finally{
+            iStream.close();
+            urlConnection.disconnect();
+        }
+
+        return data;
+    }
+
+
+    /** A class, to download Google Places */
+    private class PlacesTask extends AsyncTask<String, Integer, String> {
+
+        String data = null;
+
+        // Invoked by execute() method of this object
+        @Override
+        protected String doInBackground(String... url) {
+            try{
+                data = downloadUrl(url[0]);
+            }catch(Exception e){
+                Log.d("Background Task",e.toString());
+            }
+            return data;
+        }
+
+        // Executed after the complete execution of doInBackground() method
+        @Override
+        protected void onPostExecute(String result){
+            ParserTask parserTask = new ParserTask();
+
+            // Start parsing the Google places in JSON format
+            // Invokes the "doInBackground()" method of the class ParseTask
+            parserTask.execute(result);
+        }
+
+    }
+
+    /** A class to parse the Google Places in JSON format */
+    private class ParserTask extends AsyncTask<String, Integer, List<HashMap<String,String>>>{
+
+        JSONObject jObject;
+
+        // Invoked by execute() method of this object
+        @Override
+        protected List<HashMap<String,String>> doInBackground(String... jsonData) {
+
+            List<HashMap<String, String>> places = null;
+            PlaceJsonParser placeJsonParser = new PlaceJsonParser();
+
+            try{
+                jObject = new JSONObject(jsonData[0]);
+
+                /** Getting the parsed data as a List construct */
+                places = placeJsonParser.parse(jObject);
+
+            }catch(Exception e){
+                Log.d("Exception",e.toString());
+            }
+            return places;
+        }
+
+        // Executed after the complete execution of doInBackground() method
+        @Override
+        protected void onPostExecute(List<HashMap<String,String>> list){
+
+            // Clears all the existing markers
+            mGoogleMap.clear();
+
+            for(int i=0;i<list.size();i++){
+                Log.i("hahahah", "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhheeee");
+
+                // Creating a marker
+                MarkerOptions markerOptions = new MarkerOptions();
+
+                // Getting a place from the places list
+                HashMap<String, String> hmPlace = list.get(i);
+
+                // Getting latitude of the place
+                double lat = Double.parseDouble(hmPlace.get("lat"));
+
+                // Getting longitude of the place
+                double lng = Double.parseDouble(hmPlace.get("lng"));
+
+                // Getting name
+                String name = hmPlace.get("place_name");
+
+                // Getting vicinity
+                String vicinity = hmPlace.get("vicinity");
+
+                LatLng latLng = new LatLng(lat, lng);
+
+                // Setting the position for the marker
+                markerOptions.position(latLng);
+
+                // Setting the title for the marker.
+                //This will be displayed on taping the marker
+                markerOptions.title(name + " : " + vicinity);
+
+                // Placing a marker on the touched position
+                mGoogleMap.addMarker(markerOptions);
+
+            }
+
+        }
+
+    }
+
+
+
+
+
 
 
     //------------------------------------------------Location-------------------------------------------------

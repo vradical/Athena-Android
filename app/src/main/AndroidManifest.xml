@@ -14,11 +14,11 @@
 
     <!-- Creating Permission to receive Google Maps -->
     <permission
-        android:name="com.vradical.ron.maptesting.permission.MAPS_RECEIVE"
+        android:name="com.teamvh.orbital.athena.MAPS_RECEIVE"
         android:protectionLevel="signature" />
 
     <!-- Permission to receive Google Maps -->
-    <uses-permission android:name="com.vradical.ron.maptesting.permission.MAPS_RECEIVE" />
+    <uses-permission android:name="com.teamvh.orbital.athena.MAPS_RECEIVE" />
 
     <!-- Maps API needs OpenGL ES 2.0. -->
     <uses-feature
@@ -52,7 +52,7 @@
             android:value="@integer/google_play_services_version" />
         <meta-data
             android:name="com.google.android.maps.v2.API_KEY"
-            android:value="AIzaSyDy3ILMhQzauvJZEDDVyVmVrR6Y2awIfkA" />
+            android:value="AIzaSyDe3drnYs5a6phD4V1OrDrxDjiFkADJ6Hg" />
 
     </application>
 

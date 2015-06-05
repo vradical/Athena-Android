@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Hospital"
+        android:id="@+id/textView4"
+        android:layout_below="@+id/btnFindH"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="44dp" />
+
+    <Button
+        android:id="@+id/btnFindH"
+        android:layout_width="wrap_content"
+        android:layout_height="60dp"
+        android:text="Call"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
+
+    <Button
+        android:id="@+id/btnRouteH"
+        android:layout_width="wrap_content"
+        android:layout_height="60dp"
+        android:text="Route"
+        android:layout_alignParentTop="true"
+        android:layout_alignLeft="@+id/btnRouteP"
+        android:layout_alignStart="@+id/btnRouteP" />
+
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Police"
+        android:id="@+id/textView5" />
+
+    <Button
+        android:id="@+id/btnFindP"
+        android:layout_width="wrap_content"
+        android:layout_height="60dp"
+        android:text="Call"
+        android:layout_alignTop="@+id/textView4"
+        android:layout_centerHorizontal="true" />
+
+    <Button
+        android:id="@+id/btnRouteP"
+        android:layout_width="wrap_content"
+        android:layout_height="60dp"
+        android:text="Route"
+        android:layout_alignTop="@+id/btnFindP"
+        android:layout_toRightOf="@+id/btnFindP"
+        android:layout_toEndOf="@+id/btnFindP" />
+
+
+    <fragment xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/safe_map"
+        android:layout_width="800dp"
+        android:layout_height="700dp"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_gravity="center_vertical"
+        android:layout_below="@+id/textView4"
+        android:layout_marginTop="116dp"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Return Home"
+        android:id="@+id/button"
+        android:layout_marginBottom="67dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true" />
+
+</RelativeLayout>
