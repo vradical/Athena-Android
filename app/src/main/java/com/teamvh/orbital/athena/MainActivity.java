@@ -407,16 +407,13 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         sb.append("&radius=5000");
         sb.append("&types="+ "hospital");
         sb.append("&sensor=true");
-        sb.append("&key=AIzaSyBqBalrxkaHi9Ld1jDXxNcvxk-m0o44IcU");
-
+        sb.append("&key=AIzaSyCDeAvvUXWhlZZ1aov-zPS20C8enJCExH8");
 
         // Creating a new non-ui thread task to download Google place json data
         PlacesTask placesTask = new PlacesTask();
         Log.v("haha",sb.toString());
         // Invokes the "doInBackground()" method of the class PlaceTask
         placesTask.execute(sb.toString());
-
-
 
     }
 
@@ -429,7 +426,6 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         HttpURLConnection urlConnection = null;
         try{
             URL url = new URL(strUrl);
-
 
             // Creating an http connection to communicate with url
             urlConnection = (HttpURLConnection) url.openConnection();
@@ -459,7 +455,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
             iStream.close();
             urlConnection.disconnect();
         }
-
+        Log.v("haha",data.toString());
         return data;
     }
 
@@ -473,6 +469,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         @Override
         protected String doInBackground(String... url) {
             try{
+                Log.d("Background Task","hehehere");
                 data = downloadUrl(url[0]);
             }catch(Exception e){
                 Log.d("Background Task",e.toString());
@@ -484,7 +481,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         @Override
         protected void onPostExecute(String result){
             ParserTask parserTask = new ParserTask();
-
+            Log.d("Background Task hahaha",result.toString());
             // Start parsing the Google places in JSON format
             // Invokes the "doInBackground()" method of the class ParseTask
             parserTask.execute(result);
@@ -524,7 +521,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
             mGoogleMap.clear();
 
             for(int i=0;i<list.size();i++){
-                Log.i("hahahah", "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhheeee");
+                Log.i("1hahahah", "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhheeee");
 
                 // Creating a marker
                 MarkerOptions markerOptions = new MarkerOptions();
@@ -561,11 +558,6 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         }
 
     }
-
-
-
-
-
 
 
     //------------------------------------------------Location-------------------------------------------------
