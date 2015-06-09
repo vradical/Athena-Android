@@ -89,19 +89,16 @@ public class SQLControlllerNOK  {
         return cnt;
     }
 
-    public String[][] getNOKPhone(){
+    public String[]getNOKPhone(){
         String countQuery = "SELECT " + DBHelperNok.col_PHONE  +  " FROM " + DBHelperNok.TABLE_NAME;
         Cursor cursor = database.rawQuery(countQuery, null);
-        String[][] data = new String[cursor.getCount()][cursor.getColumnCount()];
+        String[] data = new String[cursor.getCount()];
         if (cursor != null) {
             cursor.moveToNext();
             int i = 0;
             while (i < cursor.getCount()) {
                 int j = 0;
-                while (j < cursor.getColumnCount()) {
-                    data[i][j] = cursor.getString(j);
-                    j++;
-                }
+                data[i] = cursor.getString(i);
                 i++;
                 cursor.moveToNext();
             }
@@ -110,19 +107,16 @@ public class SQLControlllerNOK  {
         return data;
     }
 
-    public String[][] getNOKEmail(){
+    public String[] getNOKEmail(){
         String countQuery = "SELECT " + DBHelperNok.col_EMAIL  +  " FROM " + DBHelperNok.TABLE_NAME;
         Cursor cursor = database.rawQuery(countQuery, null);
-        String[][] data = new String[cursor.getCount()][cursor.getColumnCount()];
+        String[] data = new String[cursor.getCount()];
         if (cursor != null) {
             cursor.moveToNext();
             int i = 0;
             while (i < cursor.getCount()) {
                 int j = 0;
-                while (j < cursor.getColumnCount()) {
-                    data[i][j] = cursor.getString(j);
-                    j++;
-                }
+                data[i] = cursor.getString(i);
                 i++;
                 cursor.moveToNext();
             }

@@ -6,7 +6,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="Hospital"
+        android:text="Police"
         android:id="@+id/textView4"
         android:layout_below="@+id/btnFindH"
         android:layout_alignParentLeft="true"
@@ -25,17 +25,18 @@
         android:id="@+id/btnRouteH"
         android:layout_width="wrap_content"
         android:layout_height="60dp"
-        android:text="Route"
+        android:text="Display nearby hospital"
         android:layout_alignParentTop="true"
         android:layout_alignLeft="@+id/btnRouteP"
-        android:layout_alignStart="@+id/btnRouteP" />
+        android:layout_alignStart="@+id/btnRouteP"
+        android:onClick="displayHospital"/>
 
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="Police"
+        android:text="Hospital"
         android:id="@+id/textView5" />
 
     <Button
@@ -44,16 +45,18 @@
         android:layout_height="60dp"
         android:text="Call"
         android:layout_alignTop="@+id/textView4"
-        android:layout_centerHorizontal="true" />
+        android:layout_centerHorizontal="true"
+        />
 
     <Button
         android:id="@+id/btnRouteP"
         android:layout_width="wrap_content"
         android:layout_height="60dp"
-        android:text="Route"
+        android:text="Display nearby police station"
         android:layout_alignTop="@+id/btnFindP"
         android:layout_toRightOf="@+id/btnFindP"
-        android:layout_toEndOf="@+id/btnFindP" />
+        android:layout_toEndOf="@+id/btnFindP"
+        android:onClick="displayPoliceStation"/>
 
 
     <fragment xmlns:android="http://schemas.android.com/apk/res/android"

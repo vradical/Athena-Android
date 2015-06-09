@@ -74,8 +74,8 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
     protected boolean mAddressRequested;
 
 
-    public String[][] nokPhoneArray = null;
-    public String[][] nokEmailArray = null;
+    public String[] nokPhoneArray = null;
+    public String[] nokEmailArray = null;
 
     public int numberOfNok = 0;
     public String sendLocation = null;
@@ -131,14 +131,12 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
     //--------------------------------------------Nearby----------------------------------------
     GoogleMap mGoogleMap;
 
-    String mPlacetype = "hospital";
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //FOR THE DB
 
+        //FOR THE DB
         dbcon = new SQLController(this);
         dbcon2 = new SQLControlllerNOK(this);
 
@@ -148,8 +146,6 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 
         displayMain();
         updateValuesFromBundle(savedInstanceState);
-
-
     }
 
     @Override
@@ -258,10 +254,30 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 
 
     public void emergencyButtonHandler(View view) {
+            //original
         setContentView(R.layout.activity_emergency);
         numberOfNok = dbcon2.getNumOfNOK();
         nokPhoneArray = dbcon2.getNOKPhone();
         sendLocation = mAddressOutput;
+
+        eNokPhoneListView = (ListView) findViewById(R.id.listViewEmergency);
+        Cursor cscs = dbcon2.fetchAllNOK();
+        adapter3 = new SimpleCursorAdapter(this,R.layout.activity_noknumbers,cscs,from3,to3,0);
+        eNokPhoneListView.setAdapter(adapter3);
+        eNokNameListView = (ListView) findViewById(R.id.listViewEmergencyCall);
+        Cursor cscs2 = dbcon2.fetchAllNOK();
+        adapter4 = new SimpleCursorAdapter(this,R.layout.activity_nok_emergency_contact,cscs,from4,to4,0);
+        eNokNameListView.setAdapter(adapter4);
+        //ends here
+//
+//        Intent intent = new Intent (this,GooglePlaces.class);
+//        intent.putExtra("numberOfNok",numberOfNok);
+//        intent.putExtra("numberOfNokPhoneArray", nokPhoneArray);
+//        intent.putExtra("location",sendLocation);
+
+
+
+
 //        Toast.makeText(this,"Number of NOK in DB " + nokPhoneArray.length +
 //                " Are they the same? " + numberOfNok +
 //                " 1st number " + nokPhoneArray[0][0]+
@@ -275,22 +291,14 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 
         //sendSMSMessage();
         //sendEmail();
-        eNokPhoneListView = (ListView) findViewById(R.id.listViewEmergency);
-        Cursor cscs = dbcon2.fetchAllNOK();
-        adapter3 = new SimpleCursorAdapter(this,R.layout.activity_noknumbers,cscs,from3,to3,0);
-        eNokPhoneListView.setAdapter(adapter3);
 
-        eNokNameListView = (ListView) findViewById(R.id.listViewEmergencyCall);
-        Cursor cscs2 = dbcon2.fetchAllNOK();
-        adapter4 = new SimpleCursorAdapter(this,R.layout.activity_nok_emergency_contact,cscs,from4,to4,0);
-        eNokNameListView.setAdapter(adapter4);
     }
 
     protected void sendSMSMessage() {
         for(int i = 0 ; i < numberOfNok ; i++){
             try {
                 SmsManager smsManager = SmsManager.getDefault();
-                smsManager.sendTextMessage(nokPhoneArray[i][0], null, "This is an emergency, your friend/relative/child has been compromised please " +
+                smsManager.sendTextMessage(nokPhoneArray[i], null, "This is an emergency, your friend/relative/child has been compromised please " +
                         "contact him/her ASAP. His/her current location is at " + sendLocation, null, null);
                 Toast.makeText(getApplicationContext(), "SMS sent.",
                         Toast.LENGTH_LONG).show();
@@ -311,7 +319,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         for(int i = 0 ; i < numberOfNok ; i++) {
         // prompts email clients only
         email.setType("message/rfc822");
-        email.putExtra(Intent.EXTRA_EMAIL, nokEmailArray[i][0]);
+        email.putExtra(Intent.EXTRA_EMAIL, nokEmailArray[i]);
         email.putExtra(Intent.EXTRA_SUBJECT, "Emergency");
         email.putExtra(Intent.EXTRA_TEXT, "testing");
             try {
@@ -328,7 +336,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
     public void callNOK(View view){
         Intent callIntent = new Intent(Intent.ACTION_CALL);
         final int positionNOK = eNokNameListView.getPositionForView((View) view.getParent());
-        callIntent.setData(Uri.parse("tel:" + nokPhoneArray[positionNOK][0]));
+        callIntent.setData(Uri.parse("tel:" + nokPhoneArray[positionNOK]));
         startActivity(callIntent);
     }
     /**
@@ -392,29 +400,45 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
     }
 
 
-    public void displayNearby(){
+    public void displayNearby() {
         setContentView(R.layout.activity_safe);
         SupportMapFragment fragment = ( SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.safe_map);
-
         // Getting Google Map
         mGoogleMap = fragment.getMap();
-
         // Enabling MyLocation in Google Map
         mGoogleMap.setMyLocationEnabled(true);
 
+    }
+
+    public void displayHospital(View view){
         StringBuilder sb = new StringBuilder("https://maps.googleapis.com/maps/api/place/nearbysearch/json?");
-        sb.append("location="+mCurrentLocation.getLatitude()+","+mCurrentLocation.getLongitude());
+        sb.append("location=" + mCurrentLocation.getLatitude() + "," + mCurrentLocation.getLongitude());
         sb.append("&radius=5000");
-        sb.append("&types="+ "hospital");
+        sb.append("&types=" + "hospital");
         sb.append("&sensor=true");
         sb.append("&key=AIzaSyCDeAvvUXWhlZZ1aov-zPS20C8enJCExH8");
 
         // Creating a new non-ui thread task to download Google place json data
         PlacesTask placesTask = new PlacesTask();
-        Log.v("haha",sb.toString());
+        Log.v("haha", sb.toString());
         // Invokes the "doInBackground()" method of the class PlaceTask
         placesTask.execute(sb.toString());
 
+    }
+
+    public void displayPoliceStation(View view){
+        StringBuilder sb = new StringBuilder("https://maps.googleapis.com/maps/api/place/nearbysearch/json?");
+        sb.append("location="+mCurrentLocation.getLatitude()+","+mCurrentLocation.getLongitude());
+        sb.append("&radius=5000");
+        sb.append("&types=" + "police");
+        sb.append("&sensor=true");
+        sb.append("&key=AIzaSyCDeAvvUXWhlZZ1aov-zPS20C8enJCExH8");
+
+        // Creating a new non-ui thread task to download Google place json data
+        PlacesTask placesTask = new PlacesTask();
+        Log.v("haha", sb.toString());
+        // Invokes the "doInBackground()" method of the class PlaceTask
+        placesTask.execute(sb.toString());
     }
 
     //---------------------------------------------Nearby------------------------------------
