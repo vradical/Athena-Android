@@ -1,5 +1,9 @@
 package com.teamvh.orbital.athena;
 
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.location.Geocoder;
@@ -73,9 +77,9 @@ public class MainActivity extends ActionBarActivity  implements GoogleApiClient.
 
     //high alert function
     protected Button mStartHighAlertButton;
-    protected TextView mAlertTimeLeft;
-    protected LayoutInflater layoutInflater;
     protected PopupWindow popupWindow;
+    protected CountDownTimer highAlertCD;
+    protected TextView mAlertTimeLeft;
 
 
     @Override
@@ -105,7 +109,7 @@ public class MainActivity extends ActionBarActivity  implements GoogleApiClient.
 
         //High alert button
         mStartHighAlertButton = (Button) findViewById(R.id.high_alert_button);
-        mAlertTimeLeft = (Button) findViewById(R.id.alert_time_left);
+
 
         // Set defaults, then update using values stored in the Bundle.
         mAddressRequested = false;
@@ -282,20 +286,11 @@ public class MainActivity extends ActionBarActivity  implements GoogleApiClient.
         updateAddress();
         fetchDB();
 
-        layoutInflater = (LayoutInflater) getBaseContext().getSystemService(LAYOUT_INFLATER_SERVICE);
-        View popupView = layoutInflater.inflate(R.layout.high_alert_window, null);
-        popupWindow = new PopupWindow(popupView, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        popupWindow.showAtLocation(mStartHighAlertButton, Gravity.CENTER, 0, 0);
-       /* new CountDownTimer(5000, 5000) {
-            public void onTick(long millisUntilFinished) {
-                mAlertTimeLeft.setText("Time Left: " + millisUntilFinished / 1000);
-            }
-
-            public void onFinish() {
-                mAlertTimeLeft.setText("done!");
-            }
-        }.start();*/
+        highAlertCD = new SafetyCountDown(5000, 5000, 1);
+        highAlertCD.start();
     }
+
+
 
     public void stillSafe(View view) {
         popupWindow.dismiss();
@@ -464,5 +459,47 @@ public class MainActivity extends ActionBarActivity  implements GoogleApiClient.
             mAddressRequested = false;
         }
     }
+
+    public class SafetyCountDown extends CountDownTimer {
+
+        protected CountDownTimer HASafetyCheck;
+        protected int cdType;
+        protected int safetyCount;
+        protected AlertDialog.Builder safetyCheck;
+        protected AlertDialog safeAlert;
+
+        public SafetyCountDown(long startTime, long interval, int type) {
+            super(startTime, interval);
+            cdType = type;
+            safetyCheck = new AlertDialog.Builder(MainActivity.this);
+            safetyCheck.setCancelable(false);
+            safetyCheck.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+                    dialog.cancel();
+                }
+            });
+            safeAlert = safetyCheck.create();
+        }
+
+        @Override
+        public void onFinish() {
+            if(cdType == 1) {
+              //  popUpAlert();
+                HASafetyCheck = new SafetyCountDown(5000, 5000, 2);
+                HASafetyCheck.start();
+            }else {
+                safetyCount++;
+            }
+        }
+
+        @Override
+        public void onTick(long millisUntilFinished) {
+            safetyCheck.setMessage("Are you safe?" + millisUntilFinished / 1000);
+            safeAlert.show();
+               // safetyCheck.setMessage("Are you safe?" + millisUntilFinished / 1000);
+        }
+
+    }
+
 }
 
