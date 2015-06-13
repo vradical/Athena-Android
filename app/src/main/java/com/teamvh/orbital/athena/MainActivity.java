@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.location.Criteria;
 import android.location.Geocoder;
 import android.location.Location;
@@ -40,11 +42,16 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 import org.json.JSONObject;
 
@@ -405,9 +412,17 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         SupportMapFragment fragment = ( SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.safe_map);
         // Getting Google Map
         mGoogleMap = fragment.getMap();
-        // Enabling MyLocation in Google Map
-        mGoogleMap.setMyLocationEnabled(true);
 
+        // Enabling go to current location in Google Map
+        LatLng ll = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
+        CameraUpdate update = CameraUpdateFactory.newLatLngZoom(ll, 12);
+        mGoogleMap.animateCamera(update);
+
+        //Add a marker to the current location
+        mGoogleMap.addMarker(new MarkerOptions().
+                position(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude())).
+                title("You are here").
+                icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
     }
 
     public void displayHospital(View view){
@@ -417,16 +432,16 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         sb.append("&types=" + "hospital");
         sb.append("&sensor=true");
         sb.append("&key=AIzaSyCDeAvvUXWhlZZ1aov-zPS20C8enJCExH8");
-
         // Creating a new non-ui thread task to download Google place json data
         PlacesTask placesTask = new PlacesTask();
-        Log.v("haha", sb.toString());
         // Invokes the "doInBackground()" method of the class PlaceTask
         placesTask.execute(sb.toString());
 
     }
 
     public void displayPoliceStation(View view){
+        //Retrieve the information from url
+        //Ensure the key is a browser key
         StringBuilder sb = new StringBuilder("https://maps.googleapis.com/maps/api/place/nearbysearch/json?");
         sb.append("location="+mCurrentLocation.getLatitude()+","+mCurrentLocation.getLongitude());
         sb.append("&radius=5000");
@@ -436,55 +451,13 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 
         // Creating a new non-ui thread task to download Google place json data
         PlacesTask placesTask = new PlacesTask();
-        Log.v("haha", sb.toString());
         // Invokes the "doInBackground()" method of the class PlaceTask
         placesTask.execute(sb.toString());
     }
 
     //---------------------------------------------Nearby------------------------------------
 
-    /** A method to download json data from url */
-    private String downloadUrl(String strUrl) throws IOException {
-        String data = "";
-        InputStream iStream = null;
-        HttpURLConnection urlConnection = null;
-        try{
-            URL url = new URL(strUrl);
-
-            // Creating an http connection to communicate with url
-            urlConnection = (HttpURLConnection) url.openConnection();
-
-            // Connecting to url
-            urlConnection.connect();
-
-            // Reading data from url
-            iStream = urlConnection.getInputStream();
-
-            BufferedReader br = new BufferedReader(new InputStreamReader(iStream));
-
-            StringBuffer sb  = new StringBuffer();
-
-            String line = "";
-            while( ( line = br.readLine())  != null){
-                sb.append(line);
-            }
-
-            data = sb.toString();
-
-            br.close();
-
-        }catch(Exception e){
-            Log.d("Exception whilding url", e.toString());
-        }finally{
-            iStream.close();
-            urlConnection.disconnect();
-        }
-        Log.v("haha",data.toString());
-        return data;
-    }
-
-
-    /** A class, to download Google Places */
+   /** A class, to download Google Places */
     private class PlacesTask extends AsyncTask<String, Integer, String> {
 
         String data = null;
@@ -493,8 +466,8 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         @Override
         protected String doInBackground(String... url) {
             try{
-                Log.d("Background Task","hehehere");
-                data = downloadUrl(url[0]);
+                HttpConnection http = new HttpConnection();
+                data = http.downloadUrl(url[0]);
             }catch(Exception e){
                 Log.d("Background Task",e.toString());
             }
@@ -505,7 +478,6 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         @Override
         protected void onPostExecute(String result){
             ParserTask parserTask = new ParserTask();
-            Log.d("Background Task hahaha",result.toString());
             // Start parsing the Google places in JSON format
             // Invokes the "doInBackground()" method of the class ParseTask
             parserTask.execute(result);
@@ -544,9 +516,13 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
             // Clears all the existing markers
             mGoogleMap.clear();
 
-            for(int i=0;i<list.size();i++){
-                Log.i("1hahahah", "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhheeee");
+            // Place the current back after clearing
+            mGoogleMap.addMarker(new MarkerOptions().
+                    position(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude())).
+                    title("You are here").
+                    icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
 
+            for(int i=0;i<list.size();i++){
                 // Creating a marker
                 MarkerOptions markerOptions = new MarkerOptions();
 
@@ -554,10 +530,10 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
                 HashMap<String, String> hmPlace = list.get(i);
 
                 // Getting latitude of the place
-                double lat = Double.parseDouble(hmPlace.get("lat"));
+                double dlat = Double.parseDouble(hmPlace.get("lat"));
 
                 // Getting longitude of the place
-                double lng = Double.parseDouble(hmPlace.get("lng"));
+                double dlng = Double.parseDouble(hmPlace.get("lng"));
 
                 // Getting name
                 String name = hmPlace.get("place_name");
@@ -565,23 +541,118 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
                 // Getting vicinity
                 String vicinity = hmPlace.get("vicinity");
 
-                LatLng latLng = new LatLng(lat, lng);
+                LatLng latLng = new LatLng(dlat, dlng);
 
                 // Setting the position for the marker
                 markerOptions.position(latLng);
 
                 // Setting the title for the marker.
-                //This will be displayed on taping the marker
-                markerOptions.title(name + " : " + vicinity);
+                markerOptions.title(dlat + " " + dlng + " " + name + " : " + vicinity);
 
                 // Placing a marker on the touched position
                 mGoogleMap.addMarker(markerOptions);
 
+                // Add OnClickListener to the markers if selected will trigger getRoute function by passing lat and lng
+                mGoogleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+                    @Override
+                    public boolean onMarkerClick(Marker marker) {
+                        getRoute(marker.getPosition().latitude, marker.getPosition().longitude);
+                        return false;
+                    }
+                });
             }
 
         }
 
     }
+
+    //-----------------------------------------------Route-----------------------------------------------------
+    public void getRoute(double destinationLat, double destinationLng){
+        Toast.makeText(MainActivity.this, destinationLat + " " + destinationLng, Toast.LENGTH_SHORT).show();
+
+        String startPoint = "origin=" + mCurrentLocation.getLatitude() + "," + mCurrentLocation.getLongitude();
+        String destPoint = "destination=" + destinationLat+ "," + destinationLng;
+
+        String sensor = "sensor=false";
+        String params = startPoint + "&" + destPoint + "&" + sensor;
+        String output = "json";
+        String url = "https://maps.googleapis.com/maps/api/directions/"
+                + output + "?" + params;
+        Log.v("Path ", url.toString());
+        RouteTask routeTask = new RouteTask();
+        routeTask.execute(url);
+    }
+
+    private class RouteTask extends AsyncTask<String, Void, String> {
+        @Override
+        protected String doInBackground(String... url) {
+            String data = "";
+            try {
+                HttpConnection http = new HttpConnection();
+                data = http.downloadUrl(url[0]);
+            } catch (Exception e) {
+                Log.d("Background Task", e.toString());
+            }
+            return data;
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+            new ParserTaskR().execute(result);
+        }
+    }
+
+    private class ParserTaskR extends AsyncTask<String, Integer, List<List<HashMap<String, String>>>> {
+
+        @Override
+        protected List<List<HashMap<String, String>>> doInBackground(
+                String... jsonData) {
+
+            JSONObject jObject;
+            List<List<HashMap<String, String>>> routes = null;
+
+            try {
+                jObject = new JSONObject(jsonData[0]);
+                PathJSONParser parser = new PathJSONParser();
+                routes = parser.parse(jObject);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return routes;
+        }
+
+        @Override
+        protected void onPostExecute(List<List<HashMap<String, String>>> routes) {
+            ArrayList<LatLng> points = null;
+            PolylineOptions polyLineOptions = null;
+
+            // traversing through routes
+            for (int i = 0; i < routes.size(); i++) {
+                points = new ArrayList<LatLng>();
+                polyLineOptions = new PolylineOptions();
+                List<HashMap<String, String>> path = routes.get(i);
+
+                for (int j = 0; j < path.size(); j++) {
+                    HashMap<String, String> point = path.get(j);
+
+                    double lat = Double.parseDouble(point.get("lat"));
+                    double lng = Double.parseDouble(point.get("lng"));
+                    LatLng position = new LatLng(lat, lng);
+
+                    points.add(position);
+                }
+
+                polyLineOptions.addAll(points);
+                polyLineOptions.width(6);
+                polyLineOptions.color(Color.BLUE);
+            }
+
+            mGoogleMap.addPolyline(polyLineOptions);
+        }
+    }
+
+
 
 
     //------------------------------------------------Location-------------------------------------------------
