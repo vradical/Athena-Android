@@ -1,8 +1,6 @@
 package com.teamvh.orbital.athena;
 
-import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
@@ -15,17 +13,13 @@ import android.os.ResultReceiver;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
-import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.PopupWindow;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -77,10 +71,11 @@ public class MainActivity extends ActionBarActivity  implements GoogleApiClient.
 
     //high alert function
     protected Button mStartHighAlertButton;
-    protected PopupWindow popupWindow;
     protected CountDownTimer highAlertCD;
-    protected TextView mAlertTimeLeft;
 
+    protected AlertDialog safeAlert;
+    protected int safetyCount = 0;
+    protected TextView alertMessage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -286,14 +281,13 @@ public class MainActivity extends ActionBarActivity  implements GoogleApiClient.
         updateAddress();
         fetchDB();
 
-        highAlertCD = new SafetyCountDown(5000, 5000, 1);
+        highAlertCD = new SafetyCountDown(5000, 1000, 1);
         highAlertCD.start();
     }
 
-
-
-    public void stillSafe(View view) {
-        popupWindow.dismiss();
+    public void stillSafe() {
+        highAlertCD.cancel();
+        highAlertCD.start();
     }
 
     //end of high alert
@@ -462,41 +456,49 @@ public class MainActivity extends ActionBarActivity  implements GoogleApiClient.
 
     public class SafetyCountDown extends CountDownTimer {
 
-        protected CountDownTimer HASafetyCheck;
         protected int cdType;
-        protected int safetyCount;
         protected AlertDialog.Builder safetyCheck;
-        protected AlertDialog safeAlert;
+        protected CountDownTimer TriggerCountDown;
 
-        public SafetyCountDown(long startTime, long interval, int type) {
+        public SafetyCountDown(long startTime, long interval, int cdType) {
             super(startTime, interval);
-            cdType = type;
-            safetyCheck = new AlertDialog.Builder(MainActivity.this);
-            safetyCheck.setCancelable(false);
-            safetyCheck.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int id) {
-                    dialog.cancel();
-                }
-            });
-            safeAlert = safetyCheck.create();
+            this.cdType = cdType;
         }
 
         @Override
         public void onFinish() {
             if(cdType == 1) {
-              //  popUpAlert();
-                HASafetyCheck = new SafetyCountDown(5000, 5000, 2);
-                HASafetyCheck.start();
-            }else {
-                safetyCount++;
+                safetyCheck = new AlertDialog.Builder(MainActivity.this, 4);
+                safetyCheck.setCancelable(false);
+                safetyCheck.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        safetyCount = 0;
+                        TriggerCountDown.cancel();
+                        dialog.cancel();
+                        stillSafe();
+                    }
+                });
+                safetyCheck.setTitle("Are you safe?");
+                safetyCheck.setMessage("Counting down...");
+                safeAlert = safetyCheck.create();
+                safeAlert.show();
+                alertMessage = (TextView) safeAlert.findViewById(android.R.id.message);
+                TriggerCountDown = new SafetyCountDown(60000, 1000, 2);
+                TriggerCountDown.start();
+            }else{
+                if(safetyCount > 2){
+                    //trigger emergency
+                }else{
+                    safetyCount++;
+                }
             }
         }
 
         @Override
         public void onTick(long millisUntilFinished) {
-            safetyCheck.setMessage("Are you safe?" + millisUntilFinished / 1000);
-            safeAlert.show();
-               // safetyCheck.setMessage("Are you safe?" + millisUntilFinished / 1000);
+            if(cdType == 2) {
+                alertMessage.setText("Remaining time = " + millisUntilFinished / 1000);
+            }
         }
 
     }
