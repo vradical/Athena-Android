@@ -72,11 +72,23 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Activate High Alert"
-            android:id="@+id/high_alert_button"
+            android:id="@+id/start_high_alert_button"
+            android:enabled="false"
             android:layout_below="@+id/start_updates_button"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
             android:onClick="startHighAlertMode" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Deactivate High Alert"
+            android:id="@+id/stop_high_alert_button"
+            android:onClick="stopHighAlertMode"
+            android:enabled="false"
+            android:layout_alignBottom="@+id/start_high_alert_button"
+            android:layout_toRightOf="@+id/start_high_alert_button"
+            android:layout_toEndOf="@+id/start_high_alert_button" />
     </RelativeLayout>
 
     <LinearLayout

@@ -73,6 +73,7 @@ public class MainActivity extends ActionBarActivity  implements GoogleApiClient.
 
     //high alert function
     protected Button mStartHighAlertButton;
+    protected Button mStopHighAlertButton;
     protected CountDownTimer highAlertCD;
 
     protected AlertDialog safeAlert;
@@ -107,7 +108,8 @@ public class MainActivity extends ActionBarActivity  implements GoogleApiClient.
         mLastUpdateTime = "";
 
         //High alert button
-        mStartHighAlertButton = (Button) findViewById(R.id.high_alert_button);
+        mStartHighAlertButton = (Button) findViewById(R.id.start_high_alert_button);
+        mStopHighAlertButton = (Button) findViewById(R.id.stop_high_alert_button);
         v = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
 
 
@@ -260,20 +262,30 @@ public class MainActivity extends ActionBarActivity  implements GoogleApiClient.
         if (mRequestingLocationUpdates) {
             mStartUpdatesButton.setEnabled(false);
             mStopUpdatesButton.setEnabled(true);
+            mStartHighAlertButton.setEnabled(true);
         } else {
             mStartUpdatesButton.setEnabled(true);
             mStopUpdatesButton.setEnabled(false);
+            mStartHighAlertButton.setEnabled(false);
         }
     }
 
     //additionl method for high alert
 
     public void startHighAlertMode(View view){
-        if(mRequestingLocationUpdates){
+        if(mRequestingLocationUpdates) {
             startHighAlert();
             mStartHighAlertButton.setEnabled(false);
+            mStopHighAlertButton.setEnabled(true);
         }
+    }
 
+    public void stopHighAlertMode(View view){
+        if(mRequestingLocationUpdates) {
+            stopHighAlert();
+            mStartHighAlertButton.setEnabled(true);
+            mStopHighAlertButton.setEnabled(false);
+        }
     }
 
     protected void startHighAlert() {
@@ -288,6 +300,12 @@ public class MainActivity extends ActionBarActivity  implements GoogleApiClient.
 
         highAlertCD = new SafetyCountDown(5000, 1000, 1);
         highAlertCD.start();
+    }
+
+    protected void stopHighAlert(){
+        highAlertCD.cancel();
+        LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+        startLocationUpdates();
     }
 
     public void stillSafe() {
