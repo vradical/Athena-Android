@@ -77,7 +77,7 @@ public class MainActivity extends ActionBarActivity  implements GoogleApiClient.
     protected CountDownTimer highAlertCD;
 
     protected AlertDialog safeAlert;
-    protected int safetyCount = 0;
+    protected int safetyCount = 1;
     protected TextView alertMessage;
 
     protected Vibrator v;
@@ -508,14 +508,18 @@ public class MainActivity extends ActionBarActivity  implements GoogleApiClient.
                 safeAlert = safetyCheck.create();
                 safeAlert.show();
                 alertMessage = (TextView) safeAlert.findViewById(android.R.id.message);
-                TriggerCountDown = new SafetyCountDown(60000, 1000, 2);
+                TriggerCountDown = new SafetyCountDown(20000, 1000, 2);
                 TriggerCountDown.start();
-                v.vibrate(60000);
+                v.vibrate(20000);
             }else{
-                if(safetyCount > 2){
-                    //trigger emergency
+                if(safetyCount > 1){
+                //trigger emergency
+                alertMessage.setText("No response from user - Triggering Emergency mode");
                 }else{
                     safetyCount++;
+                    stillSafe();
+                    safeAlert.cancel();
+                    safeAlert.cancel();
                 }
             }
         }
@@ -523,7 +527,7 @@ public class MainActivity extends ActionBarActivity  implements GoogleApiClient.
         @Override
         public void onTick(long millisUntilFinished) {
             if(cdType == 2) {
-                alertMessage.setText("Remaining time = " + millisUntilFinished / 1000);
+                alertMessage.setText("Remaining time = " + millisUntilFinished / 1000 +"\n[Safety count is at " + safetyCount + "]");
             }
         }
 
