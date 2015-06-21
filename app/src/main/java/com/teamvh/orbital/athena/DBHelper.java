@@ -20,6 +20,8 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String TRACK_TIME = "DateTime";
 
     // Database Information
+
+    //Map db
     static final String DB_NAME = "MAP_TRACKLIST.DB";
 
     // database version
@@ -32,6 +34,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public DBHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
     }
+
 
     @Override
     public void onCreate(SQLiteDatabase db) {

@@ -26,7 +26,6 @@ public class SQLController {
         dbHelper = new DBHelper(ourcontext);
         database = dbHelper.getWritableDatabase();
         return this;
-
     }
 
     public void close() {
@@ -66,4 +65,6 @@ public class SQLController {
     public void delete(long _id) {
         database.delete(DBHelper.TABLE_NAME, DBHelper._ID + "=" + _id, null);
     }
+
+
 }

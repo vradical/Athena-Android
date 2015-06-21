@@ -79,7 +79,6 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 
     protected GoogleApiClient mGoogleApiClient;
     protected Location mCurrentLocation;
-
     protected boolean mAddressRequested;
 
 
@@ -137,8 +136,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
     protected Button test;
     protected TextView mLastUpdateTimeTextView;
 
-    //--------------------------------------------Nearby----------------------------------------
-    GoogleMap mGoogleMap;
+<<<<<<< HEAD
     //high alert function
     protected Button mStartHighAlertButton;
     protected Button mStopHighAlertButton;
@@ -149,6 +147,11 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
     protected TextView alertMessage;
 
     protected Vibrator v;
+=======
+    //--------------------------------------------Nearby----------------------------------------
+    GoogleMap mGoogleMap;
+
+>>>>>>> features/emergency
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -202,8 +205,6 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         // Set defaults, then update using values stored in the Bundle.
         mAddressRequested = false;
         mAddressOutput = "";
-        updateValuesFromBundle(savedInstanceState);
-
         buildGoogleApiClient();
     }
     //MENU SETTINGS
@@ -806,6 +807,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         }
     }
 
+
     /**
      * Ensures that only one button is enabled at any time. The Start Updates button is enabled
      * if the user is not requesting location updates. The Stop Updates button is enabled if the
@@ -853,7 +855,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 
         highAlertCD = new SafetyCountDown(5000, 1000, 1);
         highAlertCD.start();
-        }
+    }
 
     protected void stopHighAlert(){
         highAlertCD.cancel();
@@ -971,28 +973,6 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         // attempt to re-establish the connection.
         Log.i(TAG, "Connection suspended");
         mGoogleApiClient.connect();
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
     }
 
     /**

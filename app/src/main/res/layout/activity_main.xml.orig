@@ -58,6 +58,7 @@
             android:layout_gravity="center_horizontal"
             android:onClick="startUpdatesButtonHandler" />
 
+
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -71,26 +72,7 @@
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_toRightOf="@id/stop_updates_button"
-            android:layout_below="@id/track_location_time"
-            android:text="Emergency"
-            android:id="@+id/emergency_button"
-            android:layout_gravity="center_horizontal"
-            android:onClick="emergencyButtonHandler" />
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_toRightOf="@id/emergency_button"
-            android:layout_below="@id/track_location_time"
-            android:text="SeeDB"
-            android:onClick="seeDB"
-            android:id="@+id/testingButton"
-            android:layout_gravity="center_horizontal" />
-
-<Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+<<<<<<< HEAD
             android:text="Activate High Alert"
             android:id="@+id/start_high_alert_button"
             android:enabled="false"
@@ -98,30 +80,48 @@
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
             android:onClick="startHighAlertMode" />
+=======
+            android:layout_toRightOf="@id/stop_updates_button"
+            android:layout_below="@id/track_location_time"
+            android:text="Emergency"
+            android:id="@+id/emergency_button"
+            android:layout_gravity="center_horizontal"
+            android:onClick="emergencyButtonHandler" />
+>>>>>>> features/emergency
 
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+<<<<<<< HEAD
             android:text="Deactivate High Alert"
             android:id="@+id/stop_high_alert_button"
             android:onClick="stopHighAlertMode"
             android:enabled="false"
             android:layout_alignBottom="@+id/start_high_alert_button"
             android:layout_toRightOf="@+id/start_high_alert_button"
-            android:layout_toEndOf="@+id/start_high_alert_button" />    
+            android:layout_toEndOf="@+id/start_high_alert_button" />
+=======
+            android:layout_toRightOf="@id/emergency_button"
+            android:layout_below="@id/track_location_time"
+            android:text="SeeDB"
+            android:onClick="seeDB"
+            android:id="@+id/testingButton"
+            android:layout_gravity="center_horizontal" />
 
-</RelativeLayout>
+>>>>>>> features/emergency
+    </RelativeLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_weight="0.4">
+        android:layout_weight="0.4"
+        android:orientation="vertical">
 
         <ListView
-            android:id="@+id/list_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:dividerHeight="1dp"
+            android:id="@+id/list_view"
             android:padding="10dp" >
         </ListView>
 

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:weightSum="1">
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="Emergency Message sent to the following numbers"
+        android:id="@+id/textView" />
+
+    <ListView
+        android:layout_width="match_parent"
+        android:layout_height="131dp"
+        android:id="@+id/listViewEmergency" />
+
+    <ListView
+        android:layout_width="match_parent"
+        android:layout_height="215dp"
+        android:id="@+id/listViewEmergencyCall"
+        android:layout_weight="0.24" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Deactivate Emergency"
+        android:id="@+id/btnDeactivate"
+        android:layout_gravity="center_horizontal"
+        android:onClick="deactivateEmergency"/>
+
+
+</LinearLayout>
