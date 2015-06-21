@@ -1,6 +1,7 @@
 package com.teamvh.orbital.athena;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
@@ -10,6 +11,7 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.ResultReceiver;
+import android.os.Vibrator;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
@@ -77,6 +79,8 @@ public class MainActivity extends ActionBarActivity  implements GoogleApiClient.
     protected int safetyCount = 0;
     protected TextView alertMessage;
 
+    protected Vibrator v;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -104,6 +108,7 @@ public class MainActivity extends ActionBarActivity  implements GoogleApiClient.
 
         //High alert button
         mStartHighAlertButton = (Button) findViewById(R.id.high_alert_button);
+        v = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
 
 
         // Set defaults, then update using values stored in the Bundle.
@@ -460,6 +465,7 @@ public class MainActivity extends ActionBarActivity  implements GoogleApiClient.
         protected AlertDialog.Builder safetyCheck;
         protected CountDownTimer TriggerCountDown;
 
+
         public SafetyCountDown(long startTime, long interval, int cdType) {
             super(startTime, interval);
             this.cdType = cdType;
@@ -474,6 +480,7 @@ public class MainActivity extends ActionBarActivity  implements GoogleApiClient.
                     public void onClick(DialogInterface dialog, int id) {
                         safetyCount = 0;
                         TriggerCountDown.cancel();
+                        v.cancel();
                         dialog.cancel();
                         stillSafe();
                     }
@@ -485,6 +492,7 @@ public class MainActivity extends ActionBarActivity  implements GoogleApiClient.
                 alertMessage = (TextView) safeAlert.findViewById(android.R.id.message);
                 TriggerCountDown = new SafetyCountDown(60000, 1000, 2);
                 TriggerCountDown.start();
+                v.vibrate(60000);
             }else{
                 if(safetyCount > 2){
                     //trigger emergency

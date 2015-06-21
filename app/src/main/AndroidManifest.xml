@@ -16,6 +16,7 @@
 
     <!-- Permission to receive Google Maps -->
     <uses-permission android:name="com.vradical.ron.maptesting.permission.MAPS_RECEIVE" />
+    <uses-permission android:name="android.permission.VIBRATE"/>
 
     <!-- Maps API needs OpenGL ES 2.0. -->
     <uses-feature
