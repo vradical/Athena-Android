@@ -29,6 +29,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.facebook.FacebookSdk;
+import com.facebook.appevents.AppEventsLogger;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
@@ -136,6 +138,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        FacebookSdk.sdkInitialize(getApplicationContext());
 
         //FOR THE DB
         dbcon = new SQLController(this);
@@ -188,7 +191,6 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
                 displayMain();
                 break;
             case R.id.helpInfo:
-
                 break;
             case R.id.history:
 
@@ -894,6 +896,8 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         if (mGoogleApiClient.isConnected() && !mRequestingLocationUpdates) {
             startLocationUpdates();
         }
+
+        AppEventsLogger.activateApp(this);
     }
 
     @Override
@@ -923,6 +927,8 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
     protected void onPause() {
         super.onPause();
         stopLocationUpdates();
+
+        AppEventsLogger.deactivateApp(this);
     }
 
     public void onSaveInstanceState(Bundle savedInstanceState) {

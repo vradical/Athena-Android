@@ -9,5 +9,7 @@
     <string name="no_geocoder_available">No GeoCoder Available</string>
     <string name="no_location_data_provided">No Location Data</string>
 
+    <string name="facebook_app_id">572141746261611</string>
+
 
 </resources>
