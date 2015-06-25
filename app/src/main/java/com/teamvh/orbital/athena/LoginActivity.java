@@ -6,12 +6,10 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Toast;
 
-import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
-import com.facebook.FacebookSdk;
 import com.facebook.Profile;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
@@ -37,19 +35,10 @@ public class LoginActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         //INITIALIZE FACEBOOK
-        FacebookSdk.sdkInitialize(getApplicationContext());
 
         //FACEBOOK LOGIN
         callbackManager = CallbackManager.Factory.create();
 
-        accessTokenTracker = new AccessTokenTracker() {
-            @Override
-            protected void onCurrentAccessTokenChanged(AccessToken oldAccessToken, AccessToken newAccessToken) {
-                updateWithToken(newAccessToken);
-            }
-        };
-
-        updateWithToken(AccessToken.getCurrentAccessToken());
 
         setContentView(R.layout.activity_login);
         loginButton = (LoginButton)findViewById(R.id.login_button);
@@ -58,6 +47,7 @@ public class LoginActivity extends Activity {
             @Override
             public void onSuccess(LoginResult loginResult) {
                 registerUser(loginResult.getAccessToken().getUserId());
+                finish();
             }
 
             @Override
@@ -74,16 +64,6 @@ public class LoginActivity extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         callbackManager.onActivityResult(requestCode, resultCode, data);
     }
-
-    private void updateWithToken(AccessToken currentAccessToken) {
-
-        if (currentAccessToken != null) {
-            Intent intent = new Intent(this, MainActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            startActivity(intent);
-        }
-    }
-
 
     //WEB SERVICE
 

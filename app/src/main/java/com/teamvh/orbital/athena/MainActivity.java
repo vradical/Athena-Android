@@ -29,6 +29,9 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.facebook.AccessToken;
+import com.facebook.AccessTokenTracker;
+import com.facebook.FacebookSdk;
 import com.facebook.appevents.AppEventsLogger;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -134,9 +137,22 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 
     protected Vibrator v;
 
+    private AccessTokenTracker accessTokenTracker;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        FacebookSdk.sdkInitialize(getApplicationContext());
+
+        accessTokenTracker = new AccessTokenTracker() {
+            @Override
+            protected void onCurrentAccessTokenChanged(AccessToken oldAccessToken, AccessToken newAccessToken) {
+                updateWithToken(newAccessToken);
+            }
+        };
+
+        updateWithToken(AccessToken.getCurrentAccessToken());
 
         //FOR THE DB
         dbcon = new SQLController(this);
@@ -208,6 +224,16 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    //FB
+    private void updateWithToken(AccessToken currentAccessToken) {
+
+        if (currentAccessToken == null) {
+            Intent intent = new Intent(this, LoginActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(intent);
+        }
     }
 
     //View the database, can be deleted at the end of the project, trigger by seeDB button on main page
@@ -891,9 +917,9 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
     @Override
     public void onResume() {
         super.onResume();
-        if (mGoogleApiClient.isConnected() && !mRequestingLocationUpdates) {
-            startLocationUpdates();
-        }
+        //if (mGoogleApiClient.isConnected() && !mRequestingLocationUpdates) {
+         //   startLocationUpdates();
+        //}
 
         AppEventsLogger.activateApp(this);
     }
@@ -924,7 +950,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
     @Override
     protected void onPause() {
         super.onPause();
-        stopLocationUpdates();
+       //stopLocationUpdates();
 
         AppEventsLogger.deactivateApp(this);
     }
