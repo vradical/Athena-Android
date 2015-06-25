@@ -21,7 +21,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
- * A login screen that offers login via email/password.
+ * Project Athena Login Page [Facebook Login]
  */
 public class LoginActivity extends Activity {
 
@@ -33,20 +33,18 @@ public class LoginActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        //INITIALIZE FACEBOOK
-
-        //FACEBOOK LOGIN
-        callbackManager = CallbackManager.Factory.create();
-
-
         setContentView(R.layout.activity_login);
+
         loginButton = (LoginButton)findViewById(R.id.login_button);
 
+        //INITIALIZE FACEBOOK CALLBACK
+        callbackManager = CallbackManager.Factory.create();
+
+        //CREATE FACEBOOK LOGIN BUTTON
         loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
-                registerUser(loginResult.getAccessToken().getUserId());
+                loginUser(loginResult.getAccessToken().getUserId());
                 finish();
             }
 
@@ -65,9 +63,8 @@ public class LoginActivity extends Activity {
         callbackManager.onActivityResult(requestCode, resultCode, data);
     }
 
-    //WEB SERVICE
-
-    public void registerUser(String userid){
+    //PREPARE QUERY TO LOGIN USER
+    public void loginUser(String userid){
 
         profile = Profile.getCurrentProfile();
         String name = profile.getName();
@@ -91,6 +88,7 @@ public class LoginActivity extends Activity {
 
     }
 
+    //SEND QUERY TO ATHENA WEB SERVICE
     public void invokeWS(RequestParams params){
         // Make RESTful webservice call using AsyncHttpClient object
         AsyncHttpClient client = new AsyncHttpClient();
