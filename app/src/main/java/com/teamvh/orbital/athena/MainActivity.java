@@ -1035,7 +1035,6 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
                     safetyCount++;
                     stillSafe();
                     safeAlert.cancel();
-                    safeAlert.cancel();
                 }
             }
         }
