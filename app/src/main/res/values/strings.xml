@@ -10,6 +10,7 @@
     <string name="no_location_data_provided">No Location Data</string>
 
     <string name="facebook_app_id">572141746261611</string>
+    <string name="title_activity_display_message">Main Activity</string>
 
 
 </resources>

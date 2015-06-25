@@ -82,6 +82,15 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name="com.teamvh.orbital.athena.MainActivity"
+            android:label="@string/title_activity_display_message"
+            android:parentActivityName="com.teamvh.orbital.athena.LoginActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.teamvh.orbital.athena.MainActivity" />
+        </activity>
     </application>
 
 </manifest>
