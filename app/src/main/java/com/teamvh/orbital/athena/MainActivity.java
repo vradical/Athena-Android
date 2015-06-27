@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
-import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -14,7 +13,6 @@ import android.os.ResultReceiver;
 import android.os.Vibrator;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.ActionBarActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -186,6 +184,70 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         buildGoogleApiClient();
     }
 
+    //Update Facebook token. If null, ask for user login
+    private void updateWithToken(AccessToken currentAccessToken) {
+        if (currentAccessToken == null) {
+            Intent intent = new Intent(this, LoginActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(intent);
+        }
+    }
+
+    //View the database, can be deleted at the end of the project, trigger by seeDB button on main page
+    public void seeDB(View view){
+        Intent dbmanager = new Intent(getApplicationContext(),AndroidDatabaseManager.class);
+        startActivity(dbmanager);
+
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mGoogleApiClient.connect();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (mGoogleApiClient.isConnected()) {
+            mGoogleApiClient.disconnect();
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        //
+        //if (mGoogleApiClient.isConnected() && !mRequestingLocationUpdates) {
+        //   startLocationUpdates();
+        //}
+
+        AppEventsLogger.activateApp(this);
+    }
+
+    @Override
+    protected void onPause(){
+        super.onPause();
+        //if (mGoogleApiClient != null) {
+        //    LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+        //}
+    }
+
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        savedInstanceState.putBoolean(REQUESTING_LOCATION_UPDATES_KEY, mRequestingLocationUpdates);
+        savedInstanceState.putParcelable(LOCATION_KEY, mCurrentLocation);
+        savedInstanceState.putString(LAST_UPDATED_TIME_STRING_KEY, mLastUpdateTime);
+        super.onSaveInstanceState(savedInstanceState);
+    }
+
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
+
     //Menu settings
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -215,24 +277,10 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         return super.onOptionsItemSelected(item);
     }
 
-    //Update Facebook token. If null, ask for user login
-    private void updateWithToken(AccessToken currentAccessToken) {
-        if (currentAccessToken == null) {
-            Intent intent = new Intent(this, LoginActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            startActivity(intent);
-        }
-    }
+    //------------------------------------------------Location-------------------------------------------------
 
-    //View the database, can be deleted at the end of the project, trigger by seeDB button on main page
-    public void seeDB(View view){
-        Intent dbmanager = new Intent(getApplicationContext(),AndroidDatabaseManager.class);
-        startActivity(dbmanager);
-
-    }
-
-    //Builds a GoogleApiClient and request for LocationServices API.
     protected synchronized void buildGoogleApiClient() {
+        Toast.makeText(this,"buildGoogleApiClient",Toast.LENGTH_SHORT).show();
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
@@ -241,90 +289,35 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
-        mGoogleApiClient.connect();
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        if (mGoogleApiClient.isConnected()) {
-            mGoogleApiClient.disconnect();
+    public void onConnected(Bundle bundle) {
+        Toast.makeText(this,"onConnected",Toast.LENGTH_SHORT).show();
+        Location mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
+                mGoogleApiClient);
+        if (mLastLocation != null) {
+            mLatitudeText.setText(String.valueOf(mLastLocation.getLatitude()));
+            mLongitudeText.setText(String.valueOf(mLastLocation.getLongitude()));
         }
+
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(Constants.CHECK_INTERVAL);
+        mLocationRequest.setFastestInterval(Constants.CHECK_FAST_INTERVAL);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
+        //mLocationRequest.setSmallestDisplacement(0.1F);
+
+        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        //if (mGoogleApiClient.isConnected() && !mRequestingLocationUpdates) {
-        //   startLocationUpdates();
-        //}
-
-        AppEventsLogger.activateApp(this);
+    public void onConnectionSuspended(int i) {
+        Toast.makeText(this,"onConnectionSuspended",Toast.LENGTH_SHORT).show();
     }
 
     @Override
-    public void onConnected(Bundle connectionHint) {
-
-        mCurrentLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-
-        if (mCurrentLocation != null) {
-
-            if (!Geocoder.isPresent()) {
-                Toast.makeText(this, R.string.no_geocoder_available, Toast.LENGTH_LONG).show();
-                return;
-            }
-
-            if (mAddressRequested) {
-                startFetchAddressIntentService();
-            }
-
-            if (mRequestingLocationUpdates) {
-                startLocationUpdates();
-            }
-
-        }
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+        Toast.makeText(this,"onConnectionFailed",Toast.LENGTH_SHORT).show();
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        //stopLocationUpdates();
-
-        AppEventsLogger.deactivateApp(this);
-    }
-
-    public void onSaveInstanceState(Bundle savedInstanceState) {
-        savedInstanceState.putBoolean(REQUESTING_LOCATION_UPDATES_KEY, mRequestingLocationUpdates);
-        savedInstanceState.putParcelable(LOCATION_KEY, mCurrentLocation);
-        savedInstanceState.putString(LAST_UPDATED_TIME_STRING_KEY, mLastUpdateTime);
-        super.onSaveInstanceState(savedInstanceState);
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult result) {
-        // Refer to the javadoc for ConnectionResult to see what error codes might be returned in
-        // onConnectionFailed.
-        Log.i(TAG, "Connection failed: ConnectionResult.getErrorCode() = " + result.getErrorCode());
-    }
-
-    @Override
-    public void onConnectionSuspended(int cause) {
-        // The connection to Google Play services was lost for some reason. We call connect() to
-        // attempt to re-establish the connection.
-        Log.i(TAG, "Connection suspended");
-        mGoogleApiClient.connect();
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
-
-    //------------------------------------------------Location-------------------------------------------------
+    ///---------------------------end of new location ------------------------
 
     //Update fields based on data stored in bundle.
     private void updateValuesFromBundle(Bundle savedInstanceState) {
@@ -397,6 +390,15 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         mTrackListView.setAdapter(adapter);
     }
 
+    protected void startLocationUpdates() {
+        mGoogleApiClient.connect();
+        updateAddress();
+        fetchDB();
+    }
+
+    protected void stopLocationUpdates() {
+        mGoogleApiClient.disconnect();
+    }
 
     /**
      * Creates an intent, adds location data to it as an extra, and starts the intent service for
@@ -473,6 +475,8 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         // immediately kicks off the process of getting the address.
         mAddressRequested = true;
     }
+
+
 
     /**
      * Updates the address in the UI.
@@ -978,20 +982,6 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
     }
 
     //end of high alert
-    protected void startLocationUpdates() {
-        createLocationRequest(Constants.CHECK_INTERVAL, Constants.CHECK_FAST_INTERVAL);
-        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
-        mLatitudeText.setText(String.valueOf(mCurrentLocation.getLatitude()));
-        mLongitudeText.setText(String.valueOf(mCurrentLocation.getLongitude()));
-        mLastUpdateTimeTextView.setText(mLastUpdateTime);
-        updateAddress();
-        fetchDB();
-    }
-
-    protected void stopLocationUpdates() {
-        LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
-    }
-
 
     /**
      * Receiver for data sent from FetchAddressIntentService.
