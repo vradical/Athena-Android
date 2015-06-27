@@ -80,7 +80,7 @@
                 android:value="com.teamvh.orbital.athena.LoginActivity" />
         </activity>
 
-        <service android:enabled="true" android:name=".LocationUpdateService" />
+        <service android:enabled="true" android:name=".LocationService" />
 
     </application>
 

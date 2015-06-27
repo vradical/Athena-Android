@@ -12,6 +12,6 @@ public final class Constants {
     public static final String LOCATION_DATA_EXTRA = PACKAGE_NAME + ".LOCATION_DATA_EXTRA";
     public static int CHECK_INTERVAL = 10000;
     public static int CHECK_FAST_INTERVAL = 5000;
-    public static float SMALLEST_DISPLACEMENT = 300 ;
+    public static float SMALLEST_DISPLACEMENT = 0 ;
     public static final String helpMessage = "Please save me! I am in danger";
 }

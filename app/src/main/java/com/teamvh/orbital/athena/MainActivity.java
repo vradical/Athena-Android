@@ -4,7 +4,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.database.Cursor;
+import android.content.SharedPreferences;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -26,18 +26,12 @@ import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
 import com.facebook.FacebookSdk;
 import com.facebook.appevents.AppEventsLogger;
-import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.GoogleMap;
 
-import java.text.DateFormat;
-import java.util.Date;
 
-
-public class MainActivity extends ActionBarActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener{
+public class MainActivity extends ActionBarActivity {
 
     protected static final String TAG = "main-activity";
 
@@ -119,10 +113,15 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 
     private AccessTokenTracker accessTokenTracker;
 
+    public static SharedPreferences preferences;
+
 //-------------------------------------GENERAL METHOD------------------------------------------//
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        //INITIALIZE SHARED PREFERENCE
+        preferences = getSharedPreferences(getPackageName() + "_preferences", MODE_PRIVATE);
 
         //INITIALIZE FACEBOOK
         FacebookSdk.sdkInitialize(getApplicationContext());
@@ -137,21 +136,18 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 
         //GET CURRENT FACEBOOK TOKEN
         updateWithToken(AccessToken.getCurrentAccessToken());
+        preferences.edit().putString("fb_userid", AccessToken.getCurrentAccessToken().getUserId()).commit();
 
         //FOR THE DB
-        dbcon = new SQLController(this);
         dbcon2 = new SQLControlllerNOK(this);
 
         //START SQLCONTROLLERS
-        dbcon.open();
         dbcon2.open();
 
         displayMain();
-        updateValuesFromBundle(savedInstanceState);
-        
     }
 
-    //Set up the activity page and intialize the content.
+    //Set up the activity page and initialize the content.
     public void displayMain(){
         setContentView(R.layout.activity_main);
         mTrackListView = (ListView) findViewById(R.id.list_view);
@@ -181,7 +177,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         mAddressRequested = false;
         mAddressOutput = "";
 
-        buildGoogleApiClient();
+        //buildGoogleApiClient();
     }
 
     //Update Facebook token. If null, ask for user login
@@ -203,34 +199,22 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
     @Override
     protected void onStart() {
         super.onStart();
-        mGoogleApiClient.connect();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        if (mGoogleApiClient.isConnected()) {
-            mGoogleApiClient.disconnect();
-        }
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        //
-        //if (mGoogleApiClient.isConnected() && !mRequestingLocationUpdates) {
-        //   startLocationUpdates();
-        //}
-
         AppEventsLogger.activateApp(this);
     }
 
     @Override
     protected void onPause(){
         super.onPause();
-        //if (mGoogleApiClient != null) {
-        //    LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
-        //}
     }
 
     public void onSaveInstanceState(Bundle savedInstanceState) {
@@ -279,204 +263,18 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 
     //------------------------------------------------Location-------------------------------------------------
 
-    protected synchronized void buildGoogleApiClient() {
-        Toast.makeText(this,"buildGoogleApiClient",Toast.LENGTH_SHORT).show();
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API)
-                .build();
-    }
-
-    @Override
-    public void onConnected(Bundle bundle) {
-        Toast.makeText(this,"onConnected",Toast.LENGTH_SHORT).show();
-        Location mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
-                mGoogleApiClient);
-        if (mLastLocation != null) {
-            mLatitudeText.setText(String.valueOf(mLastLocation.getLatitude()));
-            mLongitudeText.setText(String.valueOf(mLastLocation.getLongitude()));
-        }
-
-        mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(Constants.CHECK_INTERVAL);
-        mLocationRequest.setFastestInterval(Constants.CHECK_FAST_INTERVAL);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
-        //mLocationRequest.setSmallestDisplacement(0.1F);
-
-        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-        Toast.makeText(this,"onConnectionSuspended",Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-        Toast.makeText(this,"onConnectionFailed",Toast.LENGTH_SHORT).show();
-    }
-
-    ///---------------------------end of new location ------------------------
-
-    //Update fields based on data stored in bundle.
-    private void updateValuesFromBundle(Bundle savedInstanceState) {
-        if (savedInstanceState != null) {
-            // Check savedInstanceState to see if the address was previously requested.
-            if (savedInstanceState.keySet().contains(ADDRESS_REQUESTED_KEY)) {
-                mAddressRequested = savedInstanceState.getBoolean(ADDRESS_REQUESTED_KEY);
-            }
-            // Check savedInstanceState to see if the location address string was previously found
-            // and stored in the Bundle. If it was found, display the address string in the UI.
-            if (savedInstanceState.keySet().contains(LOCATION_ADDRESS_KEY)) {
-                mAddressOutput = savedInstanceState.getString(LOCATION_ADDRESS_KEY);
-                displayAddressOutput();
-            }
-
-            // Update the value of mRequestingLocationUpdates from the Bundle, and
-            // make sure that the Start Updates and Stop Updates buttons are
-            // correctly enabled or disabled.
-            if (savedInstanceState.keySet().contains(REQUESTING_LOCATION_UPDATES_KEY)) {
-                mRequestingLocationUpdates = savedInstanceState.getBoolean(REQUESTING_LOCATION_UPDATES_KEY);
-                setButtonsEnabledState();
-            }
-
-            // Update the value of mCurrentLocation from the Bundle and update the
-            // UI to show the correct latitude and longitude.
-            if (savedInstanceState.keySet().contains(LOCATION_KEY)) {
-                // Since LOCATION_KEY was found in the Bundle, we can be sure that
-                // mCurrentLocationis not null.
-                mCurrentLocation = savedInstanceState.getParcelable(LOCATION_KEY);
-            }
-
-            // Update the value of mLastUpdateTime from the Bundle and update the UI.
-            if (savedInstanceState.keySet().contains(LAST_UPDATED_TIME_STRING_KEY)) {
-                mLastUpdateTime = savedInstanceState.getString(LAST_UPDATED_TIME_STRING_KEY);
-            }
-        }
-
-    }
-
-    //Setup options for the location request.
-    protected void createLocationRequest(int interval, int fastInterval) {
-        mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(interval);
-        mLocationRequest.setFastestInterval(fastInterval);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        //mLocationRequest.setSmallestDisplacement(Constants.SMALLEST_DISPLACEMENT);
-    }
-
-    //Method run everytime location changed. Update UI & database
-    @Override
-    public void onLocationChanged(Location location) {
-        mCurrentLocation = location;
-        mLastUpdateTime = DateFormat.getDateTimeInstance().format(new Date());
-        updateUI();
-    }
-
-    private void updateUI() {
-        mLatitudeText.setText(String.valueOf(mCurrentLocation.getLatitude()));
-        mLongitudeText.setText(String.valueOf(mCurrentLocation.getLongitude()));
-        mLastUpdateTimeTextView.setText(mLastUpdateTime);
-        updateAddress();
-        dbcon.insert(mCurrentLocation.getLongitude(), mCurrentLocation.getLatitude(), mAddressOutput);
-        fetchDB();
-    }
-
-    private void fetchDB(){
-        Cursor cursor = dbcon.fetch();
-        adapter = new SimpleCursorAdapter(this, R.layout.activity_view_record, cursor, from, to, 0);
-        adapter.notifyDataSetChanged();
-        mTrackListView.setAdapter(adapter);
-    }
-
-    protected void startLocationUpdates() {
-        mGoogleApiClient.connect();
-        updateAddress();
-        fetchDB();
-    }
-
-    protected void stopLocationUpdates() {
-        mGoogleApiClient.disconnect();
-    }
-
-    /**
-     * Creates an intent, adds location data to it as an extra, and starts the intent service for
-     * fetching an address.
-     */
-    protected void startFetchAddressIntentService() {
-        // Create an intent for passing to the intent service responsible for fetching the address.
-        Intent intent = new Intent(this, FetchAddressIntentService.class);
-
-        // Pass the result receiver as an extra to the service.
-        intent.putExtra(Constants.RECEIVER, mResultReceiver);
-
-        // Pass the location data as an extra to the service.
-        intent.putExtra(Constants.LOCATION_DATA_EXTRA, mCurrentLocation);
-
-        // Start the service. If the service isn't already running, it is instantiated and started
-        // (creating a process for it if needed); if it is running then it remains running. The
-        // service kills itself automatically once all intents are processed.
+    public void startUpdatesButtonHandler(View view) {
+        Intent intent = new Intent(this, LocationService.class) ;
+        intent.putExtra("fb_token", AccessToken.getCurrentAccessToken());
+        intent.putExtra("track_type", "standard");
+        intent.putExtra("address", "address");
         startService(intent);
     }
 
-
-    /**
-     * Handles the Start Updates button and requests start of location updates. Does nothing if
-     * updates have already been requested.
-     */
-    public void startUpdatesButtonHandler(View view) {
-
-        if (!mRequestingLocationUpdates) {
-            mRequestingLocationUpdates = true;
-            setButtonsEnabledState();
-            startLocationUpdates();
-        }
-
-    }
-
-    /**
-     * Handles the Stop Updates button, and requests removal of location updates. Does nothing if
-     * updates were not previously requested.
-     */
     public void stopUpdatesButtonHandler(View view) {
-        if (mRequestingLocationUpdates) {
-            mRequestingLocationUpdates = false;
-            setButtonsEnabledState();
-            stopLocationUpdates();
-        }
+        Intent intent = new Intent(this, LocationService.class);
+        stopService(intent);
     }
-
-    /**
-     * Ensures that only one button is enabled at any time. The Start Updates button is enabled
-     * if the user is not requesting location updates. The Stop Updates button is enabled if the
-     * user is requesting location updates.
-     */
-    private void setButtonsEnabledState() {
-        if (mRequestingLocationUpdates) {
-            mStartUpdatesButton.setEnabled(false);
-            mStopUpdatesButton.setEnabled(true);
-            mStartHighAlertButton.setEnabled(true);
-        } else {
-            mStartUpdatesButton.setEnabled(true);
-            mStopUpdatesButton.setEnabled(false);
-            mStartHighAlertButton.setEnabled(false);
-        }
-    }
-
-    public void updateAddress(){
-        // We only start the service to fetch the address if GoogleApiClient is connected.
-        if (mGoogleApiClient.isConnected() && mCurrentLocation != null) {
-            startFetchAddressIntentService();
-        }
-        // If GoogleApiClient isn't connected, we process the user's request by setting
-        // mAddressRequested to true. Later, when GoogleApiClient connects, we launch the service to
-        // fetch the address. As far as the user is concerned, pressing the Fetch Address button
-        // immediately kicks off the process of getting the address.
-        mAddressRequested = true;
-    }
-
-
 
     /**
      * Updates the address in the UI.
@@ -934,7 +732,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
             mGoogleMap.addPolyline(polyLineOptions);
         }
     }
-    */
+
 
 
 
@@ -954,17 +752,15 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
             mStartHighAlertButton.setEnabled(true);
             mStopHighAlertButton.setEnabled(false);
         }
-    }
-
+    }*/
+/*
     protected void startHighAlert() {
         LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
-        createLocationRequest(5000, 2500);
+        //createLocationRequest(5000, 2500);
         LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
         mLatitudeText.setText(String.valueOf(mCurrentLocation.getLatitude()));
         mLongitudeText.setText(String.valueOf(mCurrentLocation.getLongitude()));
         mLastUpdateTimeTextView.setText(mLastUpdateTime);
-        updateAddress();
-        fetchDB();
 
         highAlertCD = new SafetyCountDown(5000, 1000, 1);
         highAlertCD.start();
@@ -973,8 +769,8 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
     protected void stopHighAlert(){
         highAlertCD.cancel();
         LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
-        startLocationUpdates();
-    }
+        //startLocationUpdates();
+    }*/
 
     public void stillSafe() {
         highAlertCD.cancel();
