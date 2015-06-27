@@ -3,6 +3,8 @@ package com.teamvh.orbital.athena;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -23,6 +25,8 @@ import com.loopj.android.http.RequestParams;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.List;
+
 /**
  * Created by Ron on 27-Jun-15.
  */
@@ -36,6 +40,9 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
     private AccessToken accessToken;
     private String address;
     private String trackType;
+
+    Geocoder geocoder;
+    List<Address> addresses;
 
     @Override
     public IBinder onBind(Intent arg0){

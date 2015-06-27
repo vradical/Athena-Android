@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.location.Location;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
@@ -26,23 +25,15 @@ import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
 import com.facebook.FacebookSdk;
 import com.facebook.appevents.AppEventsLogger;
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.maps.GoogleMap;
 
 
 public class MainActivity extends ActionBarActivity {
 
-    protected static final String TAG = "main-activity";
-
-    protected static final String ADDRESS_REQUESTED_KEY = "address-request-pending";
-    protected static final String LOCATION_ADDRESS_KEY = "location-address";
-
-    protected GoogleApiClient mGoogleApiClient;
-    protected Location mCurrentLocation;
+    private AccessTokenTracker accessTokenTracker;
+    public static SharedPreferences preferences;
 
     protected boolean mAddressRequested;
-
 
     public String[] nokPhoneArray = null;
     public String[] nokEmailArray = null;
@@ -99,7 +90,7 @@ public class MainActivity extends ActionBarActivity {
     protected TextView mLastUpdateTimeTextView;
 
     //--------------------------------------------Nearby----------------------------------------
-    GoogleMap mGoogleMap;
+
     //high alert function
     protected Button mStartHighAlertButton;
     protected Button mStopHighAlertButton;
@@ -110,10 +101,6 @@ public class MainActivity extends ActionBarActivity {
     protected TextView alertMessage;
 
     protected Vibrator v;
-
-    private AccessTokenTracker accessTokenTracker;
-
-    public static SharedPreferences preferences;
 
 //-------------------------------------GENERAL METHOD------------------------------------------//
     @Override
@@ -136,7 +123,6 @@ public class MainActivity extends ActionBarActivity {
 
         //GET CURRENT FACEBOOK TOKEN
         updateWithToken(AccessToken.getCurrentAccessToken());
-        preferences.edit().putString("fb_userid", AccessToken.getCurrentAccessToken().getUserId()).commit();
 
         //FOR THE DB
         dbcon2 = new SQLControlllerNOK(this);
@@ -217,14 +203,6 @@ public class MainActivity extends ActionBarActivity {
         super.onPause();
     }
 
-    public void onSaveInstanceState(Bundle savedInstanceState) {
-        savedInstanceState.putBoolean(REQUESTING_LOCATION_UPDATES_KEY, mRequestingLocationUpdates);
-        savedInstanceState.putParcelable(LOCATION_KEY, mCurrentLocation);
-        savedInstanceState.putString(LAST_UPDATED_TIME_STRING_KEY, mLastUpdateTime);
-        super.onSaveInstanceState(savedInstanceState);
-    }
-
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -276,16 +254,12 @@ public class MainActivity extends ActionBarActivity {
         stopService(intent);
     }
 
-    /**
-     * Updates the address in the UI.
-     */
+
     protected void displayAddressOutput() {
         mLocationAddressTextView.setText(mAddressOutput);
     }
 
-    /**
-     * Shows a toast with the given text.
-     */
+
     protected void showToast(String text) {
         Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
     }
