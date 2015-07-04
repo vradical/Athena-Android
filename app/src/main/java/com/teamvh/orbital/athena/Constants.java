@@ -13,5 +13,8 @@ public final class Constants {
     public static int CHECK_INTERVAL = 10000;
     public static int CHECK_FAST_INTERVAL = 5000;
     public static float SMALLEST_DISPLACEMENT = 0 ;
+    public static int HA_CHECK_INTERVAL = 5000;
+    public static int HA_CHECK_FAST_INTERVAL = 2500;
+    public static float HA_SMALLEST_DISPLACEMENT = 0 ;
     public static final String helpMessage = "Please save me! I am in danger";
 }

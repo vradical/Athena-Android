@@ -19,7 +19,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
@@ -163,7 +162,6 @@ public class MainActivity extends ActionBarActivity {
         mAddressRequested = false;
         mAddressOutput = "";
 
-        //buildGoogleApiClient();
     }
 
     //Update Facebook token. If null, ask for user login
@@ -239,17 +237,31 @@ public class MainActivity extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    //------------------------------------------------Location-------------------------------------------------
+    //------------------------------------------------Location-------------------------------------------------//
 
     public void startUpdatesButtonHandler(View view) {
+        startTracking("Standard");
+        mStartHighAlertButton.setEnabled(true);
+        mStartUpdatesButton.setEnabled(false);
+        mStopUpdatesButton.setEnabled(true);
+    }
+
+    public void stopUpdatesButtonHandler(View view) {
+        stopTracking();
+        mStartHighAlertButton.setEnabled(false);
+        mStartUpdatesButton.setEnabled(true);
+        mStopUpdatesButton.setEnabled(false);
+    }
+
+    public void startTracking(String trackType){
         Intent intent = new Intent(this, LocationService.class) ;
         intent.putExtra("fb_token", AccessToken.getCurrentAccessToken());
-        intent.putExtra("track_type", "standard");
+        intent.putExtra("track_type", trackType);
         intent.putExtra("address", "address");
         startService(intent);
     }
 
-    public void stopUpdatesButtonHandler(View view) {
+    public void stopTracking(){
         Intent intent = new Intent(this, LocationService.class);
         stopService(intent);
     }
@@ -260,8 +272,38 @@ public class MainActivity extends ActionBarActivity {
     }
 
 
-    protected void showToast(String text) {
-        Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
+    //-------------------------------------------HIGH ALERT-------------------------------------------------------------//
+
+    //additionl method for high alert
+
+    public void startHighAlertMode(View view){
+            startHighAlert();
+            mStartHighAlertButton.setEnabled(false);
+            mStopHighAlertButton.setEnabled(true);
+    }
+
+    public void stopHighAlertMode(View view){
+            stopHighAlert();
+            mStartHighAlertButton.setEnabled(true);
+            mStopHighAlertButton.setEnabled(false);
+    }
+
+    protected void startHighAlert() {
+        stopTracking();
+        startTracking("High Alert");
+        highAlertCD = new SafetyCountDown(5000, 1000, 1);
+        highAlertCD.start();
+        }
+
+    protected void stopHighAlert(){
+        stopTracking();
+        startTracking("Standard");
+        highAlertCD.cancel();
+    }
+
+    public void stillSafe() {
+        highAlertCD.cancel();
+        highAlertCD.start();
     }
 
     /*
@@ -707,50 +749,6 @@ public class MainActivity extends ActionBarActivity {
         }
     }
 
-
-
-
-    //additionl method for high alert
-
-    public void startHighAlertMode(View view){
-        if(mRequestingLocationUpdates) {
-            startHighAlert();
-            mStartHighAlertButton.setEnabled(false);
-            mStopHighAlertButton.setEnabled(true);
-        }
-    }
-
-    public void stopHighAlertMode(View view){
-        if(mRequestingLocationUpdates) {
-            stopHighAlert();
-            mStartHighAlertButton.setEnabled(true);
-            mStopHighAlertButton.setEnabled(false);
-        }
-    }*/
-/*
-    protected void startHighAlert() {
-        LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
-        //createLocationRequest(5000, 2500);
-        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
-        mLatitudeText.setText(String.valueOf(mCurrentLocation.getLatitude()));
-        mLongitudeText.setText(String.valueOf(mCurrentLocation.getLongitude()));
-        mLastUpdateTimeTextView.setText(mLastUpdateTime);
-
-        highAlertCD = new SafetyCountDown(5000, 1000, 1);
-        highAlertCD.start();
-        }
-
-    protected void stopHighAlert(){
-        highAlertCD.cancel();
-        LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
-        //startLocationUpdates();
-    }*/
-
-    public void stillSafe() {
-        highAlertCD.cancel();
-        highAlertCD.start();
-    }
-
     //end of high alert
 
     /**
@@ -773,7 +771,7 @@ public class MainActivity extends ActionBarActivity {
 
             // Show a toast message if an address was found.
             if (resultCode == Constants.SUCCESS_RESULT) {
-                showToast(getString(R.string.address_found));
+                //showToast(getString(R.string.address_found));
             }
 
             // Reset. Enable the Fetch Address button and stop showing the progress bar.
