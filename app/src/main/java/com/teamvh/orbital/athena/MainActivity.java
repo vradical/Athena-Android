@@ -23,7 +23,6 @@ import android.widget.TextView;
 import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
 import com.facebook.FacebookSdk;
-import com.facebook.appevents.AppEventsLogger;
 import com.google.android.gms.location.LocationRequest;
 
 
@@ -31,6 +30,7 @@ public class MainActivity extends ActionBarActivity {
 
     private AccessTokenTracker accessTokenTracker;
     public static SharedPreferences preferences;
+    public static SharedPreferences.Editor editor;
 
     protected boolean mAddressRequested;
 
@@ -49,7 +49,6 @@ public class MainActivity extends ActionBarActivity {
     protected TextView mLatitudeText;
     protected TextView mLongitudeText;
 
-    private SQLController dbcon;
     private SQLControlllerNOK dbcon2;
 
     protected ListView mTrackListView;
@@ -101,7 +100,7 @@ public class MainActivity extends ActionBarActivity {
 
     protected Vibrator v;
 
-//-------------------------------------GENERAL METHOD------------------------------------------//
+    //-------------------------------------GENERAL METHOD------------------------------------------//
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -112,16 +111,18 @@ public class MainActivity extends ActionBarActivity {
         //INITIALIZE FACEBOOK
         FacebookSdk.sdkInitialize(getApplicationContext());
 
+        isLoggedIn();
+
         //CHECK FOR FACEBOOK ACCESS TOKEN
         accessTokenTracker = new AccessTokenTracker() {
             @Override
             protected void onCurrentAccessTokenChanged(AccessToken oldAccessToken, AccessToken newAccessToken) {
-                updateWithToken(newAccessToken);
+                editor = preferences.edit();
+                editor.putString("fbsession", newAccessToken.getUserId());
+                editor.commit();
+                editor.apply();
             }
         };
-
-        //GET CURRENT FACEBOOK TOKEN
-        updateWithToken(AccessToken.getCurrentAccessToken());
 
         //FOR THE DB
         dbcon2 = new SQLControlllerNOK(this);
@@ -164,9 +165,10 @@ public class MainActivity extends ActionBarActivity {
 
     }
 
-    //Update Facebook token. If null, ask for user login
-    private void updateWithToken(AccessToken currentAccessToken) {
-        if (currentAccessToken == null) {
+    //Check for facebook login
+    public void isLoggedIn() {
+        AccessToken accessToken = AccessToken.getCurrentAccessToken();
+        if(accessToken == null || accessToken.isExpired()) {
             Intent intent = new Intent(this, LoginActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(intent);
@@ -193,7 +195,6 @@ public class MainActivity extends ActionBarActivity {
     @Override
     public void onResume() {
         super.onResume();
-        AppEventsLogger.activateApp(this);
     }
 
     @Override
@@ -202,8 +203,13 @@ public class MainActivity extends ActionBarActivity {
     }
 
     @Override
+    public void onDestroy() {
+        super.onDestroy();
+        accessTokenTracker.stopTracking();
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
@@ -212,29 +218,18 @@ public class MainActivity extends ActionBarActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.homePage:
-                displayMain();
+            case R.id.action_home:
+                Intent i =new Intent(this, MainActivity.class);
+                startActivity(i);
                 break;
-            case R.id.helpInfo:
+            case R.id.action_contacts:
+                Intent i1 =new Intent(this, ContactInfo.class);
+                startActivity(i1);
                 break;
-            case R.id.history:
-
-                break;
-            case R.id.share:
-
-                break;
-            case R.id.sosSignal:
-
-                break;
-            case R.id.nokSettings:
-                //nokSettings();
-                break;
-
             default:
                 break;
         }
-
-        return super.onOptionsItemSelected(item);
+        return true;
     }
 
     //------------------------------------------------Location-------------------------------------------------//
@@ -277,15 +272,15 @@ public class MainActivity extends ActionBarActivity {
     //additionl method for high alert
 
     public void startHighAlertMode(View view){
-            startHighAlert();
-            mStartHighAlertButton.setEnabled(false);
-            mStopHighAlertButton.setEnabled(true);
+        startHighAlert();
+        mStartHighAlertButton.setEnabled(false);
+        mStopHighAlertButton.setEnabled(true);
     }
 
     public void stopHighAlertMode(View view){
-            stopHighAlert();
-            mStartHighAlertButton.setEnabled(true);
-            mStopHighAlertButton.setEnabled(false);
+        stopHighAlert();
+        mStartHighAlertButton.setEnabled(true);
+        mStopHighAlertButton.setEnabled(false);
     }
 
     protected void startHighAlert() {
@@ -293,7 +288,7 @@ public class MainActivity extends ActionBarActivity {
         startTracking("High Alert");
         highAlertCD = new SafetyCountDown(5000, 1000, 1);
         highAlertCD.start();
-        }
+    }
 
     protected void stopHighAlert(){
         stopTracking();
@@ -548,7 +543,7 @@ public class MainActivity extends ActionBarActivity {
     //---------------------------------------------Nearby------------------------------------
 
 
-   /** A class, to download Google Places */
+    /** A class, to download Google Places */
 
    /*
     private class PlacesTask extends AsyncTask<String, Integer, String> {
@@ -595,7 +590,7 @@ public class MainActivity extends ActionBarActivity {
             try{
                 jObject = new JSONObject(jsonData[0]);
 */
-                /** Getting the parsed data as a List construct */
+    /** Getting the parsed data as a List construct */
              /*   places = placeJsonParser.parse(jObject);
 
             }catch(Exception e){
@@ -815,8 +810,8 @@ public class MainActivity extends ActionBarActivity {
                 v.vibrate(20000);
             }else{
                 if(safetyCount > 1){
-                //trigger emergency
-                alertMessage.setText("No response from user - Triggering Emergency mode");
+                    //trigger emergency
+                    alertMessage.setText("No response from user - Triggering Emergency mode");
                 }else{
                     safetyCount++;
                     stillSafe();

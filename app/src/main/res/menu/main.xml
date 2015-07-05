@@ -1,23 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android" >
-
-<item
-    android:id="@+id/homePage"
-    android:title="Home"/>
-<item
-    android:id="@+id/helpInfo"
-    android:title="Help Info"/>
-<item
-    android:id="@+id/history"
-    android:title="History"/>
-<item
-    android:id="@+id/share"
-    android:title="Share with Friends"/>
-<item
-    android:id="@+id/sosSignal"
-    android:title="SOS Signal"/>
-<item
-    android:id="@+id/nokSettings"
-    android:title="NOKS"/>
-
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.teamvh.orbital.athena.testing">
+    <item android:id="@+id/action_settings" android:title="@string/action_settings"
+        android:orderInCategory="100" app:showAsAction="never" />
+    <item android:id="@+id/action_home" android:title="@string/action_home"
+        android:orderInCategory="100" app:showAsAction="never" />
+    <item android:id="@+id/action_contacts" android:title="@string/action_contacts"
+        android:orderInCategory="100" app:showAsAction="never" />
 </menu>

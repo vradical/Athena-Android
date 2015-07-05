@@ -3,6 +3,7 @@ package com.teamvh.orbital.athena;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.Toast;
 
@@ -29,6 +30,8 @@ public class LoginActivity extends Activity {
     private CallbackManager callbackManager;
     private AccessTokenTracker accessTokenTracker;
     private Profile profile;
+    private SharedPreferences preferences;
+    private SharedPreferences.Editor editor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +39,9 @@ public class LoginActivity extends Activity {
         setContentView(R.layout.activity_login);
 
         loginButton = (LoginButton)findViewById(R.id.login_button);
+
+        preferences = MainActivity.preferences;
+        editor = getPreferences(MODE_PRIVATE).edit();
 
         //INITIALIZE FACEBOOK CALLBACK
         callbackManager = CallbackManager.Factory.create();
@@ -45,6 +51,7 @@ public class LoginActivity extends Activity {
             @Override
             public void onSuccess(LoginResult loginResult) {
                 loginUser(loginResult.getAccessToken().getUserId());
+                editor.putString("fbsession", loginResult.getAccessToken().getUserId());
                 finish();
             }
 

@@ -65,7 +65,6 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
     public void onCreate(){
         Log.e(TAG, "onCreate");
         mContext = this;
-        //getLocation();
     }
 
     @Override

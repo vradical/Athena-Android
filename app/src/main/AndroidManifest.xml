@@ -71,17 +71,32 @@
         <meta-data
             android:name="com.facebook.sdk.ApplicationId"
             android:value="@string/facebook_app_id" />
+
+        <service
+            android:name=".LocationService"
+            android:enabled="true" />
+
         <activity
-            android:name="com.teamvh.orbital.athena.LoginActivity"
-            android:label="@string/title_activity_display_message"
-            android:parentActivityName="com.teamvh.orbital.athena.MainActivity" >
+            android:name=".ContactInfo"
+            android:label="@string/title_activity_contact_info"
+            android:parentActivityName=".MainActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.teamvh.orbital.athena.LoginActivity" />
+                android:value="com.teamvh.orbital.athena.MainActivity" />
+        </activity>
+        <activity
+            android:name=".AddContact"
+            android:label="@string/title_activity_add_contact"
+            android:parentActivityName=".ContactInfo" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.teamvh.orbital.athena.ContactInfo" />
         </activity>
 
-        <service android:enabled="true" android:name=".LocationService" />
-
+        <activity
+            android:name=".LoginActivity"
+            android:label="@string/title_activity_display_message" >
+        </activity>
     </application>
 
 </manifest>
