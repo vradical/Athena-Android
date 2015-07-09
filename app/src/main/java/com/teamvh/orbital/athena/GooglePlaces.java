@@ -1,6 +1,5 @@
 package com.teamvh.orbital.athena;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.MenuItem;
@@ -14,7 +13,6 @@ public class GooglePlaces extends ActionBarActivity {
     public String sendLocation = null;
     public String[] nokPhoneArray = null;
     public String[][] nokEmailArray = null;
-    private SQLControlllerNOK dbcon2;
     protected String mAddressOutput;
     @Override
     protected void onCreate(Bundle savedInstanceState) {

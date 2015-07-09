@@ -1,5 +1,6 @@
 package com.teamvh.orbital.athena;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -65,6 +66,8 @@ public class AddContact extends AppCompatActivity {
         String phone = phoneField.getText().toString();
 
         addContact(name, email, country, phone);
+        Intent returnIntent = new Intent();
+        setResult(RESULT_CANCELED, returnIntent);
         finish();
     }
 

@@ -10,13 +10,11 @@ import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.ResultReceiver;
 import android.os.Vibrator;
-import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -34,10 +32,6 @@ public class MainActivity extends ActionBarActivity {
 
     protected boolean mAddressRequested;
 
-    public String[] nokPhoneArray = null;
-    public String[] nokEmailArray = null;
-
-    public int numberOfNok = 0;
     public String sendLocation = null;
 
 
@@ -49,32 +43,7 @@ public class MainActivity extends ActionBarActivity {
     protected TextView mLatitudeText;
     protected TextView mLongitudeText;
 
-    private SQLControlllerNOK dbcon2;
-
     protected ListView mTrackListView;
-    protected ListView mNOKListView;
-    protected ListView eNokPhoneListView;
-    protected ListView eNokNameListView;
-
-    private SimpleCursorAdapter adapter;
-    private SimpleCursorAdapter adapter2;
-    private SimpleCursorAdapter adapter3;
-    private SimpleCursorAdapter adapter4;
-
-    EditText editTextName;
-    EditText editTextEmail;
-    EditText editTextPhone;
-
-    //SimpleAdapter variables
-    final String[] from = new String[] { DBHelper._ID, DBHelper.TRACK_LAT, DBHelper.TRACK_LONG, DBHelper.TRACK_ADDR, DBHelper.TRACK_TIME};
-    final int[] to = new int[] {R.id.id, R.id.longi, R.id.lat, R.id.address, R.id.time};
-    final String[] from2 = new String[] {DBHelperNok.col_NAME, DBHelperNok.col_EMAIL, DBHelperNok.col_PHONE};
-    final int[] to2 = new int[] { R.id.list_name,R.id.list_email, R.id.list_phone};
-    final String[] from3 = new String[] {DBHelperNok.col_PHONE};
-    final int[] to3 = new int[] { R.id.textViewListPhone};
-    final String[] from4 = new String[] {DBHelperNok.col_NAME};
-    final int[] to4 = new int[] { R.id.textViewListNokName};
-
 
     protected boolean mRequestingLocationUpdates;
     protected LocationRequest mLocationRequest;
@@ -124,12 +93,6 @@ public class MainActivity extends ActionBarActivity {
             }
         };
 
-        //FOR THE DB
-        dbcon2 = new SQLControlllerNOK(this);
-
-        //START SQLCONTROLLERS
-        dbcon2.open();
-
         displayMain();
     }
 
@@ -173,13 +136,6 @@ public class MainActivity extends ActionBarActivity {
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(intent);
         }
-    }
-
-    //View the database, can be deleted at the end of the project, trigger by seeDB button on main page
-    public void seeDB(View view){
-        Intent dbmanager = new Intent(getApplicationContext(),AndroidDatabaseManager.class);
-        startActivity(dbmanager);
-
     }
 
     @Override
@@ -300,40 +256,6 @@ public class MainActivity extends ActionBarActivity {
         highAlertCD.cancel();
         highAlertCD.start();
     }
-
-    /*
-    //-------------------------------------------------------NOK Settings----------------------------------------------------
-    //NOK Registration
-    public void nokSettings(){
-        setContentView(R.layout.activity_nok_registration);
-        mNOKListView = (ListView) findViewById(R.id.list_nok);
-        Cursor cscs = dbcon2.fetchAllNOK();
-        adapter2 = new SimpleCursorAdapter(this,R.layout.activity_nok_entry,cscs,from2,to2,0);
-        mNOKListView.setAdapter(adapter2);
-    }
-
-    //OnClick =  TRIGGER BY REGISTRATION "ADD" BUTTON
-    public void addNOK(View view){
-        setContentView(R.layout.activity_nok_details);
-        editTextName = (EditText) findViewById(R.id.editTextName);
-        editTextEmail = (EditText) findViewById(R.id.editTextEmail);
-        editTextPhone = (EditText) findViewById(R.id.editTextPhone);
-    }
-
-    //OnClick = TRIGGER BY REGISTRATION "SAVE" BUTTON
-    public void saveNOK(View view){
-        int phone = Integer.parseInt(editTextPhone.getText().toString());
-        String name = editTextName.getText().toString();
-        String email = editTextEmail.getText().toString();
-        NOKInfo newNok = new NOKInfo(name, email, phone);
-        dbcon2.insert(newNok);
-        Toast.makeText(this,"New NOK has added ", Toast.LENGTH_LONG).show();
-        setContentView(R.layout.activity_nok_details);
-        editTextName = (EditText) findViewById(R.id.editTextName);
-        editTextEmail = (EditText) findViewById(R.id.editTextEmail);
-        editTextPhone = (EditText) findViewById(R.id.editTextPhone);
-    }
-*/
 
     //-----------------------------------------------Emergency Functions--------------------------------------
 /*
