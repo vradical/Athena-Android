@@ -1,16 +1,21 @@
 package com.teamvh.orbital.athena;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.telephony.SmsManager;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.facebook.AccessToken;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
@@ -26,7 +31,8 @@ public class EmergencyActivity extends AppCompatActivity {
     protected ListView listView;
     protected ContactAdapter adapter;
     protected ArrayList<ContactData> contactList;
-    private SharedPreferences preferences;
+    protected SharedPreferences preferences;
+    final String TAG = "De-activate Emergency";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,28 +46,6 @@ public class EmergencyActivity extends AppCompatActivity {
         listView = (ListView) findViewById(R.id.listViewEmergencyCall);
         adapter = new ContactAdapter(this, R.layout.activity_contact_row, contactList);
         listView.setAdapter(adapter);
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
     }
 
     protected void sendSMSMessage() {
@@ -109,6 +93,76 @@ public class EmergencyActivity extends AppCompatActivity {
         callIntent.setData(Uri.parse("tel:" + nokPhoneArray[positionNOK]));
         startActivity(callIntent);
     }*/
+
+    public void deactivateEmergency(View view){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = LayoutInflater.from(this);
+        final View textEntryView = inflater.inflate(R.layout.activity_password, null);
+        builder.setTitle("Passcode");
+        builder.setMessage("To deactivate please enter your passcode");
+        builder.setView(textEntryView);
+        builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                EditText mUserText;
+                mUserText = (EditText) textEntryView.findViewById(R.id.editTextPasscode);
+                String strPinCode = mUserText.getText().toString();
+                if(strPinCode.equals("1234")) {
+                    Log.d(TAG, "Correct Passcode");
+                    checkTrigger();
+
+                    stopTracking();
+                    startTracking("Standard", 0);
+                }
+                else
+                    Log.d( TAG, "Incorrect Passcode");
+            }
+        });
+
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+
+            public void onClick(DialogInterface dialog, int which) {
+                // TODO Auto-generated method stub
+                return;
+            }
+        });
+        builder.show();
+    }
+
+    public void checkTrigger(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Status");
+        builder.setMessage(" ");
+
+        builder.setPositiveButton("Safe", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                //displayNearby();
+            }
+        });
+
+        builder.setNegativeButton("False Alarm", new DialogInterface.OnClickListener() {
+
+            public void onClick(DialogInterface dialog, int which) {
+                finish();
+            }
+        });
+        builder.show();
+    }
+
+
+    //-------------------------LOCATION SERVICE METHOD-------------------------------------------//
+    public void startTracking(String trackType, int emID){
+        Intent intent = new Intent(this, LocationService.class) ;
+        intent.putExtra("fb_token", AccessToken.getCurrentAccessToken());
+        intent.putExtra("track_type", trackType);
+        intent.putExtra("track_em_id", emID);
+        intent.putExtra("address", "address");
+        startService(intent);
+    }
+
+    public void stopTracking(){
+        Intent intent = new Intent(this, LocationService.class);
+        stopService(intent);
+    }
 
 
     //-------------------------GET CONTACTS CODE--------------------------------------------------//

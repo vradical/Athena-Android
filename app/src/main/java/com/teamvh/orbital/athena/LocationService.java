@@ -3,6 +3,7 @@ package com.teamvh.orbital.athena;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -25,6 +26,7 @@ import com.loopj.android.http.RequestParams;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.sql.Timestamp;
 import java.util.List;
 
 /**
@@ -41,6 +43,8 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
     private String address;
     private String trackType;
     private String emID;
+    private SharedPreferences preferences;
+    private SharedPreferences.Editor editor;
 
     Geocoder geocoder;
     List<Address> addresses;
@@ -67,6 +71,7 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
     public void onCreate(){
         Log.e(TAG, "onCreate");
         mContext = this;
+        preferences = MainActivity.preferences;
     }
 
     @Override
@@ -129,7 +134,6 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
     public void onLocationChanged(Location location) {
         Toast.makeText(mContext, "Driver location :"+location.getLatitude()+" , "+location.getLongitude(), Toast.LENGTH_SHORT).show();
         recordLocation(location.getLongitude(), location.getLatitude());
-
     }
 
     @Override
@@ -141,6 +145,15 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
     public void recordLocation(double longitude, double latitude){
 
         String uname = accessToken.getUserId();
+
+        java.util.Date date= new java.util.Date();
+
+        editor = preferences.edit();
+        editor.putString("Longitude", String.valueOf(longitude));
+        editor.putString("Latitude", String.valueOf(latitude));
+        editor.putString("Timestamp", String.valueOf(new Timestamp(date.getTime())));
+        editor.commit();
+        editor.apply();
 
         // Instantiate Http Request Param Object
         RequestParams params = new RequestParams();

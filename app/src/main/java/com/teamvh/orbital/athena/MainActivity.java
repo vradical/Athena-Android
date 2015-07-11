@@ -15,7 +15,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,7 +30,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends ActionBarActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
 
     private AccessTokenTracker accessTokenTracker;
     public static SharedPreferences preferences;
@@ -50,17 +49,14 @@ public class MainActivity extends ActionBarActivity {
     protected TextView mLatitudeText;
     protected TextView mLongitudeText;
 
-    protected ListView mTrackListView;
-
     protected boolean mRequestingLocationUpdates;
     protected LocationRequest mLocationRequest;
-    protected String mLastUpdateTime;
     protected final static String REQUESTING_LOCATION_UPDATES_KEY = "requesting-location-updates-key";
     protected final static String LOCATION_KEY = "location-key";
     protected final static String LAST_UPDATED_TIME_STRING_KEY = "last-updated-time-string-key";
     protected Button mStartUpdatesButton;
     protected Button mStopUpdatesButton;
-    protected TextView mLastUpdateTimeTextView;
+    protected TextView mLastUpdateTimeText;
 
     //--------------------------------------------Nearby----------------------------------------
 
@@ -86,6 +82,7 @@ public class MainActivity extends ActionBarActivity {
 
         //INITIALIZE SHARED PREFERENCE
         preferences = getSharedPreferences(getPackageName() + "_preferences", MODE_PRIVATE);
+        preferences.registerOnSharedPreferenceChangeListener(this);
 
         //INITIALIZE FACEBOOK
         FacebookSdk.sdkInitialize(getApplicationContext());
@@ -109,8 +106,6 @@ public class MainActivity extends ActionBarActivity {
     //Set up the activity page and initialize the content.
     public void displayMain(){
         setContentView(R.layout.activity_main);
-        mTrackListView = (ListView) findViewById(R.id.list_view);
-        mTrackListView.setEmptyView(findViewById(R.id.empty_view));
 
         //FOR THE CURRENT LOCATION
         mResultReceiver = new AddressResultReceiver(new Handler());
@@ -120,10 +115,9 @@ public class MainActivity extends ActionBarActivity {
         mLongitudeText = (TextView) findViewById(R.id.longitude_text);
         mStartUpdatesButton = (Button) findViewById(R.id.start_updates_button);
         mStopUpdatesButton = (Button) findViewById(R.id.stop_updates_button);
-        mLastUpdateTimeTextView = (TextView) findViewById(R.id.track_location_time);
+        mLastUpdateTimeText = (TextView) findViewById(R.id.track_location_time);
 
         mRequestingLocationUpdates = false;
-        mLastUpdateTime = "";
 
         //High alert button
         mStartHighAlertButton = (Button) findViewById(R.id.start_high_alert_button);
@@ -200,6 +194,11 @@ public class MainActivity extends ActionBarActivity {
         return true;
     }
 
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        mLatitudeText.setText(sharedPreferences.getString("Latitude", ""));
+        mLongitudeText.setText(sharedPreferences.getString("Longitude",""));
+        mLastUpdateTimeText.setText(sharedPreferences.getString("Timestamp",""));
+    }
     //------------------------------------------------Location-------------------------------------------------//
 
     public void startUpdatesButtonHandler(View view) {
@@ -393,77 +392,17 @@ public class MainActivity extends ActionBarActivity {
             }
 
             @Override
-            public void onFinish(){
+            public void onFinish() {
                 startTracking("Emergency", emID);
                 Intent i = new Intent(MainActivity.this, EmergencyActivity.class);
+                //i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                //i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(i);
             }
         });
     }
 
-
-/**
- * Retrieve the info of the NOK details from the sqlLite or server
- * Send a sms to the NOKs with their current location and time
- **/
-
-    /*
-    public void deactivateEmergency(View view){
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        LayoutInflater inflater = LayoutInflater.from(this);
-        final View textEntryView = inflater.inflate(R.layout.activity_password, null);
-        builder.setTitle("Passcode");
-        builder.setMessage("To deactivate please enter your passcode");
-        builder.setView(textEntryView);
-        builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                EditText mUserText;
-                mUserText = (EditText) textEntryView.findViewById(R.id.editTextPasscode);
-                String strPinCode = mUserText.getText().toString();
-                if(strPinCode.equals("1234")) {
-                    Log.d(TAG, "Yes it is right");
-                    checkTrigger();
-                }
-                else
-                    Log.d( TAG, "Try again");
-            }
-        });
-
-        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-
-            public void onClick(DialogInterface dialog, int which) {
-                // TODO Auto-generated method stub
-                return;
-            }
-        });
-        builder.show();
-    }
-
-    public void checkTrigger(){
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        LayoutInflater inflater = LayoutInflater.from(this);
-        final View textEntryView = inflater.inflate(R.layout.activity_check_trigger, null);
-        builder.setTitle("Status");
-        builder.setMessage("Please choose one");
-        builder.setView(textEntryView);
-
-        builder.setPositiveButton("Safe", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                displayNearby();
-            }
-        });
-
-        builder.setNegativeButton("False Alarm", new DialogInterface.OnClickListener() {
-
-            public void onClick(DialogInterface dialog, int which) {
-                // TODO Auto-generated method stub
-                return;
-            }
-        });
-        builder.show();
-    }
-
-
+/*
     public void displayNearby() {
         setContentView(R.layout.activity_safe);
         SupportMapFragment fragment = ( SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.safe_map);
