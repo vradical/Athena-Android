@@ -2,11 +2,12 @@ package com.teamvh.orbital.athena;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.telephony.SmsManager;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -20,7 +21,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-public class ContactInfo extends AppCompatActivity {
+public class EmergencyActivity extends AppCompatActivity {
 
     protected ListView listView;
     protected ContactAdapter adapter;
@@ -30,12 +31,13 @@ public class ContactInfo extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_contact_info);
+        setContentView(R.layout.activity_emergency);
         preferences = MainActivity.preferences;
+
         contactList = new ArrayList<ContactData>();
 
         getContact();
-        listView = (ListView) findViewById(R.id.contact_list);
+        listView = (ListView) findViewById(R.id.listViewEmergencyCall);
         adapter = new ContactAdapter(this, R.layout.activity_contact_row, contactList);
         listView.setAdapter(adapter);
     }
@@ -47,39 +49,69 @@ public class ContactInfo extends AppCompatActivity {
         return true;
     }
 
-    //Menu settings
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_home:
-                Intent i =new Intent(this, MainActivity.class);
-                startActivity(i);
-                break;
-            case R.id.action_contacts:
-                Intent i1 =new Intent(this, ContactInfo.class);
-                startActivity(i1);
-                break;
-            default:
-                break;
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings) {
+            return true;
         }
-        return true;
+
+        return super.onOptionsItemSelected(item);
     }
 
-    public void addContacts(View view) {
-        Intent myIntent = new Intent(ContactInfo.this, AddContact.class);
-        //myIntent.putExtra("key", value); //Optional parameters
-        ContactInfo.this.startActivityForResult(myIntent, 1);
+    protected void sendSMSMessage() {
+        for(int i = 0 ; i < contactList.size() ; i++){
+            try {
+                SmsManager smsManager = SmsManager.getDefault();
+                smsManager.sendTextMessage(contactList.get(i).getPhone(), null, "This is an emergency, your friend/relative/child has been compromised please " +
+                        "contact him/her ASAP. His/her current location is at " + "Ron House!", null, null);
+                Toast.makeText(getApplicationContext(), "SMS sent.",
+                        Toast.LENGTH_LONG).show();
+            } catch (Exception e) {
+                Toast.makeText(getApplicationContext(),
+                        "SMS faild, please try again.",
+                        Toast.LENGTH_LONG).show();
+                e.printStackTrace();
+            }
+        }
+
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == 1) {
-            adapter.clear();
-            getContact();
-            adapter = new ContactAdapter(this, R.layout.activity_contact_row, contactList);
-            listView.setAdapter(adapter);
+
+    protected void sendEmail() {
+        Intent email = new Intent(Intent.ACTION_SEND, Uri.parse("mailto:"));
+        for(int i = 0 ; i < contactList.size() ; i++) {
+            // prompts email clients only
+            email.setType("message/rfc822");
+            email.putExtra(Intent.EXTRA_EMAIL, contactList.get(i).getEmail());
+            email.putExtra(Intent.EXTRA_SUBJECT, "Emergency");
+            email.putExtra(Intent.EXTRA_TEXT, "testing");
+            try {
+                // the user can choose the email client
+                startActivity(Intent.createChooser(email, "Choose an email client from..."));
+            } catch (android.content.ActivityNotFoundException ex) {
+                Toast.makeText(this, "No email client installed.", Toast.LENGTH_LONG).show();
+            }
         }
+
     }
+
+    /*
+    //OnClick = Trigger by activity_nok_emergency_contact
+    public void callNOK(View view){
+        Intent callIntent = new Intent(Intent.ACTION_CALL);
+        final int positionNOK = eNokNameListView.getPositionForView((View) view.getParent());
+        callIntent.setData(Uri.parse("tel:" + nokPhoneArray[positionNOK]));
+        startActivity(callIntent);
+    }*/
+
+
+    //-------------------------GET CONTACTS CODE--------------------------------------------------//
 
     //PREPARE QUERY TO GET CONTACT LIST
     public void getContact(){
@@ -176,10 +208,8 @@ public class ContactInfo extends AppCompatActivity {
             }
 
             @Override
-            public void onFinish() {
-                adapter.notifyDataSetChanged();
+            public void onFinish() {adapter.notifyDataSetChanged();
             }
         });
     }
-
 }

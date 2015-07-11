@@ -17,11 +17,18 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
 import com.facebook.FacebookSdk;
 import com.google.android.gms.location.LocationRequest;
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.AsyncHttpResponseHandler;
+import com.loopj.android.http.RequestParams;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -53,7 +60,6 @@ public class MainActivity extends ActionBarActivity {
     protected final static String LAST_UPDATED_TIME_STRING_KEY = "last-updated-time-string-key";
     protected Button mStartUpdatesButton;
     protected Button mStopUpdatesButton;
-    protected Button test;
     protected TextView mLastUpdateTimeTextView;
 
     //--------------------------------------------Nearby----------------------------------------
@@ -68,6 +74,10 @@ public class MainActivity extends ActionBarActivity {
     protected TextView alertMessage;
 
     protected Vibrator v;
+
+    //emergency function
+    protected Button mStartEmergencyButton;
+    protected int emID;
 
     //-------------------------------------GENERAL METHOD------------------------------------------//
     @Override
@@ -111,7 +121,6 @@ public class MainActivity extends ActionBarActivity {
         mStartUpdatesButton = (Button) findViewById(R.id.start_updates_button);
         mStopUpdatesButton = (Button) findViewById(R.id.stop_updates_button);
         mLastUpdateTimeTextView = (TextView) findViewById(R.id.track_location_time);
-        test = (Button) findViewById(R.id.testingButton);
 
         mRequestingLocationUpdates = false;
         mLastUpdateTime = "";
@@ -121,6 +130,8 @@ public class MainActivity extends ActionBarActivity {
         mStopHighAlertButton = (Button) findViewById(R.id.stop_high_alert_button);
         v = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
 
+        //Emergency Button
+        mStartEmergencyButton = (Button) findViewById(R.id.start_emergency_button);
 
         // Set defaults, then update using values stored in the Bundle.
         mAddressRequested = false;
@@ -162,6 +173,7 @@ public class MainActivity extends ActionBarActivity {
     public void onDestroy() {
         super.onDestroy();
         accessTokenTracker.stopTracking();
+        stopTracking();
     }
 
     @Override
@@ -191,10 +203,11 @@ public class MainActivity extends ActionBarActivity {
     //------------------------------------------------Location-------------------------------------------------//
 
     public void startUpdatesButtonHandler(View view) {
-        startTracking("Standard");
+        startTracking("Standard", 0);
         mStartHighAlertButton.setEnabled(true);
         mStartUpdatesButton.setEnabled(false);
         mStopUpdatesButton.setEnabled(true);
+        mStartEmergencyButton.setEnabled(true);
     }
 
     public void stopUpdatesButtonHandler(View view) {
@@ -202,12 +215,14 @@ public class MainActivity extends ActionBarActivity {
         mStartHighAlertButton.setEnabled(false);
         mStartUpdatesButton.setEnabled(true);
         mStopUpdatesButton.setEnabled(false);
+        mStartEmergencyButton.setEnabled(false);
     }
 
-    public void startTracking(String trackType){
+    public void startTracking(String trackType, int emID){
         Intent intent = new Intent(this, LocationService.class) ;
         intent.putExtra("fb_token", AccessToken.getCurrentAccessToken());
         intent.putExtra("track_type", trackType);
+        intent.putExtra("track_em_id", emID);
         intent.putExtra("address", "address");
         startService(intent);
     }
@@ -241,14 +256,14 @@ public class MainActivity extends ActionBarActivity {
 
     protected void startHighAlert() {
         stopTracking();
-        startTracking("High Alert");
+        startTracking("High Alert", 0);
         highAlertCD = new SafetyCountDown(5000, 1000, 1);
         highAlertCD.start();
     }
 
     protected void stopHighAlert(){
         stopTracking();
-        startTracking("Standard");
+        startTracking("Standard", 0);
         highAlertCD.cancel();
     }
 
@@ -258,101 +273,139 @@ public class MainActivity extends ActionBarActivity {
     }
 
     //-----------------------------------------------Emergency Functions--------------------------------------
-/*
 
     public void emergencyButtonHandler(View view) {
-            //original
-        setContentView(R.layout.activity_emergency);
-        numberOfNok = dbcon2.getNumOfNOK();
-        nokPhoneArray = dbcon2.getNOKPhone();
-        sendLocation = mAddressOutput;
-
-        eNokPhoneListView = (ListView) findViewById(R.id.listViewEmergency);
-        Cursor cscs = dbcon2.fetchAllNOK();
-        adapter3 = new SimpleCursorAdapter(this,R.layout.activity_noknumbers,cscs,from3,to3,0);
-        eNokPhoneListView.setAdapter(adapter3);
-        eNokNameListView = (ListView) findViewById(R.id.listViewEmergencyCall);
-        Cursor cscs2 = dbcon2.fetchAllNOK();
-        adapter4 = new SimpleCursorAdapter(this,R.layout.activity_nok_emergency_contact,cscs,from4,to4,0);
-        eNokNameListView.setAdapter(adapter4);
-        //ends here
-//
-//        Intent intent = new Intent (this,GooglePlaces.class);
-//        intent.putExtra("numberOfNok",numberOfNok);
-//        intent.putExtra("numberOfNokPhoneArray", nokPhoneArray);
-//        intent.putExtra("location",sendLocation);
-
-
-
-
-//        Toast.makeText(this,"Number of NOK in DB " + nokPhoneArray.length +
-//                " Are they the same? " + numberOfNok +
-//                " 1st number " + nokPhoneArray[0][0]+
-//                " 2nd number " + nokPhoneArray[1][0]+
-////                " 3rd number " + checknum[2][0]+
-////                " 4rd number " + checknum[3][0]+
-////                " 5th number " + checknum[4][0]+
-//                " his location " + sendLocation, Toast.LENGTH_LONG).show();
-        //Toast.makeText(this,test123, Toast.LENGTH_LONG).show();
-
-
-        //sendSMSMessage();
-        //sendEmail();
-
+        stopTracking();
+        getEMID();
     }
 
-    protected void sendSMSMessage() {
-        for(int i = 0 ; i < numberOfNok ; i++){
-            try {
-                SmsManager smsManager = SmsManager.getDefault();
-                smsManager.sendTextMessage(nokPhoneArray[i], null, "This is an emergency, your friend/relative/child has been compromised please " +
-                        "contact him/her ASAP. His/her current location is at " + sendLocation, null, null);
-                Toast.makeText(getApplicationContext(), "SMS sent.",
-                        Toast.LENGTH_LONG).show();
-            } catch (Exception e) {
-                Toast.makeText(getApplicationContext(),
-                        "SMS faild, please try again.",
-                        Toast.LENGTH_LONG).show();
-                e.printStackTrace();
-            }
+    public void getEMID(){
+        String uname = preferences.getString("fbsession", "");
+        RequestParams params = new RequestParams();
+        if(uname != null){
+            params.put("username", uname);
+            invokeGetEMID(params);
         }
-
-    }
-
-
-    protected void sendEmail() {
-        nokEmailArray = dbcon2.getNOKEmail();
-        Intent email = new Intent(Intent.ACTION_SEND, Uri.parse("mailto:"));
-        for(int i = 0 ; i < numberOfNok ; i++) {
-        // prompts email clients only
-        email.setType("message/rfc822");
-        email.putExtra(Intent.EXTRA_EMAIL, nokEmailArray[i]);
-        email.putExtra(Intent.EXTRA_SUBJECT, "Emergency");
-        email.putExtra(Intent.EXTRA_TEXT, "testing");
-            try {
-                // the user can choose the email client
-                startActivity(Intent.createChooser(email, "Choose an email client from..."));
-            } catch (android.content.ActivityNotFoundException ex) {
-                Toast.makeText(MainActivity.this, "No email client installed.", Toast.LENGTH_LONG).show();
-            }
+        else{
+            Toast.makeText(getApplicationContext(), "Failed to retrieve contacts", Toast.LENGTH_LONG).show();
         }
-
     }
 
-    //OnClick = Trigger by activity_nok_emergency_contact
-    public void callNOK(View view){
-        Intent callIntent = new Intent(Intent.ACTION_CALL);
-        final int positionNOK = eNokNameListView.getPositionForView((View) view.getParent());
-        callIntent.setData(Uri.parse("tel:" + nokPhoneArray[positionNOK]));
-        startActivity(callIntent);
+    //SEND QUERY TO ATHENA WEB SERVICE
+    public void invokeGetEMID(RequestParams params) {
+        // Make RESTful webservice call using AsyncHttpClient object
+        AsyncHttpClient client = new AsyncHttpClient();
+        client.get("http://119.81.223.180:8080/ProjectAthenaWS/login/getemcount", params, new AsyncHttpResponseHandler() {
+            // When the response returned by REST has Http response code '200'
+            @Override
+            public void onSuccess(String response) {
+                try {
+                    JSONObject obj = new JSONObject(response);
+                    emID = obj.getInt("status");
+                } catch (JSONException e) {
+                    // TODO Auto-generated catch block
+                    Toast.makeText(getApplicationContext(), "Error Occured [Server's JSON response might be invalid]!", Toast.LENGTH_LONG).show();
+                    e.printStackTrace();
+
+                }
+            }
+
+            // When the response returned by REST has Http response code other than '200'
+            @Override
+            public void onFailure(int statusCode, Throwable error,
+                                  String content) {
+                // When Http response code is '404'
+                if (statusCode == 404) {
+                    Toast.makeText(getApplicationContext(), "Requested resource not found", Toast.LENGTH_LONG).show();
+                }
+                // When Http response code is '500'
+                else if (statusCode == 500) {
+                    Toast.makeText(getApplicationContext(), "Something went wrong at server end", Toast.LENGTH_LONG).show();
+                }
+                // When Http response code other than 404, 500
+                else {
+                    Toast.makeText(getApplicationContext(), "Unexpected Error occcured! [Most common Error: Device might not be connected to Internet or remote server is not up and running]", Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onFinish(){
+                createEMID();
+            }
+
+        });
     }
 
-    */
+    //PREPARE QUERY TO GET CONTACT LIST
+    public void createEMID(){
+        String uname = preferences.getString("fbsession", "");
+        RequestParams params = new RequestParams();
+        if(uname != null){
+            params.put("username", uname);
+            params.put("em_times", String.valueOf(emID));
+            invokeCreateEMID(params);
+        }
+        else{
+            Toast.makeText(getApplicationContext(), "Failed to create contacts", Toast.LENGTH_LONG).show();
+        }
+    }
 
-    /**
-     * Retrieve the info of the NOK details from the sqlLite or server
-     * Send a sms to the NOKs with their current location and time
-     **/
+    //SEND QUERY TO ATHENA WEB SERVICE
+    public void invokeCreateEMID(RequestParams params) {
+        // Make RESTful webservice call using AsyncHttpClient object
+        AsyncHttpClient client = new AsyncHttpClient();
+        client.get("http://119.81.223.180:8080/ProjectAthenaWS/login/createemid", params, new AsyncHttpResponseHandler() {
+            // When the response returned by REST has Http response code '200'
+            @Override
+            public void onSuccess(String response) {
+                try {
+                    JSONObject obj = new JSONObject(response);
+
+                    if (obj.getBoolean("status")) {
+                        Toast.makeText(getApplicationContext(), "Create Successful", Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(getApplicationContext(), obj.getString("error_msg"), Toast.LENGTH_LONG).show();
+                    }
+                } catch (JSONException e) {
+                    // TODO Auto-generated catch block
+                    Toast.makeText(getApplicationContext(), "Error Occured [Server's JSON response might be invalid]!", Toast.LENGTH_LONG).show();
+                    e.printStackTrace();
+
+                }
+            }
+
+            // When the response returned by REST has Http response code other than '200'
+            @Override
+            public void onFailure(int statusCode, Throwable error,
+                                  String content) {
+                // When Http response code is '404'
+                if (statusCode == 404) {
+                    Toast.makeText(getApplicationContext(), "Requested resource not found", Toast.LENGTH_LONG).show();
+                }
+                // When Http response code is '500'
+                else if (statusCode == 500) {
+                    Toast.makeText(getApplicationContext(), "Something went wrong at server end", Toast.LENGTH_LONG).show();
+                }
+                // When Http response code other than 404, 500
+                else {
+                    Toast.makeText(getApplicationContext(), "Unexpected Error occcured! [Most common Error: Device might not be connected to Internet or remote server is not up and running]", Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onFinish(){
+                startTracking("Emergency", emID);
+                Intent i = new Intent(MainActivity.this, EmergencyActivity.class);
+                startActivity(i);
+            }
+        });
+    }
+
+
+/**
+ * Retrieve the info of the NOK details from the sqlLite or server
+ * Send a sms to the NOKs with their current location and time
+ **/
 
     /*
     public void deactivateEmergency(View view){
@@ -462,10 +515,10 @@ public class MainActivity extends ActionBarActivity {
     */
 
 
-    //---------------------------------------------Nearby------------------------------------
+//---------------------------------------------Nearby------------------------------------
 
 
-    /** A class, to download Google Places */
+/** A class, to download Google Places */
 
    /*
     private class PlacesTask extends AsyncTask<String, Integer, String> {
@@ -495,7 +548,7 @@ public class MainActivity extends ActionBarActivity {
 
     }*/
 
-    /** A class to parse the Google Places in JSON format */
+/** A class to parse the Google Places in JSON format */
 
     /*
     private class ParserTask extends AsyncTask<String, Integer, List<HashMap<String,String>>>{
@@ -578,7 +631,7 @@ public class MainActivity extends ActionBarActivity {
 
     }*/
 
-    //-----------------------------------------------Route-----------------------------------------------------
+//-----------------------------------------------Route-----------------------------------------------------
                 /*
 
     public void getRoute(double destinationLat, double destinationLng){

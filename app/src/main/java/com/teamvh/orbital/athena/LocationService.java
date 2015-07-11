@@ -40,6 +40,7 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
     private AccessToken accessToken;
     private String address;
     private String trackType;
+    private String emID;
 
     Geocoder geocoder;
     List<Address> addresses;
@@ -57,6 +58,7 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
         accessToken = (AccessToken) b.get("fb_token");
         address = b.getString("address");
         trackType = b.getString("track_type");
+        emID = String.valueOf(b.getInt("track_em_id"));
         getLocation();
         return START_STICKY;
     }
@@ -85,16 +87,20 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
     private void getLocation(){
         locationRequest = LocationRequest.create();
 
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+
         if(trackType.equals("Standard")) {
-            locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
             locationRequest.setInterval(Constants.CHECK_INTERVAL);
             locationRequest.setFastestInterval(Constants.CHECK_FAST_INTERVAL);
             locationRequest.setSmallestDisplacement(Constants.SMALLEST_DISPLACEMENT);
         }else if(trackType.equals("High Alert")){
-            locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
             locationRequest.setInterval(Constants.HA_CHECK_INTERVAL);
             locationRequest.setFastestInterval(Constants.HA_CHECK_FAST_INTERVAL);
             locationRequest.setSmallestDisplacement(Constants.HA_SMALLEST_DISPLACEMENT);
+        }else if(trackType.equals("Emergency")){
+            locationRequest.setInterval(Constants.EM_CHECK_INTERVAL);
+            locationRequest.setFastestInterval(Constants.EM_CHECK_FAST_INTERVAL);
+            locationRequest.setSmallestDisplacement(Constants.EM_SMALLEST_DISPLACEMENT);
         }
         fusedLocationProviderApi = LocationServices.FusedLocationApi;
         googleApiClient = new GoogleApiClient.Builder(this)
@@ -139,18 +145,13 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
         // Instantiate Http Request Param Object
         RequestParams params = new RequestParams();
 
-        //
         if(uname != null){
-            // Put Http parameter name with value of Name Edit View control
             params.put("username", uname);
-            // Put Http parameter username with value of Email Edit View control
             params.put("longitude", String.valueOf(longitude));
-            //
             params.put("latitude", String.valueOf(latitude));
-            // Put Http parameter username with value of Email Edit View control
             params.put("address", address);
-            // Put Http parameter username with value of Email Edit View control
             params.put("track_type", trackType);
+            params.put("track_em_id", emID);
             // Invoke RESTful Web Service with Http parameters
             invokeWS(params);
         }

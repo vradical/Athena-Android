@@ -75,21 +75,12 @@
             android:layout_toRightOf="@id/stop_updates_button"
             android:layout_below="@id/track_location_time"
             android:text="Emergency"
-            android:id="@+id/emergency_button"
+            android:id="@+id/start_emergency_button"
             android:layout_gravity="center_horizontal"
-            android:onClick="emergencyButtonHandler" />
+            android:onClick="emergencyButtonHandler"
+            android:enabled="false" />
 
         <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_toRightOf="@id/emergency_button"
-            android:layout_below="@id/track_location_time"
-            android:text="SeeDB"
-            android:onClick="seeDB"
-            android:id="@+id/testingButton"
-            android:layout_gravity="center_horizontal" />
-
-<Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Activate High Alert"
@@ -109,9 +100,9 @@
             android:enabled="false"
             android:layout_alignBottom="@+id/start_high_alert_button"
             android:layout_toRightOf="@+id/start_high_alert_button"
-            android:layout_toEndOf="@+id/start_high_alert_button" />    
+            android:layout_toEndOf="@+id/start_high_alert_button" />
 
-</RelativeLayout>
+    </RelativeLayout>
 
     <LinearLayout
         android:layout_width="match_parent"

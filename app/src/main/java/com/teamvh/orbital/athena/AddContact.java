@@ -81,10 +81,10 @@ public class AddContact extends AppCompatActivity {
 
         //
         if(uname != null){
-            params.put("fk_username", uname);
+            params.put("username", uname);
             params.put("name", name);
             params.put("email", email);
-            params.put("fk_country", country);
+            params.put("country", country);
             params.put("phone", phone);
             // Invoke RESTful Web Service with Http parameters
             invokeWS(params);

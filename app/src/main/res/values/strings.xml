@@ -18,6 +18,7 @@
     <string name="hello_world">Hello world!</string>
     <string name="title_activity_add_contact">AddContact</string>
     <string name="title_activity_testing">testing</string>
+    <string name="title_activity_emergency">EmergencyActivity</string>
 
 
 </resources>
