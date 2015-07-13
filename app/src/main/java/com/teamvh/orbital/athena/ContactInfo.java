@@ -59,6 +59,10 @@ public class ContactInfo extends AppCompatActivity {
                 Intent i1 =new Intent(this, ContactInfo.class);
                 startActivity(i1);
                 break;
+            case R.id.action_helpinfo:
+                Intent i2 =new Intent(this, HelpInfo.class);
+                startActivity(i2);
+                break;
             default:
                 break;
         }

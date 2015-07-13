@@ -101,6 +101,10 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.teamvh.orbital.athena.MainActivity" />
         </activity>
+        <activity
+            android:name=".HelpInfo"
+            android:label="@string/title_activity_help_info" >
+        </activity>
     </application>
 
 </manifest>

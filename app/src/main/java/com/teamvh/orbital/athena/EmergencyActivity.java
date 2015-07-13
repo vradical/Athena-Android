@@ -132,10 +132,15 @@ public class EmergencyActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Status");
         builder.setMessage(" ");
+        builder.setCancelable(false);
 
         builder.setPositiveButton("Safe", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
                 //displayNearby();
+                Intent i = new Intent(EmergencyActivity.this, HelpInfo.class);
+                i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(i);
+                finish();
             }
         });
 

@@ -1,0 +1,325 @@
+package com.teamvh.orbital.athena;
+
+        import android.content.Intent;
+        import android.content.SharedPreferences;
+        import android.graphics.Color;
+        import android.os.AsyncTask;
+        import android.os.Bundle;
+        import android.support.v7.app.AppCompatActivity;
+        import android.util.Log;
+        import android.view.Menu;
+        import android.view.MenuItem;
+        import android.view.View;
+        import android.widget.Toast;
+
+        import com.google.android.gms.maps.CameraUpdate;
+        import com.google.android.gms.maps.CameraUpdateFactory;
+        import com.google.android.gms.maps.GoogleMap;
+        import com.google.android.gms.maps.SupportMapFragment;
+        import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+        import com.google.android.gms.maps.model.LatLng;
+        import com.google.android.gms.maps.model.Marker;
+        import com.google.android.gms.maps.model.MarkerOptions;
+        import com.google.android.gms.maps.model.PolylineOptions;
+
+        import org.json.JSONObject;
+
+        import java.util.ArrayList;
+        import java.util.HashMap;
+        import java.util.List;
+
+public class HelpInfo extends AppCompatActivity {
+
+    protected GoogleMap mGoogleMap;
+    protected SharedPreferences preferences;
+    protected String latitude;
+    protected String longitude;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_safe);
+        preferences = MainActivity.preferences;
+
+        longitude = preferences.getString("Longitude", "");
+        latitude = preferences.getString("Latitude", "");
+
+        SupportMapFragment fragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.safe_map);
+        // Getting Google Map
+        mGoogleMap = fragment.getMap();
+
+        // Enabling go to current location in Google Map
+        LatLng ll = new LatLng(Double.parseDouble(latitude), Double.parseDouble(longitude));
+        CameraUpdate update = CameraUpdateFactory.newLatLngZoom(ll, 12);
+        mGoogleMap.animateCamera(update);
+
+        //Add a marker to the current location
+        mGoogleMap.addMarker(new MarkerOptions().
+                position(new LatLng(Double.parseDouble(latitude), Double.parseDouble(longitude))).
+                title("You are here").
+                icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
+    }
+
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
+
+    //Menu settings
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_home:
+                Intent i =new Intent(this, MainActivity.class);
+                startActivity(i);
+                break;
+            case R.id.action_contacts:
+                Intent i1 =new Intent(this, ContactInfo.class);
+                startActivity(i1);
+                break;
+            case R.id.action_helpinfo:
+                Intent i2 =new Intent(this, HelpInfo.class);
+                startActivity(i2);
+                break;
+            default:
+                break;
+        }
+        return true;
+    }
+
+    public void displayHospital(View view) {
+        StringBuilder sb = new StringBuilder("https://maps.googleapis.com/maps/api/place/nearbysearch/json?");
+        sb.append("location=" + latitude + "," + longitude);
+        sb.append("&radius=5000");
+        sb.append("&types=" + "hospital");
+        sb.append("&sensor=true");
+        sb.append("&key=AIzaSyCDeAvvUXWhlZZ1aov-zPS20C8enJCExH8");
+        // Creating a new non-ui thread task to download Google place json data
+        PlacesTask placesTask = new PlacesTask();
+        // Invokes the "doInBackground()" method of the class PlaceTask
+        placesTask.execute(sb.toString());
+
+    }
+
+    public void displayPoliceStation(View view) {
+        //Retrieve the information from url
+        //Ensure the key is a browser key
+        StringBuilder sb = new StringBuilder("https://maps.googleapis.com/maps/api/place/nearbysearch/json?");
+        sb.append("location=" + latitude + "," + longitude);
+        sb.append("&radius=5000");
+        sb.append("&types=" + "police");
+        sb.append("&sensor=true");
+        sb.append("&key=AIzaSyCDeAvvUXWhlZZ1aov-zPS20C8enJCExH8");
+
+        // Creating a new non-ui thread task to download Google place json data
+        PlacesTask placesTask = new PlacesTask();
+        // Invokes the "doInBackground()" method of the class PlaceTask
+        placesTask.execute(sb.toString());
+    }
+
+    //----------------------------------------------------NEARBY -------------------------------------------//
+
+    private class PlacesTask extends AsyncTask<String, Integer, String> {
+
+        String data = null;
+
+        // Invoked by execute() method of this object
+        @Override
+        protected String doInBackground(String... url) {
+            try {
+                HttpConnection http = new HttpConnection();
+                data = http.downloadUrl(url[0]);
+            } catch (Exception e) {
+                Log.d("Background Task", e.toString());
+            }
+            return data;
+        }
+
+        // Executed after the complete execution of doInBackground() method
+        @Override
+        protected void onPostExecute(String result) {
+            ParserTask parserTask = new ParserTask();
+            // Start parsing the Google places in JSON format
+            // Invokes the "doInBackground()" method of the class ParseTask
+            parserTask.execute(result);
+        }
+
+    }
+
+    /**
+     * A class to parse the Google Places in JSON format
+     */
+
+    private class ParserTask extends AsyncTask<String, Integer, List<HashMap<String, String>>> {
+
+        JSONObject jObject;
+
+        // Invoked by execute() method of this object
+        @Override
+        protected List<HashMap<String, String>> doInBackground(String... jsonData) {
+
+            List<HashMap<String, String>> places = null;
+            PlaceJsonParser placeJsonParser = new PlaceJsonParser();
+
+            try {
+                jObject = new JSONObject(jsonData[0]);
+
+                /** Getting the parsed data as a List construct */
+                places = placeJsonParser.parse(jObject);
+
+            } catch (Exception e) {
+                Log.d("Exception", e.toString());
+            }
+            return places;
+        }
+
+        // Executed after the complete execution of doInBackground() method
+        @Override
+        protected void onPostExecute(List<HashMap<String, String>> list) {
+
+            // Clears all the existing markers
+            mGoogleMap.clear();
+
+            // Place the current back after clearing
+            mGoogleMap.addMarker(new MarkerOptions().
+                    position(new LatLng(Double.parseDouble(latitude), Double.parseDouble(longitude))).
+                    title("You are here").
+                    icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
+
+            for (int i = 0; i < list.size(); i++) {
+                // Creating a marker
+                MarkerOptions markerOptions = new MarkerOptions();
+
+                // Getting a place from the places list
+                HashMap<String, String> hmPlace = list.get(i);
+
+                // Getting latitude of the place
+                double dlat = Double.parseDouble(hmPlace.get("lat"));
+
+                // Getting longitude of the place
+                double dlng = Double.parseDouble(hmPlace.get("lng"));
+
+                // Getting name
+                String name = hmPlace.get("place_name");
+
+                // Getting vicinity
+                String vicinity = hmPlace.get("vicinity");
+
+                LatLng latLng = new LatLng(dlat, dlng);
+
+                // Setting the position for the marker
+                markerOptions.position(latLng);
+
+                // Setting the title for the marker.
+                markerOptions.title(dlat + " " + dlng + " " + name + " : " + vicinity);
+
+                // Placing a marker on the touched position
+                mGoogleMap.addMarker(markerOptions);
+
+                // Add OnClickListener to the markers if selected will trigger getRoute function by passing lat and lng
+                mGoogleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+                    @Override
+                    public boolean onMarkerClick(Marker marker) {
+                        getRoute(marker.getPosition().latitude, marker.getPosition().longitude);
+                        return false;
+                    }
+                });
+            }
+
+        }
+
+    }
+
+//-----------------------------------------------Route-----------------------------------------------------
+
+
+    public void getRoute(double destinationLat, double destinationLng) {
+        Toast.makeText(HelpInfo.this, destinationLat + " " + destinationLng, Toast.LENGTH_SHORT).show();
+
+        String startPoint = "origin=" + latitude + "," + longitude;
+        String destPoint = "destination=" + destinationLat + "," + destinationLng;
+
+        String sensor = "sensor=false";
+        String params = startPoint + "&" + destPoint + "&" + sensor;
+        String output = "json";
+        String url = "https://maps.googleapis.com/maps/api/directions/"
+                + output + "?" + params;
+        Log.v("Path ", url.toString());
+        RouteTask routeTask = new RouteTask();
+        routeTask.execute(url);
+    }
+
+    private class RouteTask extends AsyncTask<String, Void, String> {
+        @Override
+        protected String doInBackground(String... url) {
+            String data = "";
+            try {
+                HttpConnection http = new HttpConnection();
+                data = http.downloadUrl(url[0]);
+            } catch (Exception e) {
+                Log.d("Background Task", e.toString());
+            }
+            return data;
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+            new ParserTaskR().execute(result);
+        }
+    }
+
+    private class ParserTaskR extends AsyncTask<String, Integer, List<List<HashMap<String, String>>>> {
+
+        @Override
+        protected List<List<HashMap<String, String>>> doInBackground(
+                String... jsonData) {
+
+            JSONObject jObject;
+            List<List<HashMap<String, String>>> routes = null;
+
+            try {
+                jObject = new JSONObject(jsonData[0]);
+                PathJSONParser parser = new PathJSONParser();
+                routes = parser.parse(jObject);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return routes;
+        }
+
+        @Override
+        protected void onPostExecute(List<List<HashMap<String, String>>> routes) {
+            ArrayList<LatLng> points = null;
+            PolylineOptions polyLineOptions = null;
+
+            // traversing through routes
+            for (int i = 0; i < routes.size(); i++) {
+                points = new ArrayList<LatLng>();
+                polyLineOptions = new PolylineOptions();
+                List<HashMap<String, String>> path = routes.get(i);
+
+                for (int j = 0; j < path.size(); j++) {
+                    HashMap<String, String> point = path.get(j);
+
+                    double lat = Double.parseDouble(point.get("lat"));
+                    double lng = Double.parseDouble(point.get("lng"));
+                    LatLng position = new LatLng(lat, lng);
+
+                    points.add(position);
+                }
+
+                polyLineOptions.addAll(points);
+                polyLineOptions.width(6);
+                polyLineOptions.color(Color.BLUE);
+            }
+
+            mGoogleMap.addPolyline(polyLineOptions);
+        }
+
+
+    }
+}
