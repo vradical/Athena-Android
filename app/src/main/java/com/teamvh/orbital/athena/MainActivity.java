@@ -7,8 +7,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.os.Handler;
-import android.os.ResultReceiver;
 import android.os.Vibrator;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
@@ -21,7 +19,6 @@ import android.widget.Toast;
 import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
 import com.facebook.FacebookSdk;
-import com.google.android.gms.location.LocationRequest;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
@@ -38,22 +35,12 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
     protected boolean mAddressRequested;
 
-    public String sendLocation = null;
-
-
     protected String mAddressOutput;
-
-    private AddressResultReceiver mResultReceiver;
 
     protected TextView mLocationAddressTextView;
     protected TextView mLatitudeText;
     protected TextView mLongitudeText;
 
-    protected boolean mRequestingLocationUpdates;
-    protected LocationRequest mLocationRequest;
-    protected final static String REQUESTING_LOCATION_UPDATES_KEY = "requesting-location-updates-key";
-    protected final static String LOCATION_KEY = "location-key";
-    protected final static String LAST_UPDATED_TIME_STRING_KEY = "last-updated-time-string-key";
     protected Button mStartUpdatesButton;
     protected Button mStopUpdatesButton;
     protected TextView mLastUpdateTimeText;
@@ -108,16 +95,12 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         setContentView(R.layout.activity_main);
 
         //FOR THE CURRENT LOCATION
-        mResultReceiver = new AddressResultReceiver(new Handler());
-
         mLocationAddressTextView = (TextView) findViewById(R.id.location_address_view);
         mLatitudeText = (TextView) findViewById(R.id.latitude_text);
         mLongitudeText = (TextView) findViewById(R.id.longitude_text);
         mStartUpdatesButton = (Button) findViewById(R.id.start_updates_button);
         mStopUpdatesButton = (Button) findViewById(R.id.stop_updates_button);
         mLastUpdateTimeText = (TextView) findViewById(R.id.track_location_time);
-
-        mRequestingLocationUpdates = false;
 
         //High alert button
         mStartHighAlertButton = (Button) findViewById(R.id.start_high_alert_button);
@@ -204,8 +187,9 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         mLatitudeText.setText(sharedPreferences.getString("Latitude", ""));
-        mLongitudeText.setText(sharedPreferences.getString("Longitude",""));
-        mLastUpdateTimeText.setText(sharedPreferences.getString("Timestamp",""));
+        mLongitudeText.setText(sharedPreferences.getString("Longitude", ""));
+        mLastUpdateTimeText.setText(sharedPreferences.getString("Timestamp", ""));
+        mLocationAddressTextView.setText(sharedPreferences.getString("Address",""));
     }
     //------------------------------------------------Location-------------------------------------------------//
 
@@ -238,12 +222,6 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         Intent intent = new Intent(this, LocationService.class);
         stopService(intent);
     }
-
-
-    protected void displayAddressOutput() {
-        mLocationAddressTextView.setText(mAddressOutput);
-    }
-
 
     //-------------------------------------------HIGH ALERT-------------------------------------------------------------//
 
@@ -412,35 +390,6 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     }
 
     //--------------------------------SUPPORTING CLASS ------------------------------------------//
-
-    /**
-     * Receiver for data sent from FetchAddressIntentService.
-     */
-    class AddressResultReceiver extends ResultReceiver {
-        public AddressResultReceiver(Handler handler) {
-            super(handler);
-        }
-
-        /**
-         *  Receives data sent from FetchAddressIntentService and updates the UI in MainActivity.
-         */
-        @Override
-        protected void onReceiveResult(int resultCode, Bundle resultData) {
-
-            // Display the address string or an error message sent from the intent service.
-            mAddressOutput = resultData.getString(Constants.RESULT_DATA_KEY);
-            displayAddressOutput();
-
-            // Show a toast message if an address was found.
-            if (resultCode == Constants.SUCCESS_RESULT) {
-                //showToast(getString(R.string.address_found));
-            }
-
-            // Reset. Enable the Fetch Address button and stop showing the progress bar.
-            mAddressRequested = false;
-        }
-    }
-
     public class SafetyCountDown extends CountDownTimer {
 
         protected int cdType;
@@ -477,8 +426,11 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                 v.vibrate(20000);
             }else{
                 if(safetyCount > 1){
-                    //trigger emergency
                     alertMessage.setText("No response from user - Triggering Emergency mode");
+                    safeAlert.cancel();
+                    highAlertCD.cancel();
+                    stopTracking();
+                    getEMID();
                 }else{
                     safetyCount++;
                     stillSafe();

@@ -8,7 +8,9 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -26,13 +28,15 @@ import com.loopj.android.http.RequestParams;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by Ron on 27-Jun-15.
  */
-public class LocationService extends Service implements GoogleApiClient.ConnectionCallbacks,GoogleApiClient.OnConnectionFailedListener, LocationListener {
+public class LocationService extends Service implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
     private static final String TAG = "LocationService";
     private Context mContext;
@@ -40,27 +44,28 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
     private GoogleApiClient googleApiClient;
     private FusedLocationProviderApi fusedLocationProviderApi;
     private AccessToken accessToken;
-    private String address;
     private String trackType;
     private String emID;
+    private double longitude;
+    private double latitude;
+    private String address;
     private SharedPreferences preferences;
     private SharedPreferences.Editor editor;
 
-    Geocoder geocoder;
-    List<Address> addresses;
+    private Geocoder geocoder;
 
     @Override
-    public IBinder onBind(Intent arg0){
+    public IBinder onBind(Intent arg0) {
         return null;
     }
 
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId){
+    public int onStartCommand(Intent intent, int flags, int startId) {
         Log.e(TAG, "onStartCommand");
         super.onStartCommand(intent, flags, startId);
+        geocoder = new Geocoder(this, Locale.getDefault());
         Bundle b = intent.getExtras();
         accessToken = (AccessToken) b.get("fb_token");
-        address = b.getString("address");
         trackType = b.getString("track_type");
         emID = String.valueOf(b.getInt("track_em_id"));
         getLocation();
@@ -68,41 +73,40 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
     }
 
     @Override
-    public void onCreate(){
+    public void onCreate() {
         Log.e(TAG, "onCreate");
         mContext = this;
         preferences = MainActivity.preferences;
     }
 
     @Override
-    public void onDestroy(){
+    public void onDestroy() {
         Log.e(TAG, "onDestroy");
         super.onDestroy();
-        try{
-            if(googleApiClient!=null){
+        try {
+            if (googleApiClient != null) {
                 googleApiClient.disconnect();
             }
-        }
-        catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
     }
 
-    private void getLocation(){
+    private void getLocation() {
         locationRequest = LocationRequest.create();
 
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
-        if(trackType.equals("Standard")) {
+        if (trackType.equals("Standard")) {
             locationRequest.setInterval(Constants.CHECK_INTERVAL);
             locationRequest.setFastestInterval(Constants.CHECK_FAST_INTERVAL);
             locationRequest.setSmallestDisplacement(Constants.SMALLEST_DISPLACEMENT);
-        }else if(trackType.equals("High Alert")){
+        } else if (trackType.equals("High Alert")) {
             locationRequest.setInterval(Constants.HA_CHECK_INTERVAL);
             locationRequest.setFastestInterval(Constants.HA_CHECK_FAST_INTERVAL);
             locationRequest.setSmallestDisplacement(Constants.HA_SMALLEST_DISPLACEMENT);
-        }else if(trackType.equals("Emergency")){
+        } else if (trackType.equals("Emergency")) {
             locationRequest.setInterval(Constants.EM_CHECK_INTERVAL);
             locationRequest.setFastestInterval(Constants.EM_CHECK_FAST_INTERVAL);
             locationRequest.setSmallestDisplacement(Constants.EM_SMALLEST_DISPLACEMENT);
@@ -132,8 +136,10 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
 
     @Override
     public void onLocationChanged(Location location) {
-        Toast.makeText(mContext, "Driver location :"+location.getLatitude()+" , "+location.getLongitude(), Toast.LENGTH_SHORT).show();
-        recordLocation(location.getLongitude(), location.getLatitude());
+        Toast.makeText(mContext, "Driver location :" + location.getLatitude() + " , " + location.getLongitude(), Toast.LENGTH_SHORT).show();
+        latitude = location.getLatitude();
+        longitude = location.getLongitude();
+        recordLocation();
     }
 
     @Override
@@ -142,37 +148,72 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
     }
 
     //PREPARE QUERY TO LOGIN USER
-    public void recordLocation(double longitude, double latitude){
+    public void recordLocation() {
 
-        String uname = accessToken.getUserId();
+        address = null;
+        try {
+            List<Address> addressList = geocoder.getFromLocation(
+                    latitude, longitude, 1);
+            if (addressList != null && addressList.size() > 0) {
+                Address address = addressList.get(0);
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < address.getMaxAddressLineIndex(); i++) {
+                    sb.append(address.getAddressLine(i)).append(" ");
+                }
+                sb.append(address.getPostalCode()).append(" ");
+                sb.append(address.getCountryName());
+                this.address = sb.toString();
+            }
+        } catch (IOException e) {
+            Log.e(TAG, "Unable connect to Geocoder", e);
+        } finally {
+            if (address == null) {
+                address = "Unable to get address for this lat-long.";
+            }
+            String uname = accessToken.getUserId();
+            java.util.Date date = new java.util.Date();
 
-        java.util.Date date= new java.util.Date();
+            editor = preferences.edit();
+            editor.putString("Longitude", String.valueOf(longitude));
+            editor.putString("Latitude", String.valueOf(latitude));
+            editor.putString("Timestamp", String.valueOf(new Timestamp(date.getTime())));
+            editor.putString("Address", address);
+            editor.commit();
+            editor.apply();
 
-        editor = preferences.edit();
-        editor.putString("Longitude", String.valueOf(longitude));
-        editor.putString("Latitude", String.valueOf(latitude));
-        editor.putString("Timestamp", String.valueOf(new Timestamp(date.getTime())));
-        editor.commit();
-        editor.apply();
+            // Instantiate Http Request Param Object
+            RequestParams params = new RequestParams();
 
-        // Instantiate Http Request Param Object
-        RequestParams params = new RequestParams();
+            if (uname != null) {
+                params.put("username", uname);
+                params.put("longitude", String.valueOf(longitude));
+                params.put("latitude", String.valueOf(latitude));
+                params.put("address", address);
+                params.put("track_type", trackType);
+                params.put("track_em_id", emID);
+                // Invoke RESTful Web Service with Http parameters
+                invokeWS(params);
+            }
+            // when any of the field is empty from token
+            else {
+                Toast.makeText(getApplicationContext(), "Failed to record current coordinates", Toast.LENGTH_LONG).show();
+            }
 
-        if(uname != null){
-            params.put("username", uname);
-            params.put("longitude", String.valueOf(longitude));
-            params.put("latitude", String.valueOf(latitude));
-            params.put("address", address);
-            params.put("track_type", trackType);
-            params.put("track_em_id", emID);
-            // Invoke RESTful Web Service with Http parameters
-            invokeWS(params);
         }
-        // when any of the field is empty from token
-        else{
-            Toast.makeText(getApplicationContext(), "Failed to record current coordinates", Toast.LENGTH_LONG).show();
-        }
+    }
 
+    private class GeocoderHandler extends Handler {
+        @Override
+        public void handleMessage(Message message) {
+            String locationAddress = null;
+            switch (message.what) {
+                case 1:
+                    Bundle bundle = message.getData();
+                    locationAddress = bundle.getString("address");
+                    break;
+            }
+            address = locationAddress;
+        }
     }
 
     //SEND QUERY TO ATHENA WEB SERVICE
@@ -225,5 +266,5 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
         });
 
     }
-
+    
 }

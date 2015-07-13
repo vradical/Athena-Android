@@ -199,7 +199,7 @@ public class EmergencyActivity extends AppCompatActivity {
     public void invokeEmergencyWS(RequestParams params) {
         // Make RESTful webservice call using AsyncHttpClient object
         AsyncHttpClient client = new AsyncHttpClient();
-        client.get("http://119.81.223.180:8080/ProjectAthenaWS/emergency/getcontact", params, new AsyncHttpResponseHandler() {
+        client.get("http://119.81.223.180:8080/ProjectAthenaWS/emergency/endem", params, new AsyncHttpResponseHandler() {
             // When the response returned by REST has Http response code '200'
             @Override
             public void onSuccess(String response) {

@@ -30,6 +30,7 @@ public class EmergencyTrackAdapter extends ArrayAdapter<EmergencyTrackData> {
         if (v == null) {
             holder = new ViewHolder();
             v = vi.inflate(Resource, null);
+            holder.tvTrackID = (TextView) v.findViewById(R.id.tvTrackID);
             holder.tvTrackAddress = (TextView) v.findViewById(R.id.tvTrackAddress);
             holder.tvTrackLong = (TextView) v.findViewById(R.id.tvTrackLong);
             holder.tvTrackLat = (TextView) v.findViewById(R.id.tvTrackLat);
@@ -38,6 +39,7 @@ public class EmergencyTrackAdapter extends ArrayAdapter<EmergencyTrackData> {
         } else {
             holder = (ViewHolder) v.getTag();
         }
+        holder.tvTrackID.setText(String.valueOf(position+1));
         holder.tvTrackAddress.setText(emergencyList.get(position).getAddress());
         holder.tvTrackLong.setText(emergencyList.get(position).getLongitude());
         holder.tvTrackLat.setText(emergencyList.get(position).getLatitude());
@@ -50,5 +52,6 @@ public class EmergencyTrackAdapter extends ArrayAdapter<EmergencyTrackData> {
         public TextView tvTrackLong;
         public TextView tvTrackLat;
         public TextView tvTrackDateTime;
+        public TextView tvTrackID;
     }
 }

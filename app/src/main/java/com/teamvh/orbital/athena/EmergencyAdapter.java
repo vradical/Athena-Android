@@ -9,9 +9,6 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
-/**
- * Created by Ron on 13-Jul-15.
- */
 public class EmergencyAdapter extends ArrayAdapter<EmergencyData> {
 
     ArrayList<EmergencyData> emergencyList;
@@ -41,7 +38,8 @@ public class EmergencyAdapter extends ArrayAdapter<EmergencyData> {
         } else {
             holder = (ViewHolder) v.getTag();
         }
-        holder.tvEMID.setText(emergencyList.get(position).getEmID());
+        holder.tvEMID.setText(String.valueOf(position+1));
+        //holder.tvEMID.setText(emergencyList.get(position).getEmID());
         holder.tvStartTime.setText(emergencyList.get(position).getStartTime());
         holder.tvEndTime.setText(emergencyList.get(position).getEndTime());
         holder.tvNumOfTrack.setText(emergencyList.get(position).getNumOfTrack());
