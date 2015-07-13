@@ -105,6 +105,14 @@
             android:name=".HelpInfo"
             android:label="@string/title_activity_help_info" >
         </activity>
+        <activity
+            android:name=".EmergencyHistory"
+            android:label="@string/title_activity_emergency_history" >
+        </activity>
+        <activity
+            android:name=".EmergencyTrackHistory"
+            android:label="@string/title_activity_emergency_track_history" >
+        </activity>
     </application>
 
 </manifest>

@@ -192,6 +192,10 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                 Intent i2 =new Intent(this, HelpInfo.class);
                 startActivity(i2);
                 break;
+            case R.id.action_emergencyHistory:
+                Intent i3 =new Intent(this, EmergencyHistory.class);
+                startActivity(i3);
+                break;
             default:
                 break;
         }
@@ -298,7 +302,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     public void invokeGetEMID(RequestParams params) {
         // Make RESTful webservice call using AsyncHttpClient object
         AsyncHttpClient client = new AsyncHttpClient();
-        client.get("http://119.81.223.180:8080/ProjectAthenaWS/login/getemcount", params, new AsyncHttpResponseHandler() {
+        client.get("http://119.81.223.180:8080/ProjectAthenaWS/emergency/getemcount", params, new AsyncHttpResponseHandler() {
             // When the response returned by REST has Http response code '200'
             @Override
             public void onSuccess(String response) {
@@ -357,7 +361,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     public void invokeCreateEMID(RequestParams params) {
         // Make RESTful webservice call using AsyncHttpClient object
         AsyncHttpClient client = new AsyncHttpClient();
-        client.get("http://119.81.223.180:8080/ProjectAthenaWS/login/createemid", params, new AsyncHttpResponseHandler() {
+        client.get("http://119.81.223.180:8080/ProjectAthenaWS/emergency/createemid", params, new AsyncHttpResponseHandler() {
             // When the response returned by REST has Http response code '200'
             @Override
             public void onSuccess(String response) {
@@ -399,6 +403,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
             public void onFinish() {
                 startTracking("Emergency", emID);
                 Intent i = new Intent(MainActivity.this, EmergencyActivity.class);
+                i.putExtra("track_em_id", emID);
                 //i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 //i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(i);

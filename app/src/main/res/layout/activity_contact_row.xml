@@ -6,7 +6,6 @@
     android:orientation="vertical"
     tools:context="com.teamvh.orbital.athena.AddContact">
 
-
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

@@ -32,6 +32,8 @@ public class EmergencyActivity extends AppCompatActivity {
     protected ContactAdapter adapter;
     protected ArrayList<ContactData> contactList;
     protected SharedPreferences preferences;
+    protected String emID;
+    protected String emStatus;
     final String TAG = "De-activate Emergency";
 
     @Override
@@ -39,6 +41,9 @@ public class EmergencyActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_emergency);
         preferences = MainActivity.preferences;
+
+        Bundle b = getIntent().getExtras();
+        emID = String.valueOf(b.getInt("track_em_id"));
 
         contactList = new ArrayList<ContactData>();
 
@@ -106,15 +111,14 @@ public class EmergencyActivity extends AppCompatActivity {
                 EditText mUserText;
                 mUserText = (EditText) textEntryView.findViewById(R.id.editTextPasscode);
                 String strPinCode = mUserText.getText().toString();
-                if(strPinCode.equals("1234")) {
+                if (strPinCode.equals("1234")) {
                     Log.d(TAG, "Correct Passcode");
                     checkTrigger();
 
                     stopTracking();
                     startTracking("Standard", 0);
-                }
-                else
-                    Log.d( TAG, "Incorrect Passcode");
+                } else
+                    Log.d(TAG, "Incorrect Passcode");
             }
         });
 
@@ -136,18 +140,16 @@ public class EmergencyActivity extends AppCompatActivity {
 
         builder.setPositiveButton("Safe", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
-                //displayNearby();
-                Intent i = new Intent(EmergencyActivity.this, HelpInfo.class);
-                i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                startActivity(i);
-                finish();
+                emStatus = "Safe";
+                endEmergency();
             }
         });
 
         builder.setNegativeButton("False Alarm", new DialogInterface.OnClickListener() {
 
             public void onClick(DialogInterface dialog, int which) {
-                finish();
+                emStatus = "False Alarm";
+                endEmergency();
             }
         });
         builder.show();
@@ -168,12 +170,10 @@ public class EmergencyActivity extends AppCompatActivity {
         Intent intent = new Intent(this, LocationService.class);
         stopService(intent);
     }
-
-
-    //-------------------------GET CONTACTS CODE--------------------------------------------------//
+    //-------------------------END EMERGENCY------------------------------------------------//
 
     //PREPARE QUERY TO GET CONTACT LIST
-    public void getContact(){
+    public void endEmergency(){
 
         String uname = preferences.getString("fbsession", "");
 
@@ -182,9 +182,11 @@ public class EmergencyActivity extends AppCompatActivity {
 
         if(uname != null){
             params.put("username", uname);
+            params.put("track_em_id", emID);
+            params.put("emStatus", emStatus);
 
             // Invoke RESTful Web Service with Http parameters
-            invokeWS(params);
+            invokeEmergencyWS(params);
         }
         // when any of the field is empty from token
         else{
@@ -194,10 +196,10 @@ public class EmergencyActivity extends AppCompatActivity {
     }
 
     //SEND QUERY TO ATHENA WEB SERVICE
-    public void invokeWS(RequestParams params) {
+    public void invokeEmergencyWS(RequestParams params) {
         // Make RESTful webservice call using AsyncHttpClient object
         AsyncHttpClient client = new AsyncHttpClient();
-        client.get("http://119.81.223.180:8080/ProjectAthenaWS/contacts/getcontact", params, new AsyncHttpResponseHandler() {
+        client.get("http://119.81.223.180:8080/ProjectAthenaWS/emergency/getcontact", params, new AsyncHttpResponseHandler() {
             // When the response returned by REST has Http response code '200'
             @Override
             public void onSuccess(String response) {
@@ -207,7 +209,7 @@ public class EmergencyActivity extends AppCompatActivity {
                     // When the JSON response has status boolean value assigned with true
                     if (!response.equals(null)) {
 
-                        try{
+                        try {
                             JSONObject object = obj.getJSONObject("contactData");
 
                             ContactData contact = new ContactData();
@@ -267,7 +269,116 @@ public class EmergencyActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFinish() {adapter.notifyDataSetChanged();
+            public void onFinish() {
+                if(emStatus.equals("Safe")) {
+                    Intent i = new Intent(EmergencyActivity.this, HelpInfo.class);
+                    i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    startActivity(i);
+                }
+                finish();
+            }
+        });
+    }
+
+    //-------------------------GET CONTACTS CODE--------------------------------------------------//
+
+    //PREPARE QUERY TO GET CONTACT LIST
+    public void getContact(){
+
+        String uname = preferences.getString("fbsession", "");
+
+        // Instantiate Http Request Param Object
+        RequestParams params = new RequestParams();
+
+        if(uname != null){
+            params.put("username", uname);
+
+            // Invoke RESTful Web Service with Http parameters
+            invokeContactWS(params);
+        }
+        // when any of the field is empty from token
+        else{
+            Toast.makeText(getApplicationContext(), "Failed to retrieve contacts", Toast.LENGTH_LONG).show();
+        }
+
+    }
+
+    //SEND QUERY TO ATHENA WEB SERVICE
+    public void invokeContactWS(RequestParams params) {
+        // Make RESTful webservice call using AsyncHttpClient object
+        AsyncHttpClient client = new AsyncHttpClient();
+        client.get("http://119.81.223.180:8080/ProjectAthenaWS/contacts/getcontact", params, new AsyncHttpResponseHandler() {
+            // When the response returned by REST has Http response code '200'
+            @Override
+            public void onSuccess(String response) {
+                try {
+                    // JSON Object
+                    JSONObject obj = new JSONObject(response);
+                    // When the JSON response has status boolean value assigned with true
+                    if (!response.equals(null)) {
+
+                        try {
+                            JSONObject object = obj.getJSONObject("contactData");
+
+                            ContactData contact = new ContactData();
+
+                            contact.setName(object.getString("name"));
+                            contact.setEmail(object.getString("email"));
+                            contact.setCountry(object.getString("country"));
+                            contact.setPhone(object.getString("phone"));
+
+                            contactList.add(contact);
+                        } catch (JSONException e) {
+                            JSONArray jarray = obj.getJSONArray("contactData");
+
+                            for (int i = 0; i < jarray.length(); i++) {
+                                JSONObject object = jarray.getJSONObject(i);
+
+                                ContactData contact = new ContactData();
+
+                                contact.setName(object.getString("name"));
+                                contact.setEmail(object.getString("email"));
+                                contact.setCountry(object.getString("country"));
+                                contact.setPhone(object.getString("phone"));
+
+                                contactList.add(contact);
+                            }
+                        }
+
+                        Toast.makeText(getApplicationContext(), "Retrieve Successful", Toast.LENGTH_LONG).show();
+
+                    } else {
+                        // errorMsg.setText(obj.getString("error_msg"));
+                        Toast.makeText(getApplicationContext(), obj.getString("error_msg"), Toast.LENGTH_LONG).show();
+                    }
+                } catch (JSONException e) {
+                    // TODO Auto-generated catch block
+                    Toast.makeText(getApplicationContext(), "Error Occured [Server's JSON response might be invalid]!", Toast.LENGTH_LONG).show();
+                    e.printStackTrace();
+                }
+            }
+
+            // When the response returned by REST has Http response code other than '200'
+            @Override
+            public void onFailure(int statusCode, Throwable error,
+                                  String content) {
+                // When Http response code is '404'
+                if (statusCode == 404) {
+                    Toast.makeText(getApplicationContext(), "Requested resource not found", Toast.LENGTH_LONG).show();
+                }
+                // When Http response code is '500'
+                else if (statusCode == 500) {
+                    Toast.makeText(getApplicationContext(), "Something went wrong at server end", Toast.LENGTH_LONG).show();
+                }
+                // When Http response code other than 404, 500
+                else {
+                    Toast.makeText(getApplicationContext(), "Unexpected Error occcured! [Most common Error: Device might not be connected to Internet or remote server is not up and running]", Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onFinish() {
+                adapter.notifyDataSetChanged();
             }
         });
     }
