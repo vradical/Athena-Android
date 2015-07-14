@@ -13,6 +13,8 @@ public class EmergencyTrackData {
 
     String latitude;
 
+    String country;
+
     public String getAddress() {
         return address;
     }
@@ -44,4 +46,13 @@ public class EmergencyTrackData {
     public void setLatitude(String latitude) {
         this.latitude = latitude;
     }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
 }

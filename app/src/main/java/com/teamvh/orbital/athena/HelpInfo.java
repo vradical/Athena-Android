@@ -1,32 +1,32 @@
 package com.teamvh.orbital.athena;
 
-        import android.content.Intent;
-        import android.content.SharedPreferences;
-        import android.graphics.Color;
-        import android.os.AsyncTask;
-        import android.os.Bundle;
-        import android.support.v7.app.AppCompatActivity;
-        import android.util.Log;
-        import android.view.Menu;
-        import android.view.MenuItem;
-        import android.view.View;
-        import android.widget.Toast;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.Toast;
 
-        import com.google.android.gms.maps.CameraUpdate;
-        import com.google.android.gms.maps.CameraUpdateFactory;
-        import com.google.android.gms.maps.GoogleMap;
-        import com.google.android.gms.maps.SupportMapFragment;
-        import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-        import com.google.android.gms.maps.model.LatLng;
-        import com.google.android.gms.maps.model.Marker;
-        import com.google.android.gms.maps.model.MarkerOptions;
-        import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
 
-        import org.json.JSONObject;
+import org.json.JSONObject;
 
-        import java.util.ArrayList;
-        import java.util.HashMap;
-        import java.util.List;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public class HelpInfo extends AppCompatActivity {
 
@@ -34,12 +34,16 @@ public class HelpInfo extends AppCompatActivity {
     protected SharedPreferences preferences;
     protected String latitude;
     protected String longitude;
+    protected boolean hasRoute;
+    protected String displayChoice;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_safe);
+        setContentView(R.layout.activity_helpinfo);
         preferences = MainActivity.preferences;
+
+        hasRoute = false;
 
         longitude = preferences.getString("Longitude", "");
         latitude = preferences.getString("Latitude", "");
@@ -50,7 +54,7 @@ public class HelpInfo extends AppCompatActivity {
 
         // Enabling go to current location in Google Map
         LatLng ll = new LatLng(Double.parseDouble(latitude), Double.parseDouble(longitude));
-        CameraUpdate update = CameraUpdateFactory.newLatLngZoom(ll, 12);
+        CameraUpdate update = CameraUpdateFactory.newLatLngZoom(ll, 14);
         mGoogleMap.animateCamera(update);
 
         //Add a marker to the current location
@@ -73,15 +77,15 @@ public class HelpInfo extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_home:
-                Intent i =new Intent(this, MainActivity.class);
+                Intent i = new Intent(this, MainActivity.class);
                 startActivity(i);
                 break;
             case R.id.action_contacts:
-                Intent i1 =new Intent(this, ContactInfo.class);
+                Intent i1 = new Intent(this, ContactInfo.class);
                 startActivity(i1);
                 break;
             case R.id.action_helpinfo:
-                Intent i2 =new Intent(this, HelpInfo.class);
+                Intent i2 = new Intent(this, HelpInfo.class);
                 startActivity(i2);
                 break;
             default:
@@ -90,7 +94,15 @@ public class HelpInfo extends AppCompatActivity {
         return true;
     }
 
-    public void displayHospital(View view) {
+    public void callHospital(View view) {
+        displayHospital();
+    }
+
+    public void callPoliceStation(View view) {
+        displayPoliceStation();
+    }
+
+    public void displayHospital() {
         StringBuilder sb = new StringBuilder("https://maps.googleapis.com/maps/api/place/nearbysearch/json?");
         sb.append("location=" + latitude + "," + longitude);
         sb.append("&radius=5000");
@@ -101,10 +113,10 @@ public class HelpInfo extends AppCompatActivity {
         PlacesTask placesTask = new PlacesTask();
         // Invokes the "doInBackground()" method of the class PlaceTask
         placesTask.execute(sb.toString());
-
+        displayChoice = "hospital";
     }
 
-    public void displayPoliceStation(View view) {
+    public void displayPoliceStation() {
         //Retrieve the information from url
         //Ensure the key is a browser key
         StringBuilder sb = new StringBuilder("https://maps.googleapis.com/maps/api/place/nearbysearch/json?");
@@ -118,6 +130,7 @@ public class HelpInfo extends AppCompatActivity {
         PlacesTask placesTask = new PlacesTask();
         // Invokes the "doInBackground()" method of the class PlaceTask
         placesTask.execute(sb.toString());
+        displayChoice = "police";
     }
 
     //----------------------------------------------------NEARBY -------------------------------------------//
@@ -223,6 +236,12 @@ public class HelpInfo extends AppCompatActivity {
                 mGoogleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
                     @Override
                     public boolean onMarkerClick(Marker marker) {
+                        mGoogleMap.clear();
+                        if (displayChoice.equals("police")) {
+                            displayPoliceStation();
+                        } else {
+                            displayHospital();
+                        }
                         getRoute(marker.getPosition().latitude, marker.getPosition().longitude);
                         return false;
                     }
@@ -241,9 +260,9 @@ public class HelpInfo extends AppCompatActivity {
 
         String startPoint = "origin=" + latitude + "," + longitude;
         String destPoint = "destination=" + destinationLat + "," + destinationLng;
-
+        String mode = "mode=walking";
         String sensor = "sensor=false";
-        String params = startPoint + "&" + destPoint + "&" + sensor;
+        String params = startPoint + "&" + destPoint + "&" + sensor + "&" + mode;
         String output = "json";
         String url = "https://maps.googleapis.com/maps/api/directions/"
                 + output + "?" + params;
@@ -274,6 +293,8 @@ public class HelpInfo extends AppCompatActivity {
 
     private class ParserTaskR extends AsyncTask<String, Integer, List<List<HashMap<String, String>>>> {
 
+        PolylineOptions polyLineOptions;
+
         @Override
         protected List<List<HashMap<String, String>>> doInBackground(
                 String... jsonData) {
@@ -294,7 +315,7 @@ public class HelpInfo extends AppCompatActivity {
         @Override
         protected void onPostExecute(List<List<HashMap<String, String>>> routes) {
             ArrayList<LatLng> points = null;
-            PolylineOptions polyLineOptions = null;
+            polyLineOptions = null;
 
             // traversing through routes
             for (int i = 0; i < routes.size(); i++) {
@@ -319,7 +340,6 @@ public class HelpInfo extends AppCompatActivity {
 
             mGoogleMap.addPolyline(polyLineOptions);
         }
-
 
     }
 }

@@ -117,6 +117,7 @@ public class EmergencyTrackHistory extends AppCompatActivity {
                             emergency.setDateTime(object.getString("dateTime"));
                             emergency.setLatitude(String.valueOf(object.getDouble("latitude")));
                             emergency.setLongitude(String.valueOf(object.getDouble("longitude")));
+                            emergency.setCountry(object.getString("country"));
 
                             emergencyTrackList.add(emergency);
 
@@ -132,6 +133,7 @@ public class EmergencyTrackHistory extends AppCompatActivity {
                                 emergency.setDateTime(object.getString("dateTime"));
                                 emergency.setLatitude(String.valueOf(object.getDouble("latitude")));
                                 emergency.setLongitude(String.valueOf(object.getDouble("longitude")));
+                                emergency.setCountry(object.getString("country"));
 
                                 emergencyTrackList.add(emergency);
                             }

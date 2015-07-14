@@ -122,6 +122,9 @@ public class EmergencyHistory extends AppCompatActivity {
                             emergency.setNumOfTrack(object.getString("numOfTrack"));
                             emergency.setStartTime(object.getString("startTime"));
                             emergency.setEmID(String.valueOf(object.getInt("emID")));
+                            emergency.setAddress(object.getString("address"));
+                            emergency.setCountry(object.getString("country"));
+                            emergency.setStatus(object.getString("status"));
 
                             emergencyList.add(emergency);
 
@@ -137,6 +140,9 @@ public class EmergencyHistory extends AppCompatActivity {
                                 emergency.setNumOfTrack(object.getString("numOfTrack"));
                                 emergency.setStartTime(object.getString("startTime"));
                                 emergency.setEmID(String.valueOf(object.getInt("emID")));
+                                emergency.setAddress(object.getString("address"));
+                                emergency.setCountry(object.getString("country"));
+                                emergency.setStatus(object.getString("status"));
 
                                 emergencyList.add(emergency);
                             }

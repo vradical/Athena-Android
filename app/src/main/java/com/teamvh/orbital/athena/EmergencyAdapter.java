@@ -34,6 +34,9 @@ public class EmergencyAdapter extends ArrayAdapter<EmergencyData> {
             holder.tvStartTime = (TextView) v.findViewById(R.id.tvStartTime);
             holder.tvEndTime = (TextView) v.findViewById(R.id.tvEndTime);
             holder.tvNumOfTrack = (TextView) v.findViewById(R.id.tvNumOfTrack);
+            holder.tvAddress = (TextView) v.findViewById(R.id.tvAddress);
+            holder.tvCountry = (TextView) v.findViewById(R.id.tvCountry);
+            holder.tvStatus = (TextView) v.findViewById(R.id.tvStatus);
             v.setTag(holder);
         } else {
             holder = (ViewHolder) v.getTag();
@@ -43,6 +46,9 @@ public class EmergencyAdapter extends ArrayAdapter<EmergencyData> {
         holder.tvStartTime.setText(emergencyList.get(position).getStartTime());
         holder.tvEndTime.setText(emergencyList.get(position).getEndTime());
         holder.tvNumOfTrack.setText(emergencyList.get(position).getNumOfTrack());
+        holder.tvAddress.setText(emergencyList.get(position).getAddress());
+        holder.tvCountry.setText(emergencyList.get(position).getCountry());
+        holder.tvStatus.setText(emergencyList.get(position).getStatus());
         return v;
     }
 
@@ -51,6 +57,9 @@ public class EmergencyAdapter extends ArrayAdapter<EmergencyData> {
         public TextView tvStartTime;
         public TextView tvEndTime;
         public TextView tvNumOfTrack;
+        public TextView tvAddress;
+        public TextView tvCountry;
+        public TextView tvStatus;
     }
 
 }

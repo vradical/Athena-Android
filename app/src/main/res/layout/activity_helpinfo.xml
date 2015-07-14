@@ -29,7 +29,7 @@
         android:layout_alignParentTop="true"
         android:layout_alignLeft="@+id/btnRouteP"
         android:layout_alignStart="@+id/btnRouteP"
-        android:onClick="displayHospital"/>
+        android:onClick="callHospital"/>
 
 
     <TextView
@@ -56,7 +56,7 @@
         android:layout_alignTop="@+id/btnFindP"
         android:layout_toRightOf="@+id/btnFindP"
         android:layout_toEndOf="@+id/btnFindP"
-        android:onClick="displayPoliceStation"/>
+        android:onClick="callPoliceStation"/>
 
 
     <fragment xmlns:android="http://schemas.android.com/apk/res/android"
@@ -69,23 +69,5 @@
         android:layout_marginTop="116dp"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true" />
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Return Home"
-        android:id="@+id/button"
-        android:layout_marginBottom="67dp"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true" />
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Route"
-        android:id="@+id/btnGetRoute"
-        android:layout_below="@+id/btnFindP"
-        android:layout_centerHorizontal="true"
-        android:onClick="getRoute"/>
 
 </RelativeLayout>

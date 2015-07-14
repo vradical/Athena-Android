@@ -6,8 +6,8 @@
     android:orientation="vertical">
 
     <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_weight="0.4"
         android:orientation="vertical"
         android:id="@+id/test1">
@@ -100,6 +100,13 @@
             android:layout_toRightOf="@+id/start_high_alert_button"
             android:layout_toEndOf="@+id/start_high_alert_button" />
 
+        <fragment
+            android:id="@+id/main_map"
+            android:layout_below="@+id/start_high_alert_button"
+            android:layout_width="800dp"
+            android:layout_height="700dp"
+            class="com.google.android.gms.maps.SupportMapFragment"
+            />
     </RelativeLayout>
 
 </LinearLayout>

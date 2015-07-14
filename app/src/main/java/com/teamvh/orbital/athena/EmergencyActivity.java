@@ -102,7 +102,7 @@ public class EmergencyActivity extends AppCompatActivity {
     public void deactivateEmergency(View view){
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         LayoutInflater inflater = LayoutInflater.from(this);
-        final View textEntryView = inflater.inflate(R.layout.activity_password, null);
+        final View textEntryView = inflater.inflate(R.layout.activity_emergency_password, null);
         builder.setTitle("Passcode");
         builder.setMessage("To deactivate please enter your passcode");
         builder.setView(textEntryView);
@@ -140,7 +140,7 @@ public class EmergencyActivity extends AppCompatActivity {
 
         builder.setPositiveButton("Safe", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
-                emStatus = "Safe";
+                emStatus = "Emergency";
                 endEmergency();
             }
         });
@@ -162,7 +162,6 @@ public class EmergencyActivity extends AppCompatActivity {
         intent.putExtra("fb_token", AccessToken.getCurrentAccessToken());
         intent.putExtra("track_type", trackType);
         intent.putExtra("track_em_id", emID);
-        intent.putExtra("address", "address");
         startService(intent);
     }
 
@@ -207,38 +206,10 @@ public class EmergencyActivity extends AppCompatActivity {
                     // JSON Object
                     JSONObject obj = new JSONObject(response);
                     // When the JSON response has status boolean value assigned with true
-                    if (!response.equals(null)) {
+                    if (obj.getBoolean("status")) {
+                        Toast.makeText(getApplicationContext(), "Record Successful", Toast.LENGTH_LONG).show();
 
-                        try {
-                            JSONObject object = obj.getJSONObject("contactData");
-
-                            ContactData contact = new ContactData();
-
-                            contact.setName(object.getString("name"));
-                            contact.setEmail(object.getString("email"));
-                            contact.setCountry(object.getString("country"));
-                            contact.setPhone(object.getString("phone"));
-
-                            contactList.add(contact);
-                        } catch (JSONException e) {
-                            JSONArray jarray = obj.getJSONArray("contactData");
-
-                            for (int i = 0; i < jarray.length(); i++) {
-                                JSONObject object = jarray.getJSONObject(i);
-
-                                ContactData contact = new ContactData();
-
-                                contact.setName(object.getString("name"));
-                                contact.setEmail(object.getString("email"));
-                                contact.setCountry(object.getString("country"));
-                                contact.setPhone(object.getString("phone"));
-
-                                contactList.add(contact);
-                            }
-                        }
-
-                        Toast.makeText(getApplicationContext(), "Retrieve Successful", Toast.LENGTH_LONG).show();
-
+                    // Else display error message
                     } else {
                         // errorMsg.setText(obj.getString("error_msg"));
                         Toast.makeText(getApplicationContext(), obj.getString("error_msg"), Toast.LENGTH_LONG).show();

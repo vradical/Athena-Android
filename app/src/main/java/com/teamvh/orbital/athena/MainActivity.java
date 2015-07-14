@@ -19,6 +19,12 @@ import android.widget.Toast;
 import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
 import com.facebook.FacebookSdk;
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
@@ -32,10 +38,6 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     private AccessTokenTracker accessTokenTracker;
     public static SharedPreferences preferences;
     public static SharedPreferences.Editor editor;
-
-    protected boolean mAddressRequested;
-
-    protected String mAddressOutput;
 
     protected TextView mLocationAddressTextView;
     protected TextView mLatitudeText;
@@ -61,6 +63,11 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     //emergency function
     protected Button mStartEmergencyButton;
     protected int emID;
+
+    //map
+    protected GoogleMap mGoogleMap;
+    protected double latitude;
+    protected double longitude;
 
     //-------------------------------------GENERAL METHOD------------------------------------------//
     @Override
@@ -88,6 +95,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         };
 
         displayMain();
+        createMap();
     }
 
     //Set up the activity page and initialize the content.
@@ -109,11 +117,6 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
         //Emergency Button
         mStartEmergencyButton = (Button) findViewById(R.id.start_emergency_button);
-
-        // Set defaults, then update using values stored in the Bundle.
-        mAddressRequested = false;
-        mAddressOutput = "";
-
     }
 
     //Check for facebook login
@@ -190,6 +193,16 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         mLongitudeText.setText(sharedPreferences.getString("Longitude", ""));
         mLastUpdateTimeText.setText(sharedPreferences.getString("Timestamp", ""));
         mLocationAddressTextView.setText(sharedPreferences.getString("Address",""));
+
+        longitude = Double.parseDouble(sharedPreferences.getString("Longitude", ""));
+        latitude = Double.parseDouble(sharedPreferences.getString("Latitude", ""));
+
+        // Enabling go to current location in Google Map
+        LatLng ll = new LatLng(latitude, longitude);
+        CameraUpdate update = CameraUpdateFactory.newLatLngZoom(ll, 18);
+        mGoogleMap.animateCamera(update);
+        mGoogleMap.clear();
+        mGoogleMap.addMarker(new MarkerOptions().position(ll).title("Last Track Location"));
     }
     //------------------------------------------------Location-------------------------------------------------//
 
@@ -387,6 +400,13 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                 startActivity(i);
             }
         });
+    }
+
+    //-------------------------------------MAP FUNCTION------------------------------------------//
+
+    public void createMap(){
+        SupportMapFragment fragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.main_map);
+        mGoogleMap = fragment.getMap();
     }
 
     //--------------------------------SUPPORTING CLASS ------------------------------------------//

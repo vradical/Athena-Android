@@ -49,6 +49,7 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
     private double longitude;
     private double latitude;
     private String address;
+    private String country;
     private SharedPreferences preferences;
     private SharedPreferences.Editor editor;
 
@@ -160,9 +161,12 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
                 for (int i = 0; i < address.getMaxAddressLineIndex(); i++) {
                     sb.append(address.getAddressLine(i)).append(" ");
                 }
+                if(address.getLocality() != null) {
+                    sb.append(address.getLocality()).append(" ");
+                }
                 sb.append(address.getPostalCode()).append(" ");
-                sb.append(address.getCountryName());
                 this.address = sb.toString();
+                country = address.getCountryName().toString();
             }
         } catch (IOException e) {
             Log.e(TAG, "Unable connect to Geocoder", e);
@@ -178,6 +182,7 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
             editor.putString("Latitude", String.valueOf(latitude));
             editor.putString("Timestamp", String.valueOf(new Timestamp(date.getTime())));
             editor.putString("Address", address);
+            editor.putString("Country", country);
             editor.commit();
             editor.apply();
 
@@ -189,6 +194,7 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
                 params.put("longitude", String.valueOf(longitude));
                 params.put("latitude", String.valueOf(latitude));
                 params.put("address", address);
+                params.put("country", country);
                 params.put("track_type", trackType);
                 params.put("track_em_id", emID);
                 // Invoke RESTful Web Service with Http parameters
@@ -266,5 +272,5 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
         });
 
     }
-    
+
 }
