@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdate;
@@ -36,6 +37,8 @@ public class HelpInfo extends AppCompatActivity {
     protected String longitude;
     protected boolean hasRoute;
     protected String displayChoice;
+    protected TextView mPoliceText;
+    protected TextView mHospitalText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +50,8 @@ public class HelpInfo extends AppCompatActivity {
 
         longitude = preferences.getString("Longitude", "");
         latitude = preferences.getString("Latitude", "");
+
+        displayEmergencyPhone();
 
         SupportMapFragment fragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.safe_map);
         // Getting Google Map
@@ -92,6 +97,16 @@ public class HelpInfo extends AppCompatActivity {
                 break;
         }
         return true;
+    }
+
+    public void displayEmergencyPhone(){
+        mPoliceText = (TextView) findViewById(R.id.helpPoliceText);
+        mHospitalText = (TextView) findViewById(R.id.helpHospitalText);
+
+        CountryList country = new CountryList();
+        CountryData curCountry =  country.findCountry(preferences.getString("CountryCode", ""));
+        mPoliceText.append(" " + curCountry.getPoliceNum());
+        mHospitalText.append(" " + curCountry.getHospitalNum());
     }
 
     public void callHospital(View view) {

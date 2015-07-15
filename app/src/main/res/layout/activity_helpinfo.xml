@@ -7,7 +7,7 @@
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:text="Police"
-        android:id="@+id/textView4"
+        android:id="@+id/helpPoliceText"
         android:layout_below="@+id/btnFindH"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
@@ -37,14 +37,14 @@
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:text="Hospital"
-        android:id="@+id/textView5" />
+        android:id="@+id/helpHospitalText" />
 
     <Button
         android:id="@+id/btnFindP"
         android:layout_width="wrap_content"
         android:layout_height="60dp"
         android:text="Call"
-        android:layout_alignTop="@+id/textView4"
+        android:layout_alignTop="@+id/helpPoliceText"
         android:layout_centerHorizontal="true"
         />
 
@@ -65,7 +65,7 @@
         android:layout_height="700dp"
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_gravity="center_vertical"
-        android:layout_below="@+id/textView4"
+        android:layout_below="@+id/helpHospitalText"
         android:layout_marginTop="116dp"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true" />

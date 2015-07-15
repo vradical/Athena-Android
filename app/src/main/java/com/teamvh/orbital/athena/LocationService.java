@@ -50,6 +50,7 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
     private double latitude;
     private String address;
     private String country;
+    private String countryCode;
     private SharedPreferences preferences;
     private SharedPreferences.Editor editor;
 
@@ -167,6 +168,7 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
                 sb.append(address.getPostalCode()).append(" ");
                 this.address = sb.toString();
                 country = address.getCountryName().toString();
+                countryCode = address.getCountryCode().toString();
             }
         } catch (IOException e) {
             Log.e(TAG, "Unable connect to Geocoder", e);
@@ -183,6 +185,7 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
             editor.putString("Timestamp", String.valueOf(new Timestamp(date.getTime())));
             editor.putString("Address", address);
             editor.putString("Country", country);
+            editor.putString("CountryCode", countryCode);
             editor.commit();
             editor.apply();
 

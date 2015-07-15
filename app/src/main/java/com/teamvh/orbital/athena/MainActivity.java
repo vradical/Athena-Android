@@ -182,6 +182,10 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                 Intent i3 =new Intent(this, EmergencyHistory.class);
                 startActivity(i3);
                 break;
+            case R.id.action_settings:
+                Intent i4 =new Intent(this, SettingsActivity.class);
+                startActivity(i4);
+                break;
             default:
                 break;
         }
