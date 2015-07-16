@@ -19,6 +19,7 @@ import android.widget.Toast;
 import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
 import com.facebook.FacebookSdk;
+import com.facebook.Profile;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -46,6 +47,8 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     protected Button mStartUpdatesButton;
     protected Button mStopUpdatesButton;
     protected TextView mLastUpdateTimeText;
+
+    protected Profile profile;
 
     //--------------------------------------------Nearby----------------------------------------
 
@@ -87,8 +90,11 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         accessTokenTracker = new AccessTokenTracker() {
             @Override
             protected void onCurrentAccessTokenChanged(AccessToken oldAccessToken, AccessToken newAccessToken) {
+                profile = Profile.getCurrentProfile();
+                String name = profile.getName();
                 editor = preferences.edit();
                 editor.putString("fbsession", newAccessToken.getUserId());
+                editor.putString("name", name);
                 editor.commit();
                 editor.apply();
             }
@@ -183,7 +189,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                 startActivity(i3);
                 break;
             case R.id.action_settings:
-                Intent i4 =new Intent(this, SettingsActivity.class);
+                Intent i4 =new Intent(this, EmergencyHistory.class);
                 startActivity(i4);
                 break;
             default:

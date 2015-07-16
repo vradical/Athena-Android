@@ -4,7 +4,6 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.telephony.SmsManager;
@@ -34,6 +33,7 @@ public class EmergencyActivity extends AppCompatActivity {
     protected SharedPreferences preferences;
     protected String emID;
     protected String emStatus;
+    protected String uname;
     final String TAG = "De-activate Emergency";
 
     @Override
@@ -44,49 +44,13 @@ public class EmergencyActivity extends AppCompatActivity {
 
         Bundle b = getIntent().getExtras();
         emID = String.valueOf(b.getInt("track_em_id"));
+        uname = preferences.getString("fbsession", "");
 
         contactList = new ArrayList<ContactData>();
-
         getContact();
         listView = (ListView) findViewById(R.id.listViewEmergencyCall);
         adapter = new ContactAdapter(this, R.layout.activity_contact_row, contactList);
         listView.setAdapter(adapter);
-    }
-
-    protected void sendSMSMessage() {
-        for(int i = 0 ; i < contactList.size() ; i++){
-            try {
-                SmsManager smsManager = SmsManager.getDefault();
-                smsManager.sendTextMessage(contactList.get(i).getPhone(), null, "This is an emergency, your friend/relative/child has been compromised please " +
-                        "contact him/her ASAP. His/her current location is at " + "Ron House!", null, null);
-                Toast.makeText(getApplicationContext(), "SMS sent.",
-                        Toast.LENGTH_LONG).show();
-            } catch (Exception e) {
-                Toast.makeText(getApplicationContext(),
-                        "SMS faild, please try again.",
-                        Toast.LENGTH_LONG).show();
-                e.printStackTrace();
-            }
-        }
-
-    }
-
-
-    protected void sendEmail() {
-        Intent email = new Intent(Intent.ACTION_SEND, Uri.parse("mailto:"));
-        for(int i = 0 ; i < contactList.size() ; i++) {
-            // prompts email clients only
-            email.setType("message/rfc822");
-            email.putExtra(Intent.EXTRA_EMAIL, contactList.get(i).getEmail());
-            email.putExtra(Intent.EXTRA_SUBJECT, "Emergency");
-            email.putExtra(Intent.EXTRA_TEXT, "testing");
-            try {
-                // the user can choose the email client
-                startActivity(Intent.createChooser(email, "Choose an email client from..."));
-            } catch (android.content.ActivityNotFoundException ex) {
-                Toast.makeText(this, "No email client installed.", Toast.LENGTH_LONG).show();
-            }
-        }
 
     }
 
@@ -174,8 +138,6 @@ public class EmergencyActivity extends AppCompatActivity {
     //PREPARE QUERY TO GET CONTACT LIST
     public void endEmergency(){
 
-        String uname = preferences.getString("fbsession", "");
-
         // Instantiate Http Request Param Object
         RequestParams params = new RequestParams();
 
@@ -209,7 +171,7 @@ public class EmergencyActivity extends AppCompatActivity {
                     if (obj.getBoolean("status")) {
                         Toast.makeText(getApplicationContext(), "Record Successful", Toast.LENGTH_LONG).show();
 
-                    // Else display error message
+                        // Else display error message
                     } else {
                         // errorMsg.setText(obj.getString("error_msg"));
                         Toast.makeText(getApplicationContext(), obj.getString("error_msg"), Toast.LENGTH_LONG).show();
@@ -241,7 +203,7 @@ public class EmergencyActivity extends AppCompatActivity {
 
             @Override
             public void onFinish() {
-                if(emStatus.equals("Safe")) {
+                if (emStatus.equals("Safe")) {
                     Intent i = new Intent(EmergencyActivity.this, HelpInfo.class);
                     i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                     startActivity(i);
@@ -251,12 +213,192 @@ public class EmergencyActivity extends AppCompatActivity {
         });
     }
 
+    //-------------------------SEND EMAIL --------------------------------------------------------//
+
+
+    protected void sendEmail() {
+
+        // Instantiate Http Request Param Object
+        RequestParams params = new RequestParams();
+
+        if(uname != null){
+            params.put("username", uname);
+            params.put("name", preferences.getString("name", ""));
+            params.put("country", preferences.getString("Country", ""));
+            params.put("address", preferences.getString("Address",""));
+            params.put("latitude", preferences.getString("Latitude", ""));
+            params.put("longitude", preferences.getString("Longitude", ""));
+
+            // Invoke RESTful Web Service with Http parameters
+            invokeEmailWS(params);
+        }
+        // when any of the field is empty from token
+        else{
+            Toast.makeText(getApplicationContext(), "Failed to send email", Toast.LENGTH_LONG).show();
+        }
+
+    }
+
+    //SEND QUERY TO ATHENA WEB SERVICE
+    public void invokeEmailWS(RequestParams params) {
+        // Make RESTful webservice call using AsyncHttpClient object
+        AsyncHttpClient client = new AsyncHttpClient();
+        client.get("http://119.81.223.180:8080/ProjectAthenaWS/emergency/sendmail", params, new AsyncHttpResponseHandler() {
+            // When the response returned by REST has Http response code '200'
+            @Override
+            public void onSuccess(String response) {
+                try {
+                    // JSON Object
+                    JSONObject obj = new JSONObject(response);
+                    // When the JSON response has status boolean value assigned with true
+                    if (obj.getBoolean("status")) {
+                        Toast.makeText(getApplicationContext(), "Record Successful", Toast.LENGTH_LONG).show();
+
+                        // Else display error message
+                    } else {
+                        // errorMsg.setText(obj.getString("error_msg"));
+                        Toast.makeText(getApplicationContext(), obj.getString("error_msg"), Toast.LENGTH_LONG).show();
+                    }
+                } catch (JSONException e) {
+                    // TODO Auto-generated catch block
+                    Toast.makeText(getApplicationContext(), "Error Occured [Server's JSON response might be invalid]!", Toast.LENGTH_LONG).show();
+                    e.printStackTrace();
+                }
+            }
+
+            // When the response returned by REST has Http response code other than '200'
+            @Override
+            public void onFailure(int statusCode, Throwable error,
+                                  String content) {
+                // When Http response code is '404'
+                if (statusCode == 404) {
+                    Toast.makeText(getApplicationContext(), "Requested resource not found", Toast.LENGTH_LONG).show();
+                }
+                // When Http response code is '500'
+                else if (statusCode == 500) {
+                    Toast.makeText(getApplicationContext(), "Something went wrong at server end", Toast.LENGTH_LONG).show();
+                }
+                // When Http response code other than 404, 500
+                else {
+                    Toast.makeText(getApplicationContext(), "Unexpected Error occcured! [Most common Error: Device might not be connected to Internet or remote server is not up and running]", Toast.LENGTH_LONG).show();
+                }
+            }
+
+        });
+    }
+
+
+    //-----------------------------SEND SMS -----------------------------------------------------------//
+
+
+    protected void sendSMSMessage() {
+        for(int i = 0 ; i < contactList.size() ; i++){
+            try {
+                SmsManager smsManager = SmsManager.getDefault();
+
+                /*String sendMessage = "This is an emergency. " + preferences.getString("name","") + " may be in danger. Please reach out to him/her immediately at "
+                        + preferences.getString("Country","") +" "+preferences.getString("Address", "")+" ("+preferences.getString("Latitude", "")
+                        +", "+preferences.getString("Longitude", "")+"). Please do not reply to this SMS.";*/
+
+                String sendMessage = "HELP";
+
+                String phone = contactList.get(i).getPhone();
+                smsManager.sendTextMessage(phone, null, sendMessage, null, null);
+
+                Toast.makeText(getApplicationContext(), "SMS sent.",
+                        Toast.LENGTH_LONG).show();
+
+            } catch (Exception e) {
+
+                Toast.makeText(getApplicationContext(),
+                        "SMS faild, please try again.",
+                        Toast.LENGTH_LONG).show();
+                e.printStackTrace();
+
+                //sendSMSWS();
+
+            }
+        }
+
+    }
+
+    //if above failed, use web service to send
+    protected void sendSMSWS() {
+
+        // Instantiate Http Request Param Object
+        RequestParams params = new RequestParams();
+
+        if(uname != null){
+            params.put("username", uname);
+            params.put("name", preferences.getString("name", ""));
+            params.put("country", preferences.getString("Country", ""));
+            params.put("address", preferences.getString("Address",""));
+            params.put("latitude", preferences.getString("Latitude", ""));
+            params.put("longitude", preferences.getString("Longitude", ""));
+
+            // Invoke RESTful Web Service with Http parameters
+            invokeSMSWS(params);
+        }
+        // when any of the field is empty from token
+        else{
+            Toast.makeText(getApplicationContext(), "Failed to send sms", Toast.LENGTH_LONG).show();
+        }
+
+
+    }
+
+    //SEND QUERY TO ATHENA WEB SERVICE
+    public void invokeSMSWS(RequestParams params) {
+        // Make RESTful webservice call using AsyncHttpClient object
+        AsyncHttpClient client = new AsyncHttpClient();
+        client.get("http://119.81.223.180:8080/ProjectAthenaWS/emergency/sendsms", params, new AsyncHttpResponseHandler() {
+            // When the response returned by REST has Http response code '200'
+            @Override
+            public void onSuccess(String response) {
+                try {
+                    // JSON Object
+                    JSONObject obj = new JSONObject(response);
+                    // When the JSON response has status boolean value assigned with true
+                    if (obj.getBoolean("status")) {
+                        Toast.makeText(getApplicationContext(), "Record Successful", Toast.LENGTH_LONG).show();
+
+                        // Else display error message
+                    } else {
+                        // errorMsg.setText(obj.getString("error_msg"));
+                        Toast.makeText(getApplicationContext(), obj.getString("error_msg"), Toast.LENGTH_LONG).show();
+                    }
+                } catch (JSONException e) {
+                    // TODO Auto-generated catch block
+                    Toast.makeText(getApplicationContext(), "Error Occured [Server's JSON response might be invalid]!", Toast.LENGTH_LONG).show();
+                    e.printStackTrace();
+                }
+            }
+
+            // When the response returned by REST has Http response code other than '200'
+            @Override
+            public void onFailure(int statusCode, Throwable error,
+                                  String content) {
+                // When Http response code is '404'
+                if (statusCode == 404) {
+                    Toast.makeText(getApplicationContext(), "Requested resource not found", Toast.LENGTH_LONG).show();
+                }
+                // When Http response code is '500'
+                else if (statusCode == 500) {
+                    Toast.makeText(getApplicationContext(), "Something went wrong at server end", Toast.LENGTH_LONG).show();
+                }
+                // When Http response code other than 404, 500
+                else {
+                    Toast.makeText(getApplicationContext(), "Unexpected Error occcured! [Most common Error: Device might not be connected to Internet or remote server is not up and running]", Toast.LENGTH_LONG).show();
+                }
+            }
+
+        });
+    }
+
     //-------------------------GET CONTACTS CODE--------------------------------------------------//
 
     //PREPARE QUERY TO GET CONTACT LIST
     public void getContact(){
-
-        String uname = preferences.getString("fbsession", "");
 
         // Instantiate Http Request Param Object
         RequestParams params = new RequestParams();
@@ -350,6 +492,8 @@ public class EmergencyActivity extends AppCompatActivity {
             @Override
             public void onFinish() {
                 adapter.notifyDataSetChanged();
+                sendSMSMessage();
+                sendEmail();
             }
         });
     }
