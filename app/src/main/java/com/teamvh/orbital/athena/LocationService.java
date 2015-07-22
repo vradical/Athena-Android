@@ -51,6 +51,7 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
     private String address;
     private String country;
     private String countryCode;
+    private String locality;
     private SharedPreferences preferences;
     private SharedPreferences.Editor editor;
 
@@ -141,6 +142,7 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
         Toast.makeText(mContext, "Driver location :" + location.getLatitude() + " , " + location.getLongitude(), Toast.LENGTH_SHORT).show();
         latitude = location.getLatitude();
         longitude = location.getLongitude();
+        location.getTime();
         recordLocation();
     }
 
@@ -164,6 +166,9 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
                 }
                 if(address.getLocality() != null) {
                     sb.append(address.getLocality()).append(" ");
+                    locality = address.getLocality();
+                }else{
+                    locality = "Not Available";
                 }
                 sb.append(address.getPostalCode()).append(" ");
                 this.address = sb.toString();
@@ -174,7 +179,7 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
             Log.e(TAG, "Unable connect to Geocoder", e);
         } finally {
             if (address == null) {
-                address = "Unable to get address for this lat-long.";
+                address = "Not Available";
             }
             String uname = accessToken.getUserId();
             java.util.Date date = new java.util.Date();
@@ -186,6 +191,7 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
             editor.putString("Address", address);
             editor.putString("Country", country);
             editor.putString("CountryCode", countryCode);
+            editor.putString("Locality", locality);
             editor.commit();
             editor.apply();
 

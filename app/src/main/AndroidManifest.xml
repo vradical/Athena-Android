@@ -40,15 +40,7 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
-        <activity
-            android:name=".MainActivity"
-            android:label="@string/app_name" >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
         <activity
             android:name="com.facebook.FacebookActivity"
             android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
@@ -70,9 +62,20 @@
             android:enabled="true" />
 
         <activity
+            android:name=".MainActivity"
+            android:label="@string/app_name"
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
             android:name=".ContactInfo"
             android:label="@string/title_activity_contact_info"
-            android:parentActivityName=".MainActivity" >
+            android:parentActivityName=".MainActivity"
+            android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.teamvh.orbital.athena.MainActivity" />
@@ -80,34 +83,40 @@
         <activity
             android:name=".AddContact"
             android:label="@string/title_activity_add_contact"
-            android:parentActivityName=".ContactInfo" >
+            android:parentActivityName=".ContactInfo"
+            android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.teamvh.orbital.athena.ContactInfo" />
         </activity>
         <activity
             android:name=".LoginActivity"
-            android:label="@string/title_activity_display_message" >
+            android:label="@string/title_activity_display_message"
+            android:screenOrientation="portrait">
         </activity>
         <activity
             android:name=".EmergencyActivity"
             android:label="@string/title_activity_emergency"
-            android:parentActivityName=".MainActivity" >
+            android:parentActivityName=".MainActivity"
+            android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.teamvh.orbital.athena.MainActivity" />
         </activity>
         <activity
             android:name=".HelpInfo"
-            android:label="@string/title_activity_help_info" >
+            android:label="@string/title_activity_help_info"
+            android:screenOrientation="portrait">
         </activity>
         <activity
             android:name=".EmergencyHistory"
-            android:label="@string/title_activity_emergency_history" >
+            android:label="@string/title_activity_emergency_history"
+            android:screenOrientation="portrait">
         </activity>
         <activity
             android:name=".EmergencyTrackHistory"
-            android:label="@string/title_activity_emergency_track_history" >
+            android:label="@string/title_activity_emergency_track_history"
+            android:screenOrientation="portrait">
         </activity>
     </application>
 

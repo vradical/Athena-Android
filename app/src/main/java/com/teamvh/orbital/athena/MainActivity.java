@@ -8,11 +8,14 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Vibrator;
+import android.preference.Preference;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -39,12 +42,15 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     private AccessTokenTracker accessTokenTracker;
     public static SharedPreferences preferences;
     public static SharedPreferences.Editor editor;
+    public static Preference countryPref;
+
+    protected FloatingActionButton actionButton;
 
     protected TextView mLocationAddressTextView;
-    protected TextView mLatitudeText;
-    protected TextView mLongitudeText;
+    protected TextView mCountryTextView;
+    protected TextView mStatusTextView;
 
-    protected Button mStartUpdatesButton;
+    protected ImageButton mStartUpdatesButton;
     protected Button mStopUpdatesButton;
     protected TextView mLastUpdateTimeText;
 
@@ -107,14 +113,15 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     //Set up the activity page and initialize the content.
     public void displayMain(){
         setContentView(R.layout.activity_main);
+        //getSupportActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#1e253f")));
 
         //FOR THE CURRENT LOCATION
         mLocationAddressTextView = (TextView) findViewById(R.id.location_address_view);
-        mLatitudeText = (TextView) findViewById(R.id.latitude_text);
-        mLongitudeText = (TextView) findViewById(R.id.longitude_text);
-        mStartUpdatesButton = (Button) findViewById(R.id.start_updates_button);
+        mCountryTextView = (TextView) findViewById(R.id.track_country);
+        mStartUpdatesButton = (ImageButton) findViewById(R.id.start_updates_button);
         mStopUpdatesButton = (Button) findViewById(R.id.stop_updates_button);
         mLastUpdateTimeText = (TextView) findViewById(R.id.track_location_time);
+        mStatusTextView = (TextView) findViewById(R.id.statusTV);
 
         //High alert button
         mStartHighAlertButton = (Button) findViewById(R.id.start_high_alert_button);
@@ -172,10 +179,6 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.action_home:
-                Intent i =new Intent(this, MainActivity.class);
-                startActivity(i);
-                break;
             case R.id.action_contacts:
                 Intent i1 =new Intent(this, ContactInfo.class);
                 startActivity(i1);
@@ -199,21 +202,42 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     }
 
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        mLatitudeText.setText(sharedPreferences.getString("Latitude", ""));
-        mLongitudeText.setText(sharedPreferences.getString("Longitude", ""));
-        mLastUpdateTimeText.setText(sharedPreferences.getString("Timestamp", ""));
-        mLocationAddressTextView.setText(sharedPreferences.getString("Address",""));
 
-        longitude = Double.parseDouble(sharedPreferences.getString("Longitude", ""));
-        latitude = Double.parseDouble(sharedPreferences.getString("Latitude", ""));
+        if(key.equals("Latitude") || key.equals("Longitude")){
 
-        // Enabling go to current location in Google Map
-        LatLng ll = new LatLng(latitude, longitude);
-        CameraUpdate update = CameraUpdateFactory.newLatLngZoom(ll, 18);
-        mGoogleMap.animateCamera(update);
-        mGoogleMap.clear();
-        mGoogleMap.addMarker(new MarkerOptions().position(ll).title("Last Track Location"));
+            if(sharedPreferences.getString("Address", "").equals("Not Available")){
+                mLocationAddressTextView.setText("Lat: " + sharedPreferences.getString("Latitude", "") + ", Long: " + sharedPreferences.getString("Longitude", ""));
+            }else{
+                mLocationAddressTextView.setText(sharedPreferences.getString("Address", ""));
+            }
+            longitude = Double.parseDouble(sharedPreferences.getString("Longitude", ""));
+            latitude = Double.parseDouble(sharedPreferences.getString("Latitude", ""));
+            mLastUpdateTimeText.setText(sharedPreferences.getString("Timestamp", ""));
+
+            if(sharedPreferences.getString("Locality", "").equals("Not Available")){
+                mCountryTextView.setText(sharedPreferences.getString("Country",""));
+            }else{
+                mCountryTextView.setText(sharedPreferences.getString("Country","") + ", "+ sharedPreferences.getString("Locality", ""));
+            }
+
+            // Enabling go to current location in Google Map
+            LatLng ll = new LatLng(latitude, longitude);
+            CameraUpdate update = CameraUpdateFactory.newLatLngZoom(ll, 18);
+            mGoogleMap.animateCamera(update);
+            mGoogleMap.clear();
+            mGoogleMap.addMarker(new MarkerOptions().position(ll).title("Last Track Location"));
+        }
+
+        if(key.equals("Main Status")){
+            mStatusTextView.setText(sharedPreferences.getString("Main Status", ""));
+        }
+
+        if(key.equals("Country")){
+
+        }
+
     }
+
     //------------------------------------------------Location-------------------------------------------------//
 
     public void startUpdatesButtonHandler(View view) {
@@ -233,6 +257,17 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     }
 
     public void startTracking(String trackType, int emID){
+        editor = preferences.edit();
+        if(trackType.equals("Standard")){
+            editor.putString("Main Status", "TRACKING");
+        }else if(trackType.equals("High Alert")){
+            editor.putString("Main Status", "TRACKING (ALERT MODE)");
+        }else{
+            editor.putString("Main Status", "EMERGENCY MODE ON");
+        }
+        editor.commit();
+        editor.apply();
+
         Intent intent = new Intent(this, LocationService.class) ;
         intent.putExtra("fb_token", AccessToken.getCurrentAccessToken());
         intent.putExtra("track_type", trackType);
@@ -242,6 +277,10 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     }
 
     public void stopTracking(){
+        editor = preferences.edit();
+        editor.putString("Main Status", "IDLE");
+        editor.commit();
+        editor.apply();
         Intent intent = new Intent(this, LocationService.class);
         stopService(intent);
     }

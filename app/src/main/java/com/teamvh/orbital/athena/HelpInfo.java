@@ -1,13 +1,12 @@
 package com.teamvh.orbital.athena;
 
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
@@ -46,6 +45,10 @@ public class HelpInfo extends AppCompatActivity {
         setContentView(R.layout.activity_helpinfo);
         preferences = MainActivity.preferences;
 
+        //set up action bar
+        getSupportActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#1e253f")));
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
         hasRoute = false;
 
         longitude = preferences.getString("Longitude", "");
@@ -69,34 +72,20 @@ public class HelpInfo extends AppCompatActivity {
                 icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
     }
 
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
-
-    //Menu settings
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.action_home:
-                Intent i = new Intent(this, MainActivity.class);
-                startActivity(i);
-                break;
-            case R.id.action_contacts:
-                Intent i1 = new Intent(this, ContactInfo.class);
-                startActivity(i1);
-                break;
-            case R.id.action_helpinfo:
-                Intent i2 = new Intent(this, HelpInfo.class);
-                startActivity(i2);
-                break;
-            default:
-                break;
+            case android.R.id.home:
+                this.finish();
+                return true;
         }
-        return true;
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        this.finish();
     }
 
     public void displayEmergencyPhone(){
