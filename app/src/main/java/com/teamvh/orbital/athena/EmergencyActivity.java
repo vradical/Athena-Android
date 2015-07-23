@@ -33,6 +33,7 @@ public class EmergencyActivity extends AppCompatActivity {
     protected ContactAdapter adapter;
     protected ArrayList<ContactData> contactList;
     protected SharedPreferences preferences;
+    protected SharedPreferences.Editor editor;
     protected String emID;
     protected String emStatus;
     protected String uname;
@@ -43,6 +44,7 @@ public class EmergencyActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_emergency);
         getSupportActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#1e253f")));
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
 
         preferences = MainActivity.preferences;
 
@@ -66,6 +68,16 @@ public class EmergencyActivity extends AppCompatActivity {
         callIntent.setData(Uri.parse("tel:" + nokPhoneArray[positionNOK]));
         startActivity(callIntent);
     }*/
+    @Override
+    public void onBackPressed() {
+    }
+
+    @Override
+    public void onStop(){
+        super.onStop();
+        emStatus = "Error";
+        endEmergency();
+    }
 
     public void deactivateEmergency(View view){
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -123,20 +135,38 @@ public class EmergencyActivity extends AppCompatActivity {
         builder.show();
     }
 
+    //-------------------------LOCATION TRACKING SERVICE------------------------------------//
 
-    //-------------------------LOCATION SERVICE METHOD-------------------------------------------//
     public void startTracking(String trackType, int emID){
+        editor = preferences.edit();
+        if(trackType.equals("Standard")){
+            editor.putString("Main Status", "TRACKING");
+        }else if(trackType.equals("High Alert")){
+            editor.putString("Main Status", "TRACKING (ALERT MODE)");
+        }else{
+            editor.putString("Main Status", "EMERGENCY MODE ON");
+        }
+        editor.commit();
+        editor.apply();
+
         Intent intent = new Intent(this, LocationService.class) ;
         intent.putExtra("fb_token", AccessToken.getCurrentAccessToken());
         intent.putExtra("track_type", trackType);
         intent.putExtra("track_em_id", emID);
+        intent.putExtra("address", "address");
         startService(intent);
     }
 
     public void stopTracking(){
+
+        editor = preferences.edit();
+        editor.putString("Main Status", "IDLE");
+        editor.commit();
+        editor.apply();
         Intent intent = new Intent(this, LocationService.class);
         stopService(intent);
     }
+
     //-------------------------END EMERGENCY------------------------------------------------//
 
     //PREPARE QUERY TO GET CONTACT LIST
@@ -496,8 +526,8 @@ public class EmergencyActivity extends AppCompatActivity {
             @Override
             public void onFinish() {
                 adapter.notifyDataSetChanged();
-                sendSMSMessage();
-                sendEmail();
+                //sendSMSMessage();
+                //sendEmail();
             }
         });
     }
