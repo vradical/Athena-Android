@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <com.teamvh.orbital.athena.SlidingUpPanelLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:fab="http://schemas.android.com/apk/res-auto"
     xmlns:sothree="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main_sliding"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="bottom"
-    sothree:umanoPanelHeight="40dp"
+    sothree:umanoPanelHeight="56dp"
     sothree:umanoShadowHeight="4dp">
 
     <LinearLayout
@@ -20,7 +21,7 @@
         <FrameLayout
             android:layout_width="fill_parent"
             android:layout_height="0dp"
-            android:layout_weight="0.75">
+            android:layout_weight="0.73">
 
             <LinearLayout
                 android:layout_width="fill_parent"
@@ -35,36 +36,64 @@
 
             </LinearLayout>
 
-            <android.support.design.widget.FloatingActionButton
+            <com.github.clans.fab.FloatingActionMenu
                 android:id="@+id/fab"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="end"
-                android:clickable="true"
-                android:src="@drawable/menu_button" />
+                android:layout_marginBottom="8dp"
+                android:layout_marginRight="8dp"
+                fab:menu_colorNormal="#1e253f"
+                fab:menu_colorPressed="#5E65B5"
+                fab:menu_colorRipple="#1e253f"
+                fab:menu_openDirection="down">
 
-            <ImageButton
-                android:id="@+id/test_button1"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom|center_horizontal"
-                android:layout_marginBottom="20dp"
-                android:layout_marginRight="87dp"
-                android:background="@drawable/danger_button_fade" />
+                <com.github.clans.fab.FloatingActionButton
+                    android:id="@+id/menu_setting"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    fab:fab_colorNormal="#1e253f"
+                    fab:fab_colorPressed="#5E65B5"
+                    fab:fab_colorRipple="#1e253f"
+                    fab:fab_label="Settings"
+                    fab:fab_size="mini" />
 
-            <ImageButton
-                android:id="@+id/test_button2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom|center_horizontal"
-                android:layout_marginBottom="20dp"
-                android:layout_marginLeft="87dp"
-                android:background="@drawable/alert_button_fade" />
+                <com.github.clans.fab.FloatingActionButton
+                    android:id="@+id/menu_history"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    fab:fab_colorNormal="#1e253f"
+                    fab:fab_colorPressed="#5E65B5"
+                    fab:fab_colorRipple="#1e253f"
+                    fab:fab_label="History"
+                    fab:fab_size="mini" />
+
+                <com.github.clans.fab.FloatingActionButton
+                    android:id="@+id/menu_contacts"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    fab:fab_colorNormal="#1e253f"
+                    fab:fab_colorPressed="#5E65B5"
+                    fab:fab_colorRipple="#1e253f"
+                    fab:fab_label="Contacts"
+                    fab:fab_size="mini" />
+
+                <com.github.clans.fab.FloatingActionButton
+                    android:id="@+id/menu_helpinfo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    fab:fab_colorNormal="#1e253f"
+                    fab:fab_colorPressed="#5E65B5"
+                    fab:fab_colorRipple="#1e253f"
+                    fab:fab_label="Help Info"
+                    fab:fab_size="mini" />
+
+            </com.github.clans.fab.FloatingActionMenu>
 
             <ImageButton
                 android:id="@+id/start_updates_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
                 android:layout_gravity="center_horizontal|bottom"
                 android:background="@drawable/track_button"
                 android:onClick="startUpdatesButtonHandler" />
@@ -74,7 +103,7 @@
             android:layout_width="fill_parent"
             android:layout_height="0dp"
             android:layout_gravity="center_horizontal|bottom"
-            android:layout_weight="0.25"
+            android:layout_weight="0.28"
             android:gravity="center_horizontal">
 
             <LinearLayout
@@ -82,7 +111,7 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
-                android:paddingTop="10dp">
+                android:paddingTop="15dp">
 
                 <TextView
                     android:id="@+id/statusTV"
@@ -103,8 +132,8 @@
 
                 <ImageView
                     android:id="@+id/locationPin"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="15dp"
+                    android:layout_height="15dp"
                     android:layout_marginRight="5dp"
                     android:layout_marginTop="5dp"
                     android:background="@drawable/location_pin" />
@@ -128,12 +157,12 @@
 
                 <ImageView
                     android:id="@+id/slatingFlag"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="15dp"
+                    android:layout_height="15dp"
                     android:layout_below="@+id/locationPin"
                     android:layout_marginRight="5dp"
-                    android:paddingTop="10dp"
-                    android:src="@drawable/slating_flag" />
+                    android:layout_marginTop="9dp"
+                    android:background="@drawable/slating_flag" />
 
                 <TextView
                     android:id="@+id/countryTV"
@@ -179,61 +208,42 @@
 
             </LinearLayout>
 
-            <Button
-                android:id="@+id/stop_updates_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:enabled="false"
-                android:onClick="stopUpdatesButtonHandler"
-                android:text="Stop"
-                android:visibility="invisible" />
-
-            <Button
-                android:id="@+id/start_emergency_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:enabled="false"
-                android:onClick="emergencyButtonHandler"
-                android:text="Emergency"
-                android:visibility="invisible" />
-
-            <Button
-                android:id="@+id/start_high_alert_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:enabled="false"
-                android:onClick="startHighAlertMode"
-                android:text="Activate High Alert"
-                android:visibility="invisible" />
-
-            <Button
-                android:id="@+id/stop_high_alert_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:enabled="false"
-                android:onClick="stopHighAlertMode"
-                android:text="Deactivate High Alert"
-                android:visibility="invisible" />
-
         </RelativeLayout>
 
     </LinearLayout>
 
-    <LinearLayout
+    <RelativeLayout
         android:id="@+id/sliding_up"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
         android:layout_gravity="bottom"
         android:background="#5E65B5"
         android:gravity="top|center">
 
-        <TextView
+        <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="50dp"
-            android:text="Activate Emergency"
-            style="@style/StandardText"
-            android:layout_marginTop="5dp" />
-    </LinearLayout>
+            android:layout_height="wrap_content"
+            android:layout_marginTop="13dp"
+            android:orientation="horizontal">
 
-</com.teamvh.orbital.athena.SlidingUpPanelLayout  >
+            <ImageView
+                android:id="@+id/main_dangerIV"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_marginTop="3.5dp"
+                android:background="@drawable/danger" />
+
+            <TextView
+                android:id="@+id/main_emTV"
+                style="@style/StandardText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:layout_toRightOf="@id/main_dangerIV"
+                android:text="Activate Emergency" />
+
+        </LinearLayout>
+
+    </RelativeLayout>
+
+</com.teamvh.orbital.athena.SlidingUpPanelLayout>

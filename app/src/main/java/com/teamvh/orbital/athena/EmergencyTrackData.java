@@ -15,6 +15,14 @@ public class EmergencyTrackData {
 
     String country;
 
+    public EmergencyTrackData(String address, String dateTime, String longitude, String latitude, String country) {
+        this.address = address;
+        this.dateTime = dateTime;
+        this.longitude = longitude;
+        this.latitude = latitude;
+        this.country = country;
+    }
+
     public String getAddress() {
         return address;
     }

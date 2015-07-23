@@ -1,5 +1,6 @@
 package com.teamvh.orbital.athena;
 
+import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -9,10 +10,7 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Vibrator;
 import android.preference.Preference;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.ActionBarActivity;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
@@ -24,18 +22,26 @@ import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
 import com.facebook.FacebookSdk;
 import com.facebook.Profile;
+import com.github.clans.fab.FloatingActionButton;
+import com.github.clans.fab.FloatingActionMenu;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.lang.reflect.Type;
+import java.util.ArrayList;
 
 
 public class MainActivity extends ActionBarActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
@@ -45,14 +51,18 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     public static SharedPreferences.Editor editor;
     public static Preference countryPref;
 
-    protected FloatingActionButton actionButton;
+    //menu
+    protected FloatingActionMenu actionMenu;
+    protected FloatingActionButton helpAB;
+    protected FloatingActionButton contactAB;
+    protected FloatingActionButton historyAB;
+    protected FloatingActionButton settingAB;
 
     protected TextView mLocationAddressTextView;
     protected TextView mCountryTextView;
     protected TextView mStatusTextView;
 
     protected ImageButton mStartUpdatesButton;
-    protected Button mStopUpdatesButton;
     protected TextView mLastUpdateTimeText;
 
     protected SlidingUpPanelLayout mPanelLayout;
@@ -63,7 +73,6 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
     //high alert function
     protected Button mStartHighAlertButton;
-    protected Button mStopHighAlertButton;
     protected CountDownTimer highAlertCD;
 
     protected AlertDialog safeAlert;
@@ -80,6 +89,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     protected GoogleMap mGoogleMap;
     protected double latitude;
     protected double longitude;
+    protected Marker lastLocationMark;
 
     //-------------------------------------GENERAL METHOD------------------------------------------//
     @Override
@@ -93,6 +103,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         //INITIALIZE FACEBOOK
         FacebookSdk.sdkInitialize(getApplicationContext());
 
+        //CHECK FOR LOGIN
         isLoggedIn();
 
         //CHECK FOR FACEBOOK ACCESS TOKEN
@@ -110,34 +121,44 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         };
 
         displayMain();
-        createMap();
     }
 
     //Set up the activity page and initialize the content.
     public void displayMain() {
         setContentView(R.layout.activity_main);
         getSupportActionBar().hide();
-        //getSupportActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#1e253f")));
 
         //FOR THE CURRENT LOCATION
         mLocationAddressTextView = (TextView) findViewById(R.id.location_address_view);
         mCountryTextView = (TextView) findViewById(R.id.track_country);
-        mStartUpdatesButton = (ImageButton) findViewById(R.id.start_updates_button);
-        mStopUpdatesButton = (Button) findViewById(R.id.stop_updates_button);
         mLastUpdateTimeText = (TextView) findViewById(R.id.track_location_time);
         mStatusTextView = (TextView) findViewById(R.id.statusTV);
         mPanelLayout = (SlidingUpPanelLayout) findViewById(R.id.main_sliding);
 
+        //High alert button
+        v = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
+
+        createMap();
+        prepareMenu();
+
+        mStartUpdatesButton = (ImageButton) findViewById(R.id.start_updates_button);
         mStartUpdatesButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                if (isMyServiceRunning(LocationService.class)) {
+                    stopTracking();
+                    mStartUpdatesButton.setBackgroundResource(R.drawable.track_button);
+                } else {
+                    startTracking("Standard", 0);
+                    mStartUpdatesButton.setBackgroundResource(R.drawable.track_stop);
+                }
             }
         });
 
         mStartUpdatesButton.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View view) {
+                startHighAlert();
                 return false;
             }
         });
@@ -172,13 +193,63 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
             }
         });
 
-        //High alert button
-        mStartHighAlertButton = (Button) findViewById(R.id.start_high_alert_button);
-        mStopHighAlertButton = (Button) findViewById(R.id.stop_high_alert_button);
-        v = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
+    }
 
-        //Emergency Button
-        //mStartEmergencyButton = (Button) findViewById(R.id.start_emergency_button);
+    //Prepare menu
+    public void prepareMenu() {
+        actionMenu = (FloatingActionMenu) findViewById(R.id.fab);
+
+        //Help info
+        helpAB = (FloatingActionButton) findViewById(R.id.menu_helpinfo);
+        helpAB.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent i = new Intent(MainActivity.this, HelpInfo.class);
+                i.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                startActivity(i);
+                overridePendingTransition(0, 0);
+                actionMenu.close(false);
+            }
+        });
+
+        //Contacts
+        contactAB = (FloatingActionButton) findViewById(R.id.menu_contacts);
+        contactAB.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent i = new Intent(MainActivity.this, ContactInfo.class);
+                i.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                startActivity(i);
+                overridePendingTransition(0, 0);
+                actionMenu.close(false);
+            }
+        });
+
+        //History
+        historyAB = (FloatingActionButton) findViewById(R.id.menu_history);
+        historyAB.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent i = new Intent(MainActivity.this, EmergencyHistory.class);
+                i.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                startActivity(i);
+                overridePendingTransition(0, 0);
+                actionMenu.close(false);
+            }
+        });
+
+        //Settings
+        settingAB = (FloatingActionButton) findViewById(R.id.menu_setting);
+        settingAB.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent i = new Intent(MainActivity.this, SettingActivity.class);
+                i.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                startActivity(i);
+                overridePendingTransition(0, 0);
+                actionMenu.close(false);
+            }
+        });
 
     }
 
@@ -204,6 +275,11 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
     @Override
     public void onResume() {
+        if (isMyServiceRunning(LocationService.class) && preferences.getString("Main Status", "").equals("TRACKING")) {
+            mStartUpdatesButton.setBackgroundResource(R.drawable.track_stop);
+        } else if (isMyServiceRunning(LocationService.class) && preferences.getString("Main Status", "").equals("TRACKING (ALERT MODE)")) {
+            mStartUpdatesButton.setBackgroundResource(R.drawable.alert_stop);
+        }
         mPanelLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
         super.onResume();
     }
@@ -218,38 +294,6 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         super.onDestroy();
         accessTokenTracker.stopTracking();
         stopTracking();
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
-
-    //Menu settings
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_contacts:
-                Intent i1 = new Intent(this, ContactInfo.class);
-                startActivity(i1);
-                break;
-            case R.id.action_helpinfo:
-                Intent i2 = new Intent(this, HelpInfo.class);
-                startActivity(i2);
-                break;
-            case R.id.action_emergencyHistory:
-                Intent i3 = new Intent(this, EmergencyHistory.class);
-                startActivity(i3);
-                break;
-            case R.id.action_settings:
-                Intent i4 = new Intent(this, EmergencyHistory.class);
-                startActivity(i4);
-                break;
-            default:
-                break;
-        }
-        return true;
     }
 
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
@@ -271,12 +315,26 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                 mCountryTextView.setText(sharedPreferences.getString("Country", "") + ", " + sharedPreferences.getString("Locality", ""));
             }
 
+            Gson gson = new Gson();
+            Type listOfTrack = new TypeToken<ArrayList<EmergencyTrackData>>() {
+            }.getType();
+
+            ArrayList<EmergencyTrackData> trackData = gson.fromJson(preferences.getString("TrackData", ""), listOfTrack);
+            mGoogleMap.clear();
+            for (int i = 0; i < trackData.size() - 1; i++) {
+                LatLng ll = new LatLng(Double.parseDouble(trackData.get(i).getLatitude()), Double.parseDouble(trackData.get(i).getLongitude()));
+                mGoogleMap.addMarker(new MarkerOptions().position(ll));
+
+            }
+
             // Enabling go to current location in Google Map
             LatLng ll = new LatLng(latitude, longitude);
             CameraUpdate update = CameraUpdateFactory.newLatLngZoom(ll, 18);
             mGoogleMap.animateCamera(update);
-            mGoogleMap.clear();
-            mGoogleMap.addMarker(new MarkerOptions().position(ll).title("Last Track Location"));
+            if (lastLocationMark != null) {
+                lastLocationMark.remove();
+            }
+            lastLocationMark = mGoogleMap.addMarker(new MarkerOptions().position(ll).title("Last Location"));
         }
 
         if (key.equals("Main Status")) {
@@ -289,21 +347,17 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
     }
 
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     //------------------------------------------------Location-------------------------------------------------//
-
-    public void startUpdatesButtonHandler(View view) {
-        startTracking("Standard", 0);
-        mStartHighAlertButton.setEnabled(true);
-        mStartUpdatesButton.setEnabled(false);
-        mStopUpdatesButton.setEnabled(true);
-    }
-
-    public void stopUpdatesButtonHandler(View view) {
-        stopTracking();
-        mStartHighAlertButton.setEnabled(false);
-        mStartUpdatesButton.setEnabled(true);
-        mStopUpdatesButton.setEnabled(false);
-    }
 
     public void startTracking(String trackType, int emID) {
         editor = preferences.edit();
@@ -340,14 +394,10 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
     public void startHighAlertMode(View view) {
         startHighAlert();
-        mStartHighAlertButton.setEnabled(false);
-        mStopHighAlertButton.setEnabled(true);
     }
 
     public void stopHighAlertMode(View view) {
         stopHighAlert();
-        mStartHighAlertButton.setEnabled(true);
-        mStopHighAlertButton.setEnabled(false);
     }
 
     protected void startHighAlert() {
@@ -369,13 +419,6 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     }
 
     //-----------------------------------------------Emergency Functions--------------------------------------
-
-    /*
-    //Old emergency button handler
-    public void emergencyButtonHandler(View view) {
-        stopTracking();
-        getEMID();
-    }*/
 
     public void startEmergency() {
         stopTracking();
@@ -498,9 +541,11 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                 startTracking("Emergency", emID);
                 Intent i = new Intent(MainActivity.this, EmergencyActivity.class);
                 i.putExtra("track_em_id", emID);
+                i.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                 //i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 //i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(i);
+                overridePendingTransition(0, 0);
             }
         });
     }

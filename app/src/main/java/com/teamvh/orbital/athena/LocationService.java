@@ -21,6 +21,8 @@ import com.google.android.gms.location.FusedLocationProviderApi;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
@@ -29,7 +31,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -54,6 +61,7 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
     private String locality;
     private SharedPreferences preferences;
     private SharedPreferences.Editor editor;
+    private ArrayList<EmergencyTrackData> trackData;
 
     private Geocoder geocoder;
 
@@ -153,6 +161,14 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
 
     //PREPARE QUERY TO LOGIN USER
     public void recordLocation() {
+        Gson gson = new Gson();
+        Type listOfTrack = new TypeToken<ArrayList<EmergencyTrackData>>() {}.getType();
+
+        if (null == trackData) {
+            trackData = new ArrayList<EmergencyTrackData>();
+        }else{
+            trackData = gson.fromJson(preferences.getString("TrackData",""), ArrayList.class);
+        }
 
         address = null;
         try {
@@ -187,11 +203,16 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
             editor = preferences.edit();
             editor.putString("Longitude", String.valueOf(longitude));
             editor.putString("Latitude", String.valueOf(latitude));
-            editor.putString("Timestamp", String.valueOf(new Timestamp(date.getTime())));
+            editor.putString("Timestamp", parseDateToddMMyyyy(String.valueOf(new Timestamp(date.getTime()))));
             editor.putString("Address", address);
             editor.putString("Country", country);
             editor.putString("CountryCode", countryCode);
             editor.putString("Locality", locality);
+
+            trackData.add(new EmergencyTrackData(address, parseDateToddMMyyyy(String.valueOf(new Timestamp(date.getTime()))), String.valueOf(longitude), String.valueOf(latitude), country));
+
+            editor.putString("TrackData", gson.toJson(trackData, listOfTrack));
+
             editor.commit();
             editor.apply();
 
@@ -215,6 +236,24 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
             }
 
         }
+    }
+
+    public String parseDateToddMMyyyy(String time) {
+        String inputPattern = "yyyy-MM-dd HH:mm:ss";
+        String outputPattern = "dd-MMM-yyyy h:mm a";
+        SimpleDateFormat inputFormat = new SimpleDateFormat(inputPattern);
+        SimpleDateFormat outputFormat = new SimpleDateFormat(outputPattern);
+
+        Date date = null;
+        String str = null;
+
+        try {
+            date = inputFormat.parse(time);
+            str = outputFormat.format(date);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return str;
     }
 
     private class GeocoderHandler extends Handler {

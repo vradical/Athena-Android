@@ -17,7 +17,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 public class EmergencyTrackHistory extends AppCompatActivity {
 
@@ -103,13 +106,9 @@ public class EmergencyTrackHistory extends AppCompatActivity {
                         try {
                             JSONObject object = obj.getJSONObject("trackData");
 
-                            EmergencyTrackData emergency = new EmergencyTrackData();
-
-                            emergency.setAddress(object.getString("address"));
-                            emergency.setDateTime(object.getString("dateTime"));
-                            emergency.setLatitude(String.valueOf(object.getDouble("latitude")));
-                            emergency.setLongitude(String.valueOf(object.getDouble("longitude")));
-                            emergency.setCountry(object.getString("country"));
+                            EmergencyTrackData emergency = new EmergencyTrackData(object.getString("address"),
+                                    parseDateToddMMyyyy(object.getString("dateTime")), String.valueOf(object.getDouble("latitude")),
+                                    String.valueOf(object.getDouble("longitude")), object.getString("country"));
 
                             emergencyTrackList.add(emergency);
 
@@ -119,13 +118,9 @@ public class EmergencyTrackHistory extends AppCompatActivity {
                             for (int i = 0; i < jarray.length(); i++) {
                                 JSONObject object = jarray.getJSONObject(i);
 
-                                EmergencyTrackData emergency = new EmergencyTrackData();
-
-                                emergency.setAddress(object.getString("address"));
-                                emergency.setDateTime(object.getString("dateTime"));
-                                emergency.setLatitude(String.valueOf(object.getDouble("latitude")));
-                                emergency.setLongitude(String.valueOf(object.getDouble("longitude")));
-                                emergency.setCountry(object.getString("country"));
+                                EmergencyTrackData emergency = new EmergencyTrackData(object.getString("address"),
+                                        parseDateToddMMyyyy(object.getString("dateTime")), String.valueOf(object.getDouble("latitude")),
+                                        String.valueOf(object.getDouble("longitude")), object.getString("country"));
 
                                 emergencyTrackList.add(emergency);
                             }
@@ -167,5 +162,24 @@ public class EmergencyTrackHistory extends AppCompatActivity {
                 adapter.notifyDataSetChanged();
             }
         });
+    }
+
+
+    public String parseDateToddMMyyyy(String time) {
+        String inputPattern = "yyyy-MM-dd HH:mm:ss";
+        String outputPattern = "dd-MMM-yyyy h:mm a";
+        SimpleDateFormat inputFormat = new SimpleDateFormat(inputPattern);
+        SimpleDateFormat outputFormat = new SimpleDateFormat(outputPattern);
+
+        Date date = null;
+        String str = null;
+
+        try {
+            date = inputFormat.parse(time);
+            str = outputFormat.format(date);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return str;
     }
 }

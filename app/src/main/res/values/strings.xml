@@ -25,6 +25,7 @@
     <string name="title_activity_help_info">HelpInfo</string>
     <string name="title_activity_emergency_history">EmergencyHistory</string>
     <string name="title_activity_emergency_track_history">EmergencyTrackHistory</string>
+    <string name="title_activity_setting">Setting</string>
 
 
 </resources>

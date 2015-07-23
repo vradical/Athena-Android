@@ -20,7 +20,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 public class EmergencyHistory extends AppCompatActivity {
 
@@ -111,9 +114,9 @@ public class EmergencyHistory extends AppCompatActivity {
 
                             EmergencyData emergency = new EmergencyData();
 
-                            emergency.setEndTime(object.getString("endTime"));
+                            emergency.setEndTime(parseDateToddMMyyyy(object.getString("endTime")));
                             emergency.setNumOfTrack(object.getString("numOfTrack"));
-                            emergency.setStartTime(object.getString("startTime"));
+                            emergency.setStartTime(parseDateToddMMyyyy(object.getString("startTime")));
                             emergency.setEmID(String.valueOf(object.getInt("emID")));
                             emergency.setAddress(object.getString("address"));
                             emergency.setCountry(object.getString("country"));
@@ -129,9 +132,9 @@ public class EmergencyHistory extends AppCompatActivity {
 
                                 EmergencyData emergency = new EmergencyData();
 
-                                emergency.setEndTime(object.getString("endTime"));
+                                emergency.setEndTime(parseDateToddMMyyyy(object.getString("endTime")));
                                 emergency.setNumOfTrack(object.getString("numOfTrack"));
-                                emergency.setStartTime(object.getString("startTime"));
+                                emergency.setStartTime(parseDateToddMMyyyy(object.getString("startTime")));
                                 emergency.setEmID(String.valueOf(object.getInt("emID")));
                                 emergency.setAddress(object.getString("address"));
                                 emergency.setCountry(object.getString("country"));
@@ -178,5 +181,24 @@ public class EmergencyHistory extends AppCompatActivity {
             }
         });
     }
+
+    public String parseDateToddMMyyyy(String time) {
+        String inputPattern = "yyyy-MM-dd HH:mm:ss";
+        String outputPattern = "dd-MMM-yyyy h:mm a";
+        SimpleDateFormat inputFormat = new SimpleDateFormat(inputPattern);
+        SimpleDateFormat outputFormat = new SimpleDateFormat(outputPattern);
+
+        Date date = null;
+        String str = null;
+
+        try {
+            date = inputFormat.parse(time);
+            str = outputFormat.format(date);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return str;
+    }
+
 
 }
