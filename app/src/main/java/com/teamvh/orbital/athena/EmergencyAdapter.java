@@ -47,7 +47,11 @@ public class EmergencyAdapter extends ArrayAdapter<EmergencyData> {
         holder.tvEndTime.setText(emergencyList.get(position).getEndTime());
         holder.tvNumOfTrack.setText(emergencyList.get(position).getNumOfTrack());
         holder.tvAddress.setText(emergencyList.get(position).getAddress());
-        holder.tvCountry.setText(emergencyList.get(position).getCountry());
+        if(emergencyList.get(position).getLocality().equals("Not Available")){
+            holder.tvCountry.setText(emergencyList.get(position).getCountry());
+        }else{
+            holder.tvCountry.setText(emergencyList.get(position).getLocality()+ ", " + emergencyList.get(position).getCountry());
+        }
         holder.tvStatus.setText(emergencyList.get(position).getStatus());
         return v;
     }

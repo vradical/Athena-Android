@@ -167,6 +167,9 @@ public class EmergencyActivity extends AppCompatActivity {
     //PREPARE QUERY TO GET CONTACT LIST
     public void endEmergency(){
 
+        //Empty country for update
+        MainActivity.country = "empty";
+
         // Instantiate Http Request Param Object
         RequestParams params = new RequestParams();
 

@@ -9,7 +9,6 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Vibrator;
-import android.preference.Preference;
 import android.support.v7.app.ActionBarActivity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -57,7 +56,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     private AccessTokenTracker accessTokenTracker;
     public static SharedPreferences preferences;
     public static SharedPreferences.Editor editor;
-    public static Preference countryPref;
+
 
     //menu
     protected FloatingActionMenu actionMenu;
@@ -100,7 +99,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     protected Marker lastLocationMark;
     protected ArrayList<EmergencyData> emergencyList;
     protected LatLngBounds.Builder bounds;
-    protected String country;
+    protected static String country;
     protected ArrayList<Marker> markerList;
     protected ArrayList<Circle> circleList;
 
@@ -331,7 +330,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
             if (sharedPreferences.getString("Address", "").equals("Not Available")) {
                 mLocationAddressTextView.setText("Lat: " + df.format(latitude) + ", Lng: " + df.format(longitude));
             } else {
-                mLocationAddressTextView.setText(sharedPreferences.getString("Address", "") +", " + sharedPreferences.getString("Locality", ""));
+                mLocationAddressTextView.setText(sharedPreferences.getString("Address", ""));
             }
 
             if (sharedPreferences.getString("Locality", "").equals("Not Available")) {
@@ -538,6 +537,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
             params.put("address", preferences.getString("Address", ""));
             params.put("latitude", preferences.getString("Latitude", ""));
             params.put("longitude", preferences.getString("Longitude", ""));
+            params.put("locality", preferences.getString("Locality", ""));
             invokeCreateEMID(params);
         } else {
             Toast.makeText(getApplicationContext(), "Failed to create contacts", Toast.LENGTH_LONG).show();
@@ -608,6 +608,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         RequestParams params = new RequestParams();
         if (country != null) {
             params.put("country", country);
+            params.put("locality", preferences.getString("Locality", ""));
             invokeCountryEM(params);
         } else {
             Toast.makeText(getApplicationContext(), "Failed to get Country EM", Toast.LENGTH_LONG).show();
@@ -645,6 +646,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                             emergency.setCountry(object.getString("country"));
                             emergency.setStatus(object.getString("status"));
                             emergency.setLatlng(new LatLng(Double.parseDouble(object.getString("latitude")), Double.parseDouble(object.getString("longitude"))));
+                            emergency.setLocality(object.getString("locality"));
 
                             emergencyList.add(emergency);
 
@@ -668,6 +670,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                                 emergency.setCountry(object.getString("country"));
                                 emergency.setStatus(object.getString("status"));
                                 emergency.setLatlng(new LatLng(Double.parseDouble(object.getString("latitude")), Double.parseDouble(object.getString("longitude"))));
+                                emergency.setLocality(object.getString("locality"));
 
                                 emergencyList.add(emergency);
                             }

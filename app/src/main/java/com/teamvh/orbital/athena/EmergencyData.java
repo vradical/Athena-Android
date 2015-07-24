@@ -15,6 +15,7 @@ public class EmergencyData {
     String country;
     String status;
     LatLng latlng;
+    String locality;
 
 
     public String getEmID() {
@@ -79,5 +80,13 @@ public class EmergencyData {
 
     public void setLatlng(LatLng latlng) {
         this.latlng = latlng;
+    }
+
+    public String getLocality() {
+        return locality;
+    }
+
+    public void setLocality(String locality) {
+        this.locality = locality;
     }
 }

@@ -209,7 +209,7 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
             editor.putString("Longitude", String.valueOf(longitude));
             editor.putString("Latitude", String.valueOf(latitude));
 
-            trackData.add(new EmergencyTrackData(address, parseDateToddMMyyyy(String.valueOf(new Timestamp(date.getTime()))), String.valueOf(longitude), String.valueOf(latitude), country));
+            trackData.add(new EmergencyTrackData(address, parseDateToddMMyyyy(String.valueOf(new Timestamp(date.getTime()))), String.valueOf(longitude), String.valueOf(latitude), country, locality));
 
             editor.putString("TrackData", gson.toJson(trackData, listOfTrack));
 
@@ -227,6 +227,7 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
                 params.put("country", country);
                 params.put("track_type", trackType);
                 params.put("track_em_id", emID);
+                params.put("locality", locality);
                 // Invoke RESTful Web Service with Http parameters
                 invokeWS(params);
             }

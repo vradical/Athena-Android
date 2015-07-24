@@ -127,6 +127,7 @@ public class EmergencyHistory extends AppCompatActivity {
                             emergency.setCountry(object.getString("country"));
                             emergency.setStatus(object.getString("status"));
                             emergency.setLatlng(new LatLng(Double.parseDouble(object.getString("latitude")), Double.parseDouble(object.getString("longitude"))));
+                            emergency.setLocality(object.getString("locality"));
 
                             emergencyList.add(emergency);
 
@@ -150,6 +151,7 @@ public class EmergencyHistory extends AppCompatActivity {
                                 emergency.setCountry(object.getString("country"));
                                 emergency.setStatus(object.getString("status"));
                                 emergency.setLatlng(new LatLng(Double.parseDouble(object.getString("latitude")), Double.parseDouble(object.getString("longitude"))));
+                                emergency.setLocality(object.getString("locality"));
 
                                 emergencyList.add(emergency);
                             }

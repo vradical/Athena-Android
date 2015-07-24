@@ -40,12 +40,16 @@ public class EmergencyTrackAdapter extends ArrayAdapter<EmergencyTrackData> {
         } else {
             holder = (ViewHolder) v.getTag();
         }
-        holder.tvTrackID.setText(String.valueOf(position+1));
-        holder.tvTrackAddress.setText(emergencyList.get(position).getAddress());
+        holder.tvTrackID.setText(String.valueOf(position + 1));
+        if(emergencyList.get(position).getLocality().equals("Not Available")){
+            holder.tvTrackCountry.setText(emergencyList.get(position).getCountry());
+        }else{
+            holder.tvTrackCountry.setText(emergencyList.get(position).getLocality()+ ", " + emergencyList.get(position).getCountry());
+        }
         holder.tvTrackLong.setText(emergencyList.get(position).getLongitude());
         holder.tvTrackLat.setText(emergencyList.get(position).getLatitude());
         holder.tvTrackDateTime.setText(emergencyList.get(position).getDateTime());
-        holder.tvTrackCountry.setText(emergencyList.get(position).getCountry());
+        holder.tvTrackAddress.setText(emergencyList.get(position).getAddress());
         return v;
     }
 

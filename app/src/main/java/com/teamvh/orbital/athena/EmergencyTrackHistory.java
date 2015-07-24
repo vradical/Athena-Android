@@ -108,7 +108,7 @@ public class EmergencyTrackHistory extends AppCompatActivity {
 
                             EmergencyTrackData emergency = new EmergencyTrackData(object.getString("address"),
                                     parseDateToddMMyyyy(object.getString("dateTime")), String.valueOf(object.getDouble("latitude")),
-                                    String.valueOf(object.getDouble("longitude")), object.getString("country"));
+                                    String.valueOf(object.getDouble("longitude")), object.getString("country"), object.getString("locality"));
 
                             emergencyTrackList.add(emergency);
 
@@ -120,7 +120,7 @@ public class EmergencyTrackHistory extends AppCompatActivity {
 
                                 EmergencyTrackData emergency = new EmergencyTrackData(object.getString("address"),
                                         parseDateToddMMyyyy(object.getString("dateTime")), String.valueOf(object.getDouble("latitude")),
-                                        String.valueOf(object.getDouble("longitude")), object.getString("country"));
+                                        String.valueOf(object.getDouble("longitude")), object.getString("country"), object.getString("locality"));
 
                                 emergencyTrackList.add(emergency);
                             }

@@ -15,12 +15,15 @@ public class EmergencyTrackData {
 
     String country;
 
-    public EmergencyTrackData(String address, String dateTime, String longitude, String latitude, String country) {
+    String locality;
+
+    public EmergencyTrackData(String address, String dateTime, String longitude, String latitude, String country, String locality) {
         this.address = address;
         this.dateTime = dateTime;
         this.longitude = longitude;
         this.latitude = latitude;
         this.country = country;
+        this.locality = locality;
     }
 
     public String getAddress() {
@@ -63,4 +66,11 @@ public class EmergencyTrackData {
         this.country = country;
     }
 
+    public String getLocality() {
+        return locality;
+    }
+
+    public void setLocality(String locality) {
+        this.locality = locality;
+    }
 }
