@@ -20,6 +20,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 import org.json.JSONObject;
@@ -34,10 +35,10 @@ public class HelpInfo extends AppCompatActivity {
     protected SharedPreferences preferences;
     protected String latitude;
     protected String longitude;
-    protected boolean hasRoute;
     protected String displayChoice;
     protected TextView mPoliceText;
     protected TextView mHospitalText;
+    protected Polyline polyLineStore;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,7 +50,7 @@ public class HelpInfo extends AppCompatActivity {
         getSupportActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#1e253f")));
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        hasRoute = false;
+        polyLineStore = null;
 
         longitude = preferences.getString("Longitude", "");
         latitude = preferences.getString("Latitude", "");
@@ -231,21 +232,17 @@ public class HelpInfo extends AppCompatActivity {
                 markerOptions.position(latLng);
 
                 // Setting the title for the marker.
-                markerOptions.title(dlat + " " + dlng + " " + name + " : " + vicinity);
+                markerOptions.title(name);
+                markerOptions.snippet(vicinity);
 
                 // Placing a marker on the touched position
-                mGoogleMap.addMarker(markerOptions);
+                Marker marker = mGoogleMap.addMarker(markerOptions);
+                marker.showInfoWindow();
 
                 // Add OnClickListener to the markers if selected will trigger getRoute function by passing lat and lng
                 mGoogleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
                     @Override
                     public boolean onMarkerClick(Marker marker) {
-                        mGoogleMap.clear();
-                        if (displayChoice.equals("police")) {
-                            displayPoliceStation();
-                        } else {
-                            displayHospital();
-                        }
                         getRoute(marker.getPosition().latitude, marker.getPosition().longitude);
                         return false;
                     }
@@ -264,7 +261,7 @@ public class HelpInfo extends AppCompatActivity {
 
         String startPoint = "origin=" + latitude + "," + longitude;
         String destPoint = "destination=" + destinationLat + "," + destinationLng;
-        String mode = "mode=walking";
+        String mode = "mode=" + Constants.PATH_TYPE;
         String sensor = "sensor=false";
         String params = startPoint + "&" + destPoint + "&" + sensor + "&" + mode;
         String output = "json";
@@ -342,7 +339,11 @@ public class HelpInfo extends AppCompatActivity {
                 polyLineOptions.color(Color.BLUE);
             }
 
-            mGoogleMap.addPolyline(polyLineOptions);
+            if(polyLineStore != null){
+                polyLineStore.remove();
+            }
+
+            polyLineStore = mGoogleMap.addPolyline(polyLineOptions);
         }
 
     }

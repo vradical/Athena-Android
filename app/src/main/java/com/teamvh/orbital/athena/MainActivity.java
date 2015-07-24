@@ -6,6 +6,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Vibrator;
@@ -21,6 +23,7 @@ import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
 import com.facebook.FacebookSdk;
 import com.facebook.Profile;
+import com.facebook.login.LoginManager;
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
 import com.google.android.gms.maps.CameraUpdate;
@@ -64,6 +67,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     protected FloatingActionButton contactAB;
     protected FloatingActionButton historyAB;
     protected FloatingActionButton settingAB;
+    protected FloatingActionButton logoutAB;
 
     protected TextView mLocationAddressTextView;
     protected TextView mCountryTextView;
@@ -120,26 +124,34 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         //INITIALIZE FACEBOOK
         FacebookSdk.sdkInitialize(getApplicationContext());
 
+        bounds = new LatLngBounds.Builder();
+
+        displayMain();
+
+        if(!isOnline()){
+            Intent intent = new Intent(this, LoginActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(intent);
+        }
+
         //CHECK FOR LOGIN
         isLoggedIn();
-
-        bounds = new LatLngBounds.Builder();
 
         //CHECK FOR FACEBOOK ACCESS TOKEN
         accessTokenTracker = new AccessTokenTracker() {
             @Override
             protected void onCurrentAccessTokenChanged(AccessToken oldAccessToken, AccessToken newAccessToken) {
-                profile = Profile.getCurrentProfile();
-                String name = profile.getName();
-                editor = preferences.edit();
-                editor.putString("fbsession", newAccessToken.getUserId());
-                editor.putString("name", name);
-                editor.commit();
-                editor.apply();
+                if(newAccessToken != null) {
+                    profile = Profile.getCurrentProfile();
+                    String name = profile.getName();
+                    editor = preferences.edit();
+                    editor.putString("fbsession", newAccessToken.getUserId());
+                    editor.putString("name", name);
+                    editor.commit();
+                    editor.apply();
+                }
             }
         };
-
-        displayMain();
     }
 
     //Set up the activity page and initialize the content.
@@ -270,6 +282,28 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
             }
         });
 
+        //Logout
+        logoutAB = (FloatingActionButton) findViewById(R.id.menu_logout);
+        logoutAB.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                LoginManager.getInstance().logOut();
+                Intent i = new Intent(MainActivity.this, LoginActivity.class);
+                i.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                startActivity(i);
+                overridePendingTransition(0, 0);
+                actionMenu.close(false);
+            }
+        });
+
+    }
+
+    //Check for connection
+    public boolean isOnline() {
+        ConnectivityManager cm =
+                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = cm.getActiveNetworkInfo();
+        return netInfo != null && netInfo.isConnectedOrConnecting();
     }
 
     //Check for facebook login
@@ -375,8 +409,6 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
             // Enabling go to current location in Google Map
             LatLng ll = new LatLng(latitude, longitude);
-            bounds.include(ll);
-            mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds.build(), 50));
             CameraUpdate update = CameraUpdateFactory.newLatLngZoom(ll, 18);
             mGoogleMap.animateCamera(update);
 
@@ -448,7 +480,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     protected void startHighAlert() {
         stopTracking();
         startTracking("High Alert", 0);
-        highAlertCD = new SafetyCountDown(5000, 1000, 1);
+        highAlertCD = new SafetyCountDown(Constants.ALERT_COUNTDOWN, 1000, 1);
         highAlertCD.start();
     }
 
@@ -592,8 +624,6 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                 Intent i = new Intent(MainActivity.this, EmergencyActivity.class);
                 i.putExtra("track_em_id", emID);
                 i.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-                //i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                //i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(i);
                 overridePendingTransition(0, 0);
             }
@@ -719,7 +749,8 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
                 //Repopulate map
                 for (int i = 0; i < emergencyList.size(); i++) {
-                    circleList.add(mGoogleMap.addCircle(new CircleOptions().center(emergencyList.get(i).getLatlng()).fillColor(0x20ff0000).radius(100).strokeWidth(0)));
+                    circleList.add(mGoogleMap.addCircle(new CircleOptions().center(emergencyList.get(i).getLatlng()).fillColor(0x20ff0000)
+                            .radius(Constants.DANGER_ZONE_RADIUS).strokeWidth(0)));
                 }
             }
         });
@@ -748,6 +779,18 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     public void createMap() {
         SupportMapFragment fragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.main_map);
         mGoogleMap = fragment.getMap();
+        /* //Prevent clustering of dangerzone.
+        mGoogleMap.setOnCameraChangeListener(new GoogleMap.OnCameraChangeListener() {
+            @Override
+            public void onCameraChange(CameraPosition cameraPosition) {
+                LatLngBounds bounds = mGoogleMap.getProjection().getVisibleRegion().latLngBounds;
+                for (int i =0; i<circleList.size(); i++) {
+                    if(bounds.contains(circleList.get(i).getCenter()) ){
+                        circleList.get(i).setVisible(true);
+                    }
+                }
+            }
+        });*/
     }
 
     //--------------------------------SUPPORTING CLASS ------------------------------------------//
@@ -782,9 +825,9 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                 safeAlert = safetyCheck.create();
                 safeAlert.show();
                 alertMessage = (TextView) safeAlert.findViewById(android.R.id.message);
-                TriggerCountDown = new SafetyCountDown(20000, 1000, 2);
+                TriggerCountDown = new SafetyCountDown(Constants.ALERT_COUNTDOWN, 1000, 2);
                 TriggerCountDown.start();
-                v.vibrate(20000);
+                v.vibrate(Constants.ALERT_COUNTDOWN);
             } else {
                 if (safetyCount > 1) {
                     alertMessage.setText("No response from user - Triggering Emergency mode");

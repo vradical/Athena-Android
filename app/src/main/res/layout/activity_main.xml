@@ -50,6 +50,17 @@
                 fab:menu_openDirection="down">
 
                 <com.github.clans.fab.FloatingActionButton
+                    android:id="@+id/menu_logout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    fab:fab_colorNormal="#1e253f"
+                    fab:fab_colorPressed="#5E65B5"
+                    fab:fab_colorRipple="#1e253f"
+                    fab:fab_label="Log Out"
+                    fab:fab_size="mini" />
+
+
+                <com.github.clans.fab.FloatingActionButton
                     android:id="@+id/menu_setting"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

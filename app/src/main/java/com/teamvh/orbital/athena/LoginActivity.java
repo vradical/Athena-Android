@@ -66,6 +66,11 @@ public class LoginActivity extends Activity {
 
     }
 
+    @Override
+    public void onBackPressed(){
+
+    }
+
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         callbackManager.onActivityResult(requestCode, resultCode, data);
     }
