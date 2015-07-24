@@ -1,5 +1,7 @@
 package com.teamvh.orbital.athena;
 
+import com.google.android.gms.maps.model.LatLng;
+
 /**
  * Created by Ron on 13-Jul-15.
  */
@@ -12,6 +14,7 @@ public class EmergencyData {
     String address;
     String country;
     String status;
+    LatLng latlng;
 
 
     public String getEmID() {
@@ -68,5 +71,13 @@ public class EmergencyData {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public LatLng getLatlng() {
+        return latlng;
+    }
+
+    public void setLatlng(LatLng latlng) {
+        this.latlng = latlng;
     }
 }

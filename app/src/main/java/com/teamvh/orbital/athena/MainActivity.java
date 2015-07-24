@@ -28,7 +28,10 @@ import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.gson.Gson;
@@ -37,11 +40,16 @@ import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.lang.reflect.Type;
+import java.text.DecimalFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 
 public class MainActivity extends ActionBarActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
@@ -90,6 +98,11 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     protected double latitude;
     protected double longitude;
     protected Marker lastLocationMark;
+    protected ArrayList<EmergencyData> emergencyList;
+    protected LatLngBounds.Builder bounds;
+    protected String country;
+    protected ArrayList<Marker> markerList;
+    protected ArrayList<Circle> circleList;
 
     //-------------------------------------GENERAL METHOD------------------------------------------//
     @Override
@@ -99,12 +112,19 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         //INITIALIZE SHARED PREFERENCE
         preferences = getSharedPreferences(getPackageName() + "_preferences", MODE_PRIVATE);
         preferences.registerOnSharedPreferenceChangeListener(this);
+        //RESET COUNTRY
+        country = "empty";
+        emergencyList = new ArrayList<EmergencyData>();
+        markerList = new ArrayList<Marker>();
+        circleList = new ArrayList<Circle>();
 
         //INITIALIZE FACEBOOK
         FacebookSdk.sdkInitialize(getApplicationContext());
 
         //CHECK FOR LOGIN
         isLoggedIn();
+
+        bounds = new LatLngBounds.Builder();
 
         //CHECK FOR FACEBOOK ACCESS TOKEN
         accessTokenTracker = new AccessTokenTracker() {
@@ -291,23 +311,28 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
     @Override
     public void onDestroy() {
+        //CLEAR TRACKDATA AND COUNTRY FOR NEW UPDATES
         super.onDestroy();
         accessTokenTracker.stopTracking();
         stopTracking();
+        preferences.edit().remove("TrackData").commit();
     }
 
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
 
         if (key.equals("Latitude") || key.equals("Longitude")) {
 
-            if (sharedPreferences.getString("Address", "").equals("Not Available")) {
-                mLocationAddressTextView.setText("Lat: " + sharedPreferences.getString("Latitude", "") + ", Long: " + sharedPreferences.getString("Longitude", ""));
-            } else {
-                mLocationAddressTextView.setText(sharedPreferences.getString("Address", ""));
-            }
+            DecimalFormat df = new DecimalFormat("0.0000");
+
             longitude = Double.parseDouble(sharedPreferences.getString("Longitude", ""));
             latitude = Double.parseDouble(sharedPreferences.getString("Latitude", ""));
             mLastUpdateTimeText.setText(sharedPreferences.getString("Timestamp", ""));
+
+            if (sharedPreferences.getString("Address", "").equals("Not Available")) {
+                mLocationAddressTextView.setText("Lat: " + df.format(latitude) + ", Lng: " + df.format(longitude));
+            } else {
+                mLocationAddressTextView.setText(sharedPreferences.getString("Address", "") +", " + sharedPreferences.getString("Locality", ""));
+            }
 
             if (sharedPreferences.getString("Locality", "").equals("Not Available")) {
                 mCountryTextView.setText(sharedPreferences.getString("Country", ""));
@@ -320,17 +345,42 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
             }.getType();
 
             ArrayList<EmergencyTrackData> trackData = gson.fromJson(preferences.getString("TrackData", ""), listOfTrack);
-            mGoogleMap.clear();
+            //ArrayList<LatLng> latlngList = new ArrayList<LatLng>();
+
+            /* //Add Path
+            for(int i = 0; i < trackData.size(); i++){
+                LatLng ll = new LatLng(Double.parseDouble(trackData.get(i).getLatitude()), Double.parseDouble(trackData.get(i).getLongitude()));
+                latlngList.add(ll);
+            }
+            Polyline route = mGoogleMap.addPolyline(new PolylineOptions().width(5).color(Color.parseColor("#5E65B5")).geodesic(true));
+            route.setPoints(latlngList);
+            */
+
+            if(!country.equals(sharedPreferences.getString("Country", ""))){
+                country = sharedPreferences.getString("Country", "");
+                getCountryEM();
+            }
+
+            //Clear all previous marker on map
+            for (int i = 0; i < markerList.size(); i++) {
+                markerList.get(i).remove();
+            }
+            //Reset marker list
+            markerList.clear();
+
+            //Add marker
             for (int i = 0; i < trackData.size() - 1; i++) {
                 LatLng ll = new LatLng(Double.parseDouble(trackData.get(i).getLatitude()), Double.parseDouble(trackData.get(i).getLongitude()));
-                mGoogleMap.addMarker(new MarkerOptions().position(ll));
-
+                markerList.add(mGoogleMap.addMarker(new MarkerOptions().position(ll)));
             }
 
             // Enabling go to current location in Google Map
             LatLng ll = new LatLng(latitude, longitude);
+            bounds.include(ll);
+            mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds.build(), 50));
             CameraUpdate update = CameraUpdateFactory.newLatLngZoom(ll, 18);
             mGoogleMap.animateCamera(update);
+
             if (lastLocationMark != null) {
                 lastLocationMark.remove();
             }
@@ -339,10 +389,6 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
         if (key.equals("Main Status")) {
             mStatusTextView.setText(sharedPreferences.getString("Main Status", ""));
-        }
-
-        if (key.equals("Country")) {
-
         }
 
     }
@@ -432,7 +478,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
             params.put("username", uname);
             invokeGetEMID(params);
         } else {
-            Toast.makeText(getApplicationContext(), "Failed to retrieve contacts", Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), "EMID : Username null", Toast.LENGTH_LONG).show();
         }
     }
 
@@ -449,7 +495,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                     emID = obj.getInt("status");
                 } catch (JSONException e) {
                     // TODO Auto-generated catch block
-                    Toast.makeText(getApplicationContext(), "Error Occured [Server's JSON response might be invalid]!", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "Unable to get EM ID from WS", Toast.LENGTH_LONG).show();
                     e.printStackTrace();
 
                 }
@@ -461,15 +507,15 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                                   String content) {
                 // When Http response code is '404'
                 if (statusCode == 404) {
-                    Toast.makeText(getApplicationContext(), "Requested resource not found", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "GetEMID : Requested resource not found", Toast.LENGTH_LONG).show();
                 }
                 // When Http response code is '500'
                 else if (statusCode == 500) {
-                    Toast.makeText(getApplicationContext(), "Something went wrong at server end", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "Get EMID : Something went wrong at server end", Toast.LENGTH_LONG).show();
                 }
                 // When Http response code other than 404, 500
                 else {
-                    Toast.makeText(getApplicationContext(), "Unexpected Error occcured! [Most common Error: Device might not be connected to Internet or remote server is not up and running]", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), " Get EMID : Unexpected Error occcured!", Toast.LENGTH_LONG).show();
                 }
             }
 
@@ -488,6 +534,10 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         if (uname != null) {
             params.put("username", uname);
             params.put("em_times", String.valueOf(emID));
+            params.put("country", preferences.getString("Country", ""));
+            params.put("address", preferences.getString("Address", ""));
+            params.put("latitude", preferences.getString("Latitude", ""));
+            params.put("longitude", preferences.getString("Longitude", ""));
             invokeCreateEMID(params);
         } else {
             Toast.makeText(getApplicationContext(), "Failed to create contacts", Toast.LENGTH_LONG).show();
@@ -506,13 +556,13 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                     JSONObject obj = new JSONObject(response);
 
                     if (obj.getBoolean("status")) {
-                        Toast.makeText(getApplicationContext(), "Create Successful", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getApplicationContext(), "EMID Create Successful", Toast.LENGTH_LONG).show();
                     } else {
                         Toast.makeText(getApplicationContext(), obj.getString("error_msg"), Toast.LENGTH_LONG).show();
                     }
                 } catch (JSONException e) {
                     // TODO Auto-generated catch block
-                    Toast.makeText(getApplicationContext(), "Error Occured [Server's JSON response might be invalid]!", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "Create EMID: Error Occured!", Toast.LENGTH_LONG).show();
                     e.printStackTrace();
 
                 }
@@ -524,15 +574,15 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                                   String content) {
                 // When Http response code is '404'
                 if (statusCode == 404) {
-                    Toast.makeText(getApplicationContext(), "Requested resource not found", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "Create EMID: Requested resource not found", Toast.LENGTH_LONG).show();
                 }
                 // When Http response code is '500'
                 else if (statusCode == 500) {
-                    Toast.makeText(getApplicationContext(), "Something went wrong at server end", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "Create EMID: Something went wrong at server end", Toast.LENGTH_LONG).show();
                 }
                 // When Http response code other than 404, 500
                 else {
-                    Toast.makeText(getApplicationContext(), "Unexpected Error occcured! [Most common Error: Device might not be connected to Internet or remote server is not up and running]", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "Create EMID: Unexpected Error occcured!", Toast.LENGTH_LONG).show();
                 }
             }
 
@@ -548,6 +598,146 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                 overridePendingTransition(0, 0);
             }
         });
+    }
+
+    //-------------------------------------GIS FUNCTION-------------------------------------------//
+
+    //PREPARE QUERY TO GET CONTACT LIST
+    public void getCountryEM() {
+        String country = preferences.getString("Country", "");
+        RequestParams params = new RequestParams();
+        if (country != null) {
+            params.put("country", country);
+            invokeCountryEM(params);
+        } else {
+            Toast.makeText(getApplicationContext(), "Failed to get Country EM", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    //SEND QUERY TO ATHENA WEB SERVICE
+    public void invokeCountryEM(RequestParams params) {
+        // Make RESTful webservice call using AsyncHttpClient object
+        AsyncHttpClient client = new AsyncHttpClient();
+        client.get("http://119.81.223.180:8080/ProjectAthenaWS/emergency/getcountryem", params, new AsyncHttpResponseHandler() {
+            // When the response returned by REST has Http response code '200'
+            @Override
+            public void onSuccess(String response) {
+                try {
+                    // JSON Object
+                    JSONObject obj = new JSONObject(response);
+                    // When the JSON response has status boolean value assigned with true
+                    if (!response.equals(null)) {
+
+                        try {
+                            JSONObject object = obj.getJSONObject("emergencyData");
+
+                            EmergencyData emergency = new EmergencyData();
+
+                            if (object.getString("endTime").equals("Not Available")) {
+                                emergency.setEndTime("Not Available");
+                            } else {
+                                emergency.setEndTime(parseDateToddMMyyyy(object.getString("endTime")));
+                            }
+                            emergency.setNumOfTrack(object.getString("numOfTrack"));
+                            emergency.setStartTime(parseDateToddMMyyyy(object.getString("startTime")));
+                            emergency.setEmID(String.valueOf(object.getInt("emID")));
+                            emergency.setAddress(object.getString("address"));
+                            emergency.setCountry(object.getString("country"));
+                            emergency.setStatus(object.getString("status"));
+                            emergency.setLatlng(new LatLng(Double.parseDouble(object.getString("latitude")), Double.parseDouble(object.getString("longitude"))));
+
+                            emergencyList.add(emergency);
+
+                        } catch (JSONException e) {
+                            JSONArray jarray = obj.getJSONArray("emergencyData");
+
+                            for (int i = 0; i < jarray.length(); i++) {
+                                JSONObject object = jarray.getJSONObject(i);
+
+                                EmergencyData emergency = new EmergencyData();
+
+                                if (object.getString("endTime").equals("Not Available")) {
+                                    emergency.setEndTime("Not Available");
+                                } else {
+                                    emergency.setEndTime(parseDateToddMMyyyy(object.getString("endTime")));
+                                }
+                                emergency.setNumOfTrack(object.getString("numOfTrack"));
+                                emergency.setStartTime(parseDateToddMMyyyy(object.getString("startTime")));
+                                emergency.setEmID(String.valueOf(object.getInt("emID")));
+                                emergency.setAddress(object.getString("address"));
+                                emergency.setCountry(object.getString("country"));
+                                emergency.setStatus(object.getString("status"));
+                                emergency.setLatlng(new LatLng(Double.parseDouble(object.getString("latitude")), Double.parseDouble(object.getString("longitude"))));
+
+                                emergencyList.add(emergency);
+                            }
+                        }
+
+                        Toast.makeText(getApplicationContext(), "Get Country EM Successfully", Toast.LENGTH_LONG).show();
+
+                    } else {
+                        // errorMsg.setText(obj.getString("error_msg"));
+                        Toast.makeText(getApplicationContext(), obj.getString("error_msg"), Toast.LENGTH_LONG).show();
+                    }
+                } catch (JSONException e) {
+                    // TODO Auto-generated catch block
+                    Toast.makeText(getApplicationContext(), "Error Occured in get country EM.", Toast.LENGTH_LONG).show();
+                    e.printStackTrace();
+                }
+            }
+
+            // When the response returned by REST has Http response code other than '200'
+            @Override
+            public void onFailure(int statusCode, Throwable error,
+                                  String content) {
+                // When Http response code is '404'
+                if (statusCode == 404) {
+                    Toast.makeText(getApplicationContext(), "Country EM: Requested resource not found", Toast.LENGTH_LONG).show();
+                }
+                // When Http response code is '500'
+                else if (statusCode == 500) {
+                    Toast.makeText(getApplicationContext(), "Country EM: Something went wrong at server end", Toast.LENGTH_LONG).show();
+                }
+                // When Http response code other than 404, 500
+                else {
+                    Toast.makeText(getApplicationContext(), "Country EM: Unexpected Error occcured!", Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onFinish() {
+
+                //Reset circle list and remove from map
+                for (int i = 0; i < circleList.size(); i++) {
+                    circleList.get(i).remove();
+                }
+                circleList.clear();
+
+
+                //Repopulate map
+                for (int i = 0; i < emergencyList.size(); i++) {
+                    circleList.add(mGoogleMap.addCircle(new CircleOptions().center(emergencyList.get(i).getLatlng()).fillColor(0x20ff0000).radius(100).strokeWidth(0)));
+                }
+            }
+        });
+    }
+
+    public String parseDateToddMMyyyy(String time) {
+        String inputPattern = "yyyy-MM-dd HH:mm:ss";
+        String outputPattern = "dd-MMM-yyyy h:mm a";
+        SimpleDateFormat inputFormat = new SimpleDateFormat(inputPattern);
+        SimpleDateFormat outputFormat = new SimpleDateFormat(outputPattern);
+
+        Date date = null;
+        String str = null;
+
+        try {
+            date = inputFormat.parse(time);
+            str = outputFormat.format(date);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return str;
     }
 
     //-------------------------------------MAP FUNCTION------------------------------------------//
@@ -577,7 +767,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                 safetyCheck.setCancelable(false);
                 safetyCheck.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        safetyCount = 0;
+                        safetyCount = 1;
                         TriggerCountDown.cancel();
                         v.cancel();
                         dialog.cancel();

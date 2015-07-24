@@ -19,5 +19,4 @@ public final class Constants {
     public static int EM_CHECK_INTERVAL = 25000;
     public static int EM_CHECK_FAST_INTERVAL = 12500;
     public static float EM_SMALLEST_DISPLACEMENT = 0;
-    public static final String helpMessage = "Please save me! I am in danger";
 }

@@ -72,8 +72,6 @@ public class EmergencyActivity extends AppCompatActivity {
     @Override
     public void onStop(){
         super.onStop();
-        emStatus = "Error";
-        endEmergency();
     }
 
     public void deactivateEmergency(View view){
@@ -182,7 +180,7 @@ public class EmergencyActivity extends AppCompatActivity {
         }
         // when any of the field is empty from token
         else{
-            Toast.makeText(getApplicationContext(), "Failed to retrieve contacts", Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), "Failed to end Emergency", Toast.LENGTH_LONG).show();
         }
 
     }
@@ -200,7 +198,7 @@ public class EmergencyActivity extends AppCompatActivity {
                     JSONObject obj = new JSONObject(response);
                     // When the JSON response has status boolean value assigned with true
                     if (obj.getBoolean("status")) {
-                        Toast.makeText(getApplicationContext(), "Record Successful", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getApplicationContext(), "End Emergency Successful", Toast.LENGTH_LONG).show();
 
                         // Else display error message
                     } else {
@@ -209,7 +207,7 @@ public class EmergencyActivity extends AppCompatActivity {
                     }
                 } catch (JSONException e) {
                     // TODO Auto-generated catch block
-                    Toast.makeText(getApplicationContext(), "Error Occured [Server's JSON response might be invalid]!", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "Error Occured in End Emergency", Toast.LENGTH_LONG).show();
                     e.printStackTrace();
                 }
             }
@@ -220,21 +218,21 @@ public class EmergencyActivity extends AppCompatActivity {
                                   String content) {
                 // When Http response code is '404'
                 if (statusCode == 404) {
-                    Toast.makeText(getApplicationContext(), "Requested resource not found", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "End EM : Requested resource not found", Toast.LENGTH_LONG).show();
                 }
                 // When Http response code is '500'
                 else if (statusCode == 500) {
-                    Toast.makeText(getApplicationContext(), "Something went wrong at server end", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "End EM : Something went wrong at server end", Toast.LENGTH_LONG).show();
                 }
                 // When Http response code other than 404, 500
                 else {
-                    Toast.makeText(getApplicationContext(), "Unexpected Error occcured! [Most common Error: Device might not be connected to Internet or remote server is not up and running]", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "End EM : Unexpected Error occcured!", Toast.LENGTH_LONG).show();
                 }
             }
 
             @Override
             public void onFinish() {
-                if (emStatus.equals("Safe")) {
+                if (emStatus.equals("Emergency")) {
                     Intent i = new Intent(EmergencyActivity.this, HelpInfo.class);
                     i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                     startActivity(i);
@@ -489,7 +487,7 @@ public class EmergencyActivity extends AppCompatActivity {
                             }
                         }
 
-                        Toast.makeText(getApplicationContext(), "Retrieve Successful", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getApplicationContext(), "Contacts Retrieve Successful", Toast.LENGTH_LONG).show();
 
                     } else {
                         // errorMsg.setText(obj.getString("error_msg"));
@@ -497,7 +495,7 @@ public class EmergencyActivity extends AppCompatActivity {
                     }
                 } catch (JSONException e) {
                     // TODO Auto-generated catch block
-                    Toast.makeText(getApplicationContext(), "Error Occured [Server's JSON response might be invalid]!", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "Error Occured in get Contacts.", Toast.LENGTH_LONG).show();
                     e.printStackTrace();
                 }
             }
@@ -508,15 +506,15 @@ public class EmergencyActivity extends AppCompatActivity {
                                   String content) {
                 // When Http response code is '404'
                 if (statusCode == 404) {
-                    Toast.makeText(getApplicationContext(), "Requested resource not found", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "Get Contact : Requested resource not found", Toast.LENGTH_LONG).show();
                 }
                 // When Http response code is '500'
                 else if (statusCode == 500) {
-                    Toast.makeText(getApplicationContext(), "Something went wrong at server end", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "Get Contact : Something went wrong at server end", Toast.LENGTH_LONG).show();
                 }
                 // When Http response code other than 404, 500
                 else {
-                    Toast.makeText(getApplicationContext(), "Unexpected Error occcured! [Most common Error: Device might not be connected to Internet or remote server is not up and running]", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "Get Contact : Unexpected Error occcured!", Toast.LENGTH_LONG).show();
                 }
             }
 

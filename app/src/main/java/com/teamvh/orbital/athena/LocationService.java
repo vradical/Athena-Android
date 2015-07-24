@@ -201,13 +201,13 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
             java.util.Date date = new java.util.Date();
 
             editor = preferences.edit();
-            editor.putString("Longitude", String.valueOf(longitude));
-            editor.putString("Latitude", String.valueOf(latitude));
             editor.putString("Timestamp", parseDateToddMMyyyy(String.valueOf(new Timestamp(date.getTime()))));
             editor.putString("Address", address);
             editor.putString("Country", country);
             editor.putString("CountryCode", countryCode);
             editor.putString("Locality", locality);
+            editor.putString("Longitude", String.valueOf(longitude));
+            editor.putString("Latitude", String.valueOf(latitude));
 
             trackData.add(new EmergencyTrackData(address, parseDateToddMMyyyy(String.valueOf(new Timestamp(date.getTime()))), String.valueOf(longitude), String.valueOf(latitude), country));
 

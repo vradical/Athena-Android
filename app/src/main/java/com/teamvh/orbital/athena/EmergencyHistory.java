@@ -12,6 +12,7 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.google.android.gms.maps.model.LatLng;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
@@ -114,13 +115,18 @@ public class EmergencyHistory extends AppCompatActivity {
 
                             EmergencyData emergency = new EmergencyData();
 
-                            emergency.setEndTime(parseDateToddMMyyyy(object.getString("endTime")));
+                            if(object.getString("endTime").equals("Not Available")){
+                                emergency.setEndTime("Not Available");
+                            }else {
+                                emergency.setEndTime(parseDateToddMMyyyy(object.getString("endTime")));
+                            }
                             emergency.setNumOfTrack(object.getString("numOfTrack"));
                             emergency.setStartTime(parseDateToddMMyyyy(object.getString("startTime")));
                             emergency.setEmID(String.valueOf(object.getInt("emID")));
                             emergency.setAddress(object.getString("address"));
                             emergency.setCountry(object.getString("country"));
                             emergency.setStatus(object.getString("status"));
+                            emergency.setLatlng(new LatLng(Double.parseDouble(object.getString("latitude")), Double.parseDouble(object.getString("longitude"))));
 
                             emergencyList.add(emergency);
 
@@ -132,13 +138,18 @@ public class EmergencyHistory extends AppCompatActivity {
 
                                 EmergencyData emergency = new EmergencyData();
 
-                                emergency.setEndTime(parseDateToddMMyyyy(object.getString("endTime")));
+                                if(object.getString("endTime").equals("Not Available")){
+                                    emergency.setEndTime("Not Available");
+                                }else {
+                                    emergency.setEndTime(parseDateToddMMyyyy(object.getString("endTime")));
+                                }
                                 emergency.setNumOfTrack(object.getString("numOfTrack"));
                                 emergency.setStartTime(parseDateToddMMyyyy(object.getString("startTime")));
                                 emergency.setEmID(String.valueOf(object.getInt("emID")));
                                 emergency.setAddress(object.getString("address"));
                                 emergency.setCountry(object.getString("country"));
                                 emergency.setStatus(object.getString("status"));
+                                emergency.setLatlng(new LatLng(Double.parseDouble(object.getString("latitude")), Double.parseDouble(object.getString("longitude"))));
 
                                 emergencyList.add(emergency);
                             }
