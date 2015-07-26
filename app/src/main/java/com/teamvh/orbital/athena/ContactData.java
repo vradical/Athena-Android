@@ -12,6 +12,8 @@ public class ContactData {
 
     public String phone;
 
+    public String emStatus = "Pending...";
+
     public String getName() {
         return name;
     }
@@ -42,5 +44,13 @@ public class ContactData {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public String getEmStatus() {
+        return emStatus;
+    }
+
+    public void setEmStatus(String emStatus) {
+        this.emStatus = emStatus;
     }
 }

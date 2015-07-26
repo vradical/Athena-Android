@@ -1,8 +1,13 @@
 package com.teamvh.orbital.athena;
 
+import android.app.AlertDialog;
+import android.content.ActivityNotFoundException;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -38,7 +43,9 @@ public class HelpInfo extends AppCompatActivity {
     protected String displayChoice;
     protected TextView mPoliceText;
     protected TextView mHospitalText;
+    protected TextView mCountryText;
     protected Polyline polyLineStore;
+    protected CountryData curCountry;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,25 +59,39 @@ public class HelpInfo extends AppCompatActivity {
 
         polyLineStore = null;
 
-        longitude = preferences.getString("Longitude", "");
-        latitude = preferences.getString("Latitude", "");
+        if(preferences.getString("Longitude", "").equals("")){
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage("No location information found. Please let the track run at least once first.")
+                    .setCancelable(false)
+                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            finish();
+                            dialog.cancel();
+                        }
+                    });
+            AlertDialog alert = builder.create();
+            alert.show();
+        }else {
+            longitude = preferences.getString("Longitude", "");
+            latitude = preferences.getString("Latitude", "");
 
-        displayEmergencyPhone();
+            displayEmergencyPhone();
 
-        SupportMapFragment fragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.safe_map);
-        // Getting Google Map
-        mGoogleMap = fragment.getMap();
+            SupportMapFragment fragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.safe_map);
+            // Getting Google Map
+            mGoogleMap = fragment.getMap();
 
-        // Enabling go to current location in Google Map
-        LatLng ll = new LatLng(Double.parseDouble(latitude), Double.parseDouble(longitude));
-        CameraUpdate update = CameraUpdateFactory.newLatLngZoom(ll, 14);
-        mGoogleMap.animateCamera(update);
+            // Enabling go to current location in Google Map
+            LatLng ll = new LatLng(Double.parseDouble(latitude), Double.parseDouble(longitude));
+            CameraUpdate update = CameraUpdateFactory.newLatLngZoom(ll, 14);
+            mGoogleMap.animateCamera(update);
 
-        //Add a marker to the current location
-        mGoogleMap.addMarker(new MarkerOptions().
-                position(new LatLng(Double.parseDouble(latitude), Double.parseDouble(longitude))).
-                title("You are here").
-                icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
+            //Add a marker to the current location
+            mGoogleMap.addMarker(new MarkerOptions().
+                    position(new LatLng(Double.parseDouble(latitude), Double.parseDouble(longitude))).
+                    title("You are here").
+                    icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
+        }
     }
 
     @Override
@@ -90,24 +111,51 @@ public class HelpInfo extends AppCompatActivity {
     }
 
     public void displayEmergencyPhone(){
-        mPoliceText = (TextView) findViewById(R.id.helpPoliceText);
-        mHospitalText = (TextView) findViewById(R.id.helpHospitalText);
+        mPoliceText = (TextView) findViewById(R.id.helpPoliceContact);
+        mHospitalText = (TextView) findViewById(R.id.helpHospitalContact);
+        mCountryText = (TextView) findViewById(R.id.help_country);
 
-        CountryList country = new CountryList();
-        CountryData curCountry =  country.findCountry(preferences.getString("CountryCode", ""));
-        mPoliceText.append(" " + curCountry.getPoliceNum());
-        mHospitalText.append(" " + curCountry.getHospitalNum());
+        if(preferences.getString("Country", "").equals("")){
+            mCountryText.setText("N/A");
+        }else {
+            mCountryText.setText(preferences.getString("Country", ""));
+            CountryList country = new CountryList();
+            curCountry = country.findCountry(preferences.getString("CountryCode", ""));
+            if (curCountry == null) {
+                mPoliceText.setText("N/A");
+                mHospitalText.setText("N/A");
+            } else {
+                mPoliceText.setText(curCountry.getPoliceNum());
+                mHospitalText.setText(curCountry.getHospitalNum());
+            }
+        }
     }
 
     public void callHospital(View view) {
-        displayHospital();
+        if(!curCountry.getHospitalNum().equals("NA")) {
+            try {
+                Intent callIntent = new Intent(Intent.ACTION_CALL);
+                callIntent.setData(Uri.parse("tel:" + curCountry.getHospitalNum()));
+                startActivity(callIntent);
+            } catch (ActivityNotFoundException activityException) {
+                Log.e("Calling a Phone Number", "Call failed", activityException);
+            }
+        }
     }
 
     public void callPoliceStation(View view) {
-        displayPoliceStation();
+        if(!curCountry.getPoliceNum().equals("NA")) {
+            try {
+                Intent callIntent = new Intent(Intent.ACTION_CALL);
+                callIntent.setData(Uri.parse("tel:" + curCountry.getPoliceNum()));
+                startActivity(callIntent);
+            } catch (ActivityNotFoundException activityException) {
+                Log.e("Calling a Phone Number", "Call failed", activityException);
+            }
+        }
     }
 
-    public void displayHospital() {
+    public void displayHospital(View view) {
         StringBuilder sb = new StringBuilder("https://maps.googleapis.com/maps/api/place/nearbysearch/json?");
         sb.append("location=" + latitude + "," + longitude);
         sb.append("&radius=5000");
@@ -121,7 +169,7 @@ public class HelpInfo extends AppCompatActivity {
         displayChoice = "hospital";
     }
 
-    public void displayPoliceStation() {
+    public void displayPoliceStation(View view) {
         //Retrieve the information from url
         //Ensure the key is a browser key
         StringBuilder sb = new StringBuilder("https://maps.googleapis.com/maps/api/place/nearbysearch/json?");

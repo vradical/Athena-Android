@@ -1,8 +1,13 @@
 package com.teamvh.orbital.athena;
 
+import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -12,6 +17,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.facebook.AccessToken;
@@ -28,13 +34,20 @@ import java.util.ArrayList;
 public class EmergencyActivity extends AppCompatActivity {
 
     protected ListView listView;
-    protected ContactAdapter adapter;
+    protected EmContactAdapter adapter;
     protected ArrayList<ContactData> contactList;
     protected SharedPreferences preferences;
     protected SharedPreferences.Editor editor;
     protected String emID;
     protected String emStatus;
     protected String uname;
+    protected TextView mContactStatus;
+    protected Boolean smsDelivered;
+    protected int[][] mSuccessCheck;
+
+    protected BroadcastReceiver sendBroadcastReceiver;
+    protected BroadcastReceiver deliveryBroadcastReceiver;
+
     final String TAG = "De-activate Emergency";
 
     @Override
@@ -52,8 +65,9 @@ public class EmergencyActivity extends AppCompatActivity {
         contactList = new ArrayList<ContactData>();
         getContact();
         listView = (ListView) findViewById(R.id.listViewEmergencyCall);
-        adapter = new ContactAdapter(this, R.layout.activity_contact_row, contactList);
+        adapter = new EmContactAdapter(this, R.layout.activity_contact_row_e, contactList);
         listView.setAdapter(adapter);
+        listView.setDivider(null);
 
     }
 
@@ -70,11 +84,14 @@ public class EmergencyActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onStop(){
+
+    public void onStop() {
+        unregisterReceiver(sendBroadcastReceiver);
+        unregisterReceiver(deliveryBroadcastReceiver);
         super.onStop();
     }
 
-    public void deactivateEmergency(View view){
+    public void deactivateEmergency(View view) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         LayoutInflater inflater = LayoutInflater.from(this);
         final View textEntryView = inflater.inflate(R.layout.activity_emergency_password, null);
@@ -107,7 +124,7 @@ public class EmergencyActivity extends AppCompatActivity {
         builder.show();
     }
 
-    public void checkTrigger(){
+    public void checkTrigger() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Status");
         builder.setMessage(" ");
@@ -132,19 +149,19 @@ public class EmergencyActivity extends AppCompatActivity {
 
     //-------------------------LOCATION TRACKING SERVICE------------------------------------//
 
-    public void startTracking(String trackType, int emID){
+    public void startTracking(String trackType, int emID) {
         editor = preferences.edit();
-        if(trackType.equals("Standard")){
+        if (trackType.equals("Standard")) {
             editor.putString("Main Status", "TRACKING");
-        }else if(trackType.equals("High Alert")){
+        } else if (trackType.equals("High Alert")) {
             editor.putString("Main Status", "TRACKING (ALERT MODE)");
-        }else{
+        } else {
             editor.putString("Main Status", "EMERGENCY MODE ON");
         }
         editor.commit();
         editor.apply();
 
-        Intent intent = new Intent(this, LocationService.class) ;
+        Intent intent = new Intent(this, LocationService.class);
         intent.putExtra("fb_token", AccessToken.getCurrentAccessToken());
         intent.putExtra("track_type", trackType);
         intent.putExtra("track_em_id", emID);
@@ -152,7 +169,7 @@ public class EmergencyActivity extends AppCompatActivity {
         startService(intent);
     }
 
-    public void stopTracking(){
+    public void stopTracking() {
 
         editor = preferences.edit();
         editor.putString("Main Status", "IDLE");
@@ -165,7 +182,7 @@ public class EmergencyActivity extends AppCompatActivity {
     //-------------------------END EMERGENCY------------------------------------------------//
 
     //PREPARE QUERY TO GET CONTACT LIST
-    public void endEmergency(){
+    public void endEmergency() {
 
         //Empty country for update
         MainActivity.country = "empty";
@@ -173,7 +190,7 @@ public class EmergencyActivity extends AppCompatActivity {
         // Instantiate Http Request Param Object
         RequestParams params = new RequestParams();
 
-        if(uname != null){
+        if (uname != null) {
             params.put("username", uname);
             params.put("track_em_id", emID);
             params.put("emStatus", emStatus);
@@ -182,7 +199,7 @@ public class EmergencyActivity extends AppCompatActivity {
             invokeEmergencyWS(params);
         }
         // when any of the field is empty from token
-        else{
+        else {
             Toast.makeText(getApplicationContext(), "Failed to end Emergency", Toast.LENGTH_LONG).show();
         }
 
@@ -253,11 +270,11 @@ public class EmergencyActivity extends AppCompatActivity {
         // Instantiate Http Request Param Object
         RequestParams params = new RequestParams();
 
-        if(uname != null){
+        if (uname != null) {
             params.put("username", uname);
             params.put("name", preferences.getString("name", ""));
             params.put("country", preferences.getString("Country", ""));
-            params.put("address", preferences.getString("Address",""));
+            params.put("address", preferences.getString("Address", ""));
             params.put("latitude", preferences.getString("Latitude", ""));
             params.put("longitude", preferences.getString("Longitude", ""));
 
@@ -265,7 +282,7 @@ public class EmergencyActivity extends AppCompatActivity {
             invokeEmailWS(params);
         }
         // when any of the field is empty from token
-        else{
+        else {
             Toast.makeText(getApplicationContext(), "Failed to send email", Toast.LENGTH_LONG).show();
         }
 
@@ -283,12 +300,28 @@ public class EmergencyActivity extends AppCompatActivity {
                     // JSON Object
                     JSONObject obj = new JSONObject(response);
                     // When the JSON response has status boolean value assigned with true
-                    if (obj.getBoolean("status")) {
-                        Toast.makeText(getApplicationContext(), "Record Successful", Toast.LENGTH_LONG).show();
+                    if (obj.getString("status").equals("Error")) {
 
-                        // Else display error message
+                        for (int i = 0; i < contactList.size(); i++) {
+                            mSuccessCheck[i][1] = 0;
+                        }
+
                     } else {
-                        // errorMsg.setText(obj.getString("error_msg"));
+
+                        String[] errorList = obj.getString("status").split(" ");
+
+                        for (int i = 0; i < errorList.length ;i++){
+
+                            for(int j = 0; j < contactList.size(); j++)
+
+                            if (contactList.get(j).getEmail().equals(errorList[i])) {
+                                mSuccessCheck[j][1] = 0;
+                            } else {
+                                mSuccessCheck[j][1] = 1;
+                            }
+
+                        }
+
                         Toast.makeText(getApplicationContext(), obj.getString("error_msg"), Toast.LENGTH_LONG).show();
                     }
                 } catch (JSONException e) {
@@ -316,6 +349,23 @@ public class EmergencyActivity extends AppCompatActivity {
                 }
             }
 
+            @Override
+            public void onFinish() {
+                for (int i = 0; i < contactList.size(); i++) {
+
+                    if (mSuccessCheck[i][0] == 1 && mSuccessCheck[i][1] == 1) {
+                        adapter.getItem(i).setEmStatus("SMS and Email Sent");
+                    } else if (mSuccessCheck[i][0] == 0 && mSuccessCheck[i][1] == 1) {
+                        adapter.getItem(i).setEmStatus("SMS Error, Email Sent");
+                    } else if (mSuccessCheck[i][0] == 1 && mSuccessCheck[i][1] == 0) {
+                        adapter.getItem(i).setEmStatus("SMS Sent, Email Error");
+                    } else {
+                        adapter.getItem(i).setEmStatus("Error sending Email and SMS");
+                    }
+                    adapter.notifyDataSetChanged();
+                }
+            }
+
         });
     }
 
@@ -324,34 +374,84 @@ public class EmergencyActivity extends AppCompatActivity {
 
 
     protected void sendSMSMessage() {
-        for(int i = 0 ; i < contactList.size() ; i++){
+        for (int i = 0; i < contactList.size(); i++) {
+            smsDelivered = false;
+            mSuccessCheck[i][0] = 0;
+
             try {
-                SmsManager smsManager = SmsManager.getDefault();
 
                 /*String sendMessage = "This is an emergency. " + preferences.getString("name","") + " may be in danger. Please reach out to him/her immediately at "
                         + preferences.getString("Country","") +" "+preferences.getString("Address", "")+" ("+preferences.getString("Latitude", "")
                         +", "+preferences.getString("Longitude", "")+"). Please do not reply to this SMS.";*/
 
                 String sendMessage = "HELP";
-
                 String phone = contactList.get(i).getPhone();
-                smsManager.sendTextMessage(phone, null, sendMessage, null, null);
-
-                Toast.makeText(getApplicationContext(), "SMS sent.",
-                        Toast.LENGTH_LONG).show();
+                sendSMS(phone, sendMessage);
+                //sendSMSWS();
 
             } catch (Exception e) {
-
-                Toast.makeText(getApplicationContext(),
-                        "SMS faild, please try again.",
-                        Toast.LENGTH_LONG).show();
                 e.printStackTrace();
-
-                //sendSMSWS();
 
             }
         }
 
+    }
+
+    public void sendSMS(final String phoneNumber, String message)
+    {
+        String SENT = "SMS_SENT";
+        String DELIVERED = "SMS_DELIVERED";
+
+        PendingIntent sentPI = PendingIntent.getBroadcast(this, 0,
+                new Intent(SENT), 0);
+
+        PendingIntent deliveredPI = PendingIntent.getBroadcast(this, 0,
+                new Intent(DELIVERED), 0);
+
+        sendBroadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context arg0, Intent arg1) {
+                switch (getResultCode()) {
+                    case Activity.RESULT_OK:
+                        break;
+                    case SmsManager.RESULT_ERROR_GENERIC_FAILURE:
+                        break;
+                    case SmsManager.RESULT_ERROR_NO_SERVICE:
+                        break;
+                    case SmsManager.RESULT_ERROR_NULL_PDU:
+                        break;
+                    case SmsManager.RESULT_ERROR_RADIO_OFF:
+                        break;
+                }
+            }
+        };
+
+        deliveryBroadcastReceiver = new BroadcastReceiver(){
+            @Override
+            public void onReceive(Context arg0, Intent arg1) {
+                switch (getResultCode())
+                {
+                    case Activity.RESULT_OK:
+                        for(int i = 0; i < contactList.size(); i++){
+                            if(phoneNumber == contactList.get(i).getPhone()){
+                                mSuccessCheck[i][0] = 1;
+                            }
+                        }
+                        break;
+                    case Activity.RESULT_CANCELED:
+                        break;
+                }
+            }
+        };
+
+        //---when the SMS has been sent---
+        registerReceiver(sendBroadcastReceiver, new IntentFilter(SENT));
+
+        //---when the SMS has been delivered---
+        registerReceiver(deliveryBroadcastReceiver, new IntentFilter(DELIVERED));
+
+        SmsManager sms = SmsManager.getDefault();
+        sms.sendTextMessage(phoneNumber, null, message, sentPI, deliveredPI);
     }
 
     //if above failed, use web service to send
@@ -360,11 +460,11 @@ public class EmergencyActivity extends AppCompatActivity {
         // Instantiate Http Request Param Object
         RequestParams params = new RequestParams();
 
-        if(uname != null){
+        if (uname != null) {
             params.put("username", uname);
             params.put("name", preferences.getString("name", ""));
             params.put("country", preferences.getString("Country", ""));
-            params.put("address", preferences.getString("Address",""));
+            params.put("address", preferences.getString("Address", ""));
             params.put("latitude", preferences.getString("Latitude", ""));
             params.put("longitude", preferences.getString("Longitude", ""));
 
@@ -372,7 +472,7 @@ public class EmergencyActivity extends AppCompatActivity {
             invokeSMSWS(params);
         }
         // when any of the field is empty from token
-        else{
+        else {
             Toast.makeText(getApplicationContext(), "Failed to send sms", Toast.LENGTH_LONG).show();
         }
 
@@ -430,19 +530,19 @@ public class EmergencyActivity extends AppCompatActivity {
     //-------------------------GET CONTACTS CODE--------------------------------------------------//
 
     //PREPARE QUERY TO GET CONTACT LIST
-    public void getContact(){
+    public void getContact() {
 
         // Instantiate Http Request Param Object
         RequestParams params = new RequestParams();
 
-        if(uname != null){
+        if (uname != null) {
             params.put("username", uname);
 
             // Invoke RESTful Web Service with Http parameters
             invokeContactWS(params);
         }
         // when any of the field is empty from token
-        else{
+        else {
             Toast.makeText(getApplicationContext(), "Failed to retrieve contacts", Toast.LENGTH_LONG).show();
         }
 
@@ -524,8 +624,9 @@ public class EmergencyActivity extends AppCompatActivity {
             @Override
             public void onFinish() {
                 adapter.notifyDataSetChanged();
-                //sendSMSMessage();
-                //sendEmail();
+                mSuccessCheck = new int[contactList.size()][2];
+                sendSMSMessage();
+                sendEmail();
             }
         });
     }

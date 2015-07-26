@@ -96,8 +96,6 @@ public class AddContact extends AppCompatActivity {
                     // When the JSON response has status boolean value assigned with true
                     if (obj.getBoolean("status")) {
                         Toast.makeText(getApplicationContext(), "Record Successful", Toast.LENGTH_LONG).show();
-                        // Navigate to Home screen
-                        //navigatetoHomeActivity();
                     }
                     // Else display error message
                     else {

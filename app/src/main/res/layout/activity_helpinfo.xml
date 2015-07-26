@@ -1,73 +1,212 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent" android:layout_height="match_parent">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:weightSum="1.0">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="Police"
-        android:id="@+id/helpPoliceText"
-        android:layout_below="@+id/btnFindH"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="44dp" />
+    <LinearLayout
+        android:id="@+id/help_RL1"
+        android:layout_width="fill_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.45"
+        android:orientation="vertical"
+        android:weightSum="1.0">
 
-    <Button
-        android:id="@+id/btnFindH"
-        android:layout_width="wrap_content"
-        android:layout_height="60dp"
-        android:text="Call"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true" />
+        <LinearLayout
+            android:id="@+id/help_header"
+            android:layout_width="fill_parent"
+            android:layout_height="0dp"
+            android:background="@color/special_blue"
+            android:gravity="center"
+            android:padding="15dp"
+            android:orientation="horizontal"
+            android:layout_weight="0.25">
 
-    <Button
-        android:id="@+id/btnRouteH"
-        android:layout_width="wrap_content"
-        android:layout_height="60dp"
-        android:text="Display nearby hospital"
-        android:layout_alignParentTop="true"
-        android:layout_alignLeft="@+id/btnRouteP"
-        android:layout_alignStart="@+id/btnRouteP"
-        android:onClick="callHospital"/>
+            <TextView
+                style="@style/StandardText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Emergency Numbers for " />
+
+            <TextView
+                android:id="@+id/help_country"
+                style="@style/StandardText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-light"
+                android:text="country"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/help_hospital"
+            android:layout_width="fill_parent"
+            android:layout_height="0dp"
+            android:layout_below="@+id/help_header"
+            android:orientation="horizontal"
+            android:padding="20dp"
+            android:weightSum="1.0"
+            android:layout_weight="0.375">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.6"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/helpHospitalText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="20dp"
+                    android:text="Hospital"
+                    android:textColor="#000000"
+                    android:textStyle="bold"/>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="5dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="#000000"
+                        android:text="Contact Number: " />
+
+                    <TextView
+                        android:id="@+id/helpHospitalContact"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="#000000"
+                        android:text="number" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.4"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <ImageButton
+                    android:id="@+id/btnFindH"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginRight="20dp"
+                    android:onClick="callHospital"
+                    android:background="@drawable/call_button_x"/>
+
+                <ImageButton
+                    android:id="@+id/btnRouteH"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:onClick="displayHospital"
+                    android:background="@drawable/target_button_x"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <View
+            android:id="@+id/setting_seperator1"
+            android:layout_width="fill_parent"
+            android:layout_height="1dp"
+            android:background="@android:color/darker_gray" />
+
+        <LinearLayout
+            android:id="@+id/help_police"
+            android:layout_width="fill_parent"
+            android:layout_height="0dp"
+            android:orientation="horizontal"
+            android:padding="20dp"
+            android:weightSum="1.0"
+            android:layout_weight="0.375">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.6"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/helpPoliceText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="20dp"
+                    android:textColor="#000000"
+                    android:text="Police"
+                    android:textStyle="bold"/>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="5dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:textColor="#000000"
+                        android:layout_height="wrap_content"
+                        android:text="Contact Number: " />
+
+                    <TextView
+                        android:id="@+id/helpPoliceContact"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="#000000"
+                        android:text="number" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.4"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <ImageButton
+                    android:id="@+id/btnFindP"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginRight="20dp"
+                    android:onClick="callPoliceStation"
+                    android:background="@drawable/call_button_x"/>
+
+                <ImageButton
+                    android:id="@+id/btnRouteP"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:onClick="displayPoliceStation"
+                    android:background="@drawable/target_button_x"/>
+
+            </LinearLayout>
 
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="Hospital"
-        android:id="@+id/helpHospitalText" />
+        </LinearLayout>
 
-    <Button
-        android:id="@+id/btnFindP"
-        android:layout_width="wrap_content"
-        android:layout_height="60dp"
-        android:text="Call"
-        android:layout_alignTop="@+id/helpPoliceText"
-        android:layout_centerHorizontal="true"
-        />
+        <View
+            android:id="@+id/setting_seperator2"
+            android:layout_width="fill_parent"
+            android:layout_height="1dp"
+            android:background="@android:color/darker_gray" />
 
-    <Button
-        android:id="@+id/btnRouteP"
-        android:layout_width="wrap_content"
-        android:layout_height="60dp"
-        android:text="Display nearby police station"
-        android:layout_alignTop="@+id/btnFindP"
-        android:layout_toRightOf="@+id/btnFindP"
-        android:layout_toEndOf="@+id/btnFindP"
-        android:onClick="callPoliceStation"/>
-
+    </LinearLayout>
 
     <fragment xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/safe_map"
-        android:layout_width="800dp"
-        android:layout_height="700dp"
         android:name="com.google.android.gms.maps.SupportMapFragment"
-        android:layout_gravity="center_vertical"
-        android:layout_below="@+id/helpHospitalText"
-        android:layout_marginTop="116dp"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
+        android:layout_width="fill_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.55" />
 
-</RelativeLayout>
+</LinearLayout>

@@ -1,44 +1,86 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/special_blue"
+    android:gravity="center_horizontal"
     android:orientation="vertical"
-    android:background="#5E65B5"
     android:weightSum="1">
 
-    <TextView
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:id="@+id/em_LL1"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="EMERGENCY MODE ON"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="20dp"
-        android:layout_marginBottom="20dp"/>
+        android:layout_marginTop="30dp"
+        android:layout_weight="0.1"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="Emergency Message sent to the following numbers"
-        android:id="@+id/textView" />
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/em_TV1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="EMERGENCY MODE"
+                android:textColor="#FFFFFF"
+                android:textSize="24dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:text="ON"
+                android:textColor="#FFFFFF"
+                android:textSize="24dp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/em_danger"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginTop="15dp"
+            android:background="@drawable/danger" />
+
+        <TextView
+            android:id="@+id/em_TV2"
+            style="@style/StandardText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="15dp"
+            android:text="The emergency message has been" />
+
+        <TextView
+            android:id="@+id/em_TV3"
+            style="@style/StandardText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="sent to the following contacts," />
+
+    </LinearLayout>
 
     <ListView
-        android:layout_width="match_parent"
-        android:layout_height="131dp"
-        android:id="@+id/listViewEmergency" />
-
-    <ListView
-        android:layout_width="match_parent"
-        android:layout_height="215dp"
         android:id="@+id/listViewEmergencyCall"
-        android:layout_weight="0.24" />
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.8" />
 
-    <Button
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Deactivate Emergency"
-        android:id="@+id/btnDeactivate"
-        android:layout_gravity="center_horizontal"
-        android:onClick="deactivateEmergency"/>
+        android:layout_weight="0.1"
+        android:gravity="center">
 
+        <Button
+            android:id="@+id/btnDeactivate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="deactivateEmergency"
+            android:text="Deactivate Emergency" />
+    </LinearLayout>
 
 </LinearLayout>

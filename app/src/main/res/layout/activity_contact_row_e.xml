@@ -1,49 +1,65 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/help_hospital"
-    android:layout_width="fill_parent"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@color/special_purple"
     android:orientation="vertical"
     tools:context="com.teamvh.orbital.athena.AddContact">
 
-    <RelativeLayout
+    <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp">
-
-        <TextView
-            android:id="@+id/tvName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Name"
-            android:textColor="#000000"
-            android:textSize="20sp"
-            android:textStyle="bold"/>
+        android:padding="15dp">
 
         <LinearLayout
-            android:id="@+id/contact_row_LL1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tvName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Name"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvContactStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingLeft="20dp"
+                android:text="Pending..."
+                android:textColor="@color/special_green"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_below="@id/tvName">
+            android:paddingTop="7dp">
 
             <TextView
-                style="@style/StandardTextBlack"
+                style="@style/StandardText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:paddingRight="5dp"
                 android:text="Contact: " />
 
             <TextView
-                style="@style/StandardTextBlack"
+                style="@style/StandardText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="+" />
 
             <TextView
                 android:id="@+id/tvCountry"
-                style="@style/StandardTextBlack"
+                style="@style/StandardText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:paddingRight="5dp"
@@ -51,7 +67,7 @@
 
             <TextView
                 android:id="@+id/tvPhone"
-                style="@style/StandardTextBlack"
+                style="@style/StandardText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="123456" />
@@ -59,14 +75,13 @@
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/contact_row_LL2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_below="@+id/contact_row_LL1">
+            android:paddingTop="7dp">
 
             <TextView
-                style="@style/StandardTextBlack"
+                style="@style/StandardText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:paddingRight="5dp"
@@ -74,41 +89,19 @@
 
             <TextView
                 android:id="@+id/tvEmail"
-                style="@style/StandardTextBlack"
+                style="@style/StandardText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Email" />
 
         </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:orientation="horizontal"
-            android:layout_alignParentRight="true">
 
-            <ImageButton
-                android:id="@+id/btnCallC"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginRight="20dp"
-                android:background="@drawable/call_button_x"/>
-
-            <ImageButton
-                android:id="@+id/btnDeleteC"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="@drawable/cross_button_x"/>
-
-        </LinearLayout>
-
-    </RelativeLayout>
+    </LinearLayout>
 
     <View
-        android:id="@+id/setting_seperator1"
-        android:layout_width="fill_parent"
-        android:layout_height="1dp"
-        android:background="@android:color/darker_gray"/>
+        android:layout_width="match_parent"
+        android:layout_height="3dp"
+        android:background="@color/special_blue" />
 
 </LinearLayout>

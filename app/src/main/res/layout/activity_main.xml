@@ -21,7 +21,7 @@
         <FrameLayout
             android:layout_width="fill_parent"
             android:layout_height="0dp"
-            android:layout_weight="0.73">
+            android:layout_weight="0.70">
 
             <LinearLayout
                 android:layout_width="fill_parent"
@@ -33,7 +33,7 @@
                     class="com.google.android.gms.maps.SupportMapFragment"
                     android:layout_width="fill_parent"
                     android:layout_height="fill_parent"
-                    android:background="#FFFFFF"/>
+                    android:background="#FFFFFF" />
 
             </LinearLayout>
 
@@ -56,7 +56,7 @@
                     fab:fab_colorNormal="#1e253f"
                     fab:fab_colorPressed="#5E65B5"
                     fab:fab_colorRipple="#1e253f"
-                    fab:fab_label="Log Out"
+                    fab:fab_label="Logout"
                     fab:fab_size="mini" />
 
 
@@ -115,7 +115,7 @@
             android:layout_width="fill_parent"
             android:layout_height="0dp"
             android:layout_gravity="center_horizontal|bottom"
-            android:layout_weight="0.28"
+            android:layout_weight="0.3"
             android:gravity="center_horizontal">
 
             <LinearLayout
@@ -123,7 +123,7 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
-                android:paddingTop="15dp">
+                android:paddingTop="10dp">
 
                 <TextView
                     android:id="@+id/statusTV"
@@ -134,79 +134,113 @@
 
             </LinearLayout>
 
+            <LinearLayout
+                android:id="@+id/mainLL2_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_below="@+id/mainLL1"
+                android:layout_centerHorizontal="true"
+                android:paddingTop="5dp">
+
+                <ImageView
+                    android:id="@+id/shieldIcon"
+                    android:layout_width="14dp"
+                    android:layout_height="17dp"
+                    android:layout_marginRight="5dp"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/shield_icon" />
+
+                <TextView
+                    android:id="@+id/dangerZoneTV"
+                    style="@style/ThickText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_toRightOf="@id/shieldIcon"
+                    android:text="Zone: " />
+
+                <TextView
+                    android:id="@+id/danger_zone_view"
+                    style="@style/StandardText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_toRightOf="@+id/dangerZoneTV"
+                    android:maxLines="100"
+                    android:text="Not Available" />
+            </LinearLayout>
+
             <RelativeLayout
                 android:id="@+id/mainLL2"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/mainLL1"
-                android:gravity="center"
-                android:paddingTop="10dp">
+                android:layout_below="@+id/mainLL2_1"
+                android:gravity="center">
 
                 <LinearLayout
-                    android:id="@+id/mainLL2_1"
+                    android:id="@+id/mainLL2_2"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
 
-                <ImageView
-                    android:id="@+id/locationPin"
-                    android:layout_width="15dp"
-                    android:layout_height="15dp"
-                    android:layout_marginRight="5dp"
-                    android:layout_marginTop="5dp"
-                    android:background="@drawable/location_pin" />
+                    <ImageView
+                        android:id="@+id/locationPin"
+                        android:layout_width="14dp"
+                        android:layout_height="17dp"
+                        android:layout_marginRight="5dp"
+                        android:layout_marginTop="4dp"
+                        android:background="@drawable/location_pin" />
 
-                <TextView
-                    android:id="@+id/locationTV"
-                    style="@style/ThickText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_toRightOf="@id/locationPin"
-                    android:text="Location: " />
+                    <TextView
+                        android:id="@+id/locationTV"
+                        style="@style/ThickText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_toRightOf="@id/locationPin"
+                        android:text="Location: " />
 
-                <TextView
-                    android:id="@+id/location_address_view"
-                    style="@style/StandardText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_toRightOf="@+id/locationTV"
-                    android:maxLines="100"
-                    android:text="Not Available" />
+                    <TextView
+                        android:id="@+id/location_address_view"
+                        style="@style/StandardText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_toRightOf="@+id/locationTV"
+                        android:maxLines="100"
+                        android:text="Not Available" />
 
                 </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_below="@+id/mainLL2_1">
+                    android:layout_below="@+id/mainLL2_2"
+                    android:orientation="horizontal">
 
-                <ImageView
-                    android:id="@+id/slatingFlag"
-                    android:layout_width="15dp"
-                    android:layout_height="15dp"
-                    android:layout_below="@+id/locationPin"
-                    android:layout_marginRight="5dp"
-                    android:layout_marginTop="5dp"
-                    android:background="@drawable/slating_flag" />
+                    <ImageView
+                        android:id="@+id/slatingFlag"
+                        android:layout_width="14dp"
+                        android:layout_height="17dp"
+                        android:layout_below="@+id/locationPin"
+                        android:layout_marginRight="5dp"
+                        android:layout_marginTop="4dp"
+                        android:background="@drawable/slating_flag" />
 
-                <TextView
-                    android:id="@+id/countryTV"
-                    style="@style/ThickText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_below="@id/locationTV"
-                    android:layout_toRightOf="@id/slatingFlag"
-                    android:text="Country: " />
+                    <TextView
+                        android:id="@+id/countryTV"
+                        style="@style/ThickText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@id/locationTV"
+                        android:layout_toRightOf="@id/slatingFlag"
+                        android:text="Country: " />
 
-                <TextView
-                    android:id="@+id/track_country"
-                    style="@style/StandardText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_below="@+id/location_address_view"
-                    android:layout_toRightOf="@+id/countryTV"
-                    android:text="Not Available" />
+                    <TextView
+                        android:id="@+id/track_country"
+                        style="@style/StandardText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/location_address_view"
+                        android:layout_toRightOf="@+id/countryTV"
+                        android:text="Not Available" />
 
                 </LinearLayout>
 
@@ -245,7 +279,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="bottom"
-        android:background="#5E65B5"
+        android:background="@color/special_blue"
         android:gravity="top|center">
 
         <LinearLayout

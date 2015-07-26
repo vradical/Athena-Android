@@ -6,6 +6,9 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.location.Location;
+import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
@@ -14,7 +17,6 @@ import android.os.Vibrator;
 import android.support.v7.app.ActionBarActivity;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -59,7 +61,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     private AccessTokenTracker accessTokenTracker;
     public static SharedPreferences preferences;
     public static SharedPreferences.Editor editor;
-
+    protected LocationManager manager;
 
     //menu
     protected FloatingActionMenu actionMenu;
@@ -69,9 +71,11 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     protected FloatingActionButton settingAB;
     protected FloatingActionButton logoutAB;
 
+    //Status
     protected TextView mLocationAddressTextView;
     protected TextView mCountryTextView;
     protected TextView mStatusTextView;
+    protected TextView mDangerZoneTextView;
 
     protected ImageButton mStartUpdatesButton;
     protected TextView mLastUpdateTimeText;
@@ -83,17 +87,13 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     //--------------------------------------------Nearby----------------------------------------
 
     //high alert function
-    protected Button mStartHighAlertButton;
     protected CountDownTimer highAlertCD;
-
     protected AlertDialog safeAlert;
     protected int safetyCount = 1;
     protected TextView alertMessage;
-
     protected Vibrator v;
 
     //emergency function
-    //protected Button mStartEmergencyButton;
     protected int emID;
 
     //map
@@ -115,9 +115,9 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         //INITIALIZE SHARED PREFERENCE
         preferences = getSharedPreferences(getPackageName() + "_preferences", MODE_PRIVATE);
         preferences.registerOnSharedPreferenceChangeListener(this);
+
         //RESET COUNTRY
         country = "empty";
-        emergencyList = new ArrayList<EmergencyData>();
         markerList = new ArrayList<Marker>();
         circleList = new ArrayList<Circle>();
 
@@ -125,13 +125,18 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         FacebookSdk.sdkInitialize(getApplicationContext());
 
         bounds = new LatLngBounds.Builder();
+        manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         displayMain();
 
-        if(!isOnline()){
+        if (!isOnline()) {
             Intent intent = new Intent(this, LoginActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(intent);
+        }
+
+        if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            buildAlertMessageNoGps();
         }
 
         //CHECK FOR LOGIN
@@ -141,7 +146,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         accessTokenTracker = new AccessTokenTracker() {
             @Override
             protected void onCurrentAccessTokenChanged(AccessToken oldAccessToken, AccessToken newAccessToken) {
-                if(newAccessToken != null) {
+                if (newAccessToken != null) {
                     profile = Profile.getCurrentProfile();
                     String name = profile.getName();
                     editor = preferences.edit();
@@ -164,6 +169,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         mCountryTextView = (TextView) findViewById(R.id.track_country);
         mLastUpdateTimeText = (TextView) findViewById(R.id.track_location_time);
         mStatusTextView = (TextView) findViewById(R.id.statusTV);
+        mDangerZoneTextView = (TextView) findViewById(R.id.danger_zone_view);
         mPanelLayout = (SlidingUpPanelLayout) findViewById(R.id.main_sliding);
 
         //High alert button
@@ -316,6 +322,25 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         }
     }
 
+    //Check for GPS
+    private void buildAlertMessageNoGps() {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Your GPS seems to be disabled and it may affect the tracking quality, do you want to enable it?")
+                .setCancelable(false)
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    public void onClick(@SuppressWarnings("unused") final DialogInterface dialog, @SuppressWarnings("unused") final int id) {
+                        startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                    }
+                })
+                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    public void onClick(final DialogInterface dialog, @SuppressWarnings("unused") final int id) {
+                        dialog.cancel();
+                    }
+                });
+        final AlertDialog alert = builder.create();
+        alert.show();
+    }
+
     @Override
     protected void onStart() {
         super.onStart();
@@ -328,12 +353,27 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
     @Override
     public void onResume() {
+
+        //CHECK AND SHOW CORRECT STATUS
         if (isMyServiceRunning(LocationService.class) && preferences.getString("Main Status", "").equals("TRACKING")) {
             mStartUpdatesButton.setBackgroundResource(R.drawable.track_stop);
         } else if (isMyServiceRunning(LocationService.class) && preferences.getString("Main Status", "").equals("TRACKING (ALERT MODE)")) {
             mStartUpdatesButton.setBackgroundResource(R.drawable.alert_stop);
         }
         mPanelLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
+
+        //CHECK TO ENSURE ONLINE
+        if (!isOnline()) {
+            Intent intent = new Intent(this, LoginActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(intent);
+        }
+
+        //CHECK TO ENSURE GPS ON AGAIN
+        if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            buildAlertMessageNoGps();
+        }
+
         super.onResume();
     }
 
@@ -370,7 +410,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
             if (sharedPreferences.getString("Locality", "").equals("Not Available")) {
                 mCountryTextView.setText(sharedPreferences.getString("Country", ""));
             } else {
-                mCountryTextView.setText(sharedPreferences.getString("Country", "") + ", " + sharedPreferences.getString("Locality", ""));
+                mCountryTextView.setText(sharedPreferences.getString("Locality", "") + ", " + sharedPreferences.getString("Country", ""));
             }
 
             Gson gson = new Gson();
@@ -389,7 +429,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
             route.setPoints(latlngList);
             */
 
-            if(!country.equals(sharedPreferences.getString("Country", ""))){
+            if (!country.equals(sharedPreferences.getString("Country", ""))) {
                 country = sharedPreferences.getString("Country", "");
                 getCountryEM();
             }
@@ -416,12 +456,43 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                 lastLocationMark.remove();
             }
             lastLocationMark = mGoogleMap.addMarker(new MarkerOptions().position(ll).title("Last Location"));
+
+            calculateDangerZone();
         }
 
         if (key.equals("Main Status")) {
             mStatusTextView.setText(sharedPreferences.getString("Main Status", ""));
         }
+    }
 
+    private void calculateDangerZone() {
+        if (!circleList.isEmpty()) {
+
+            int dangerCount = 0;
+
+            Location currentLoc = new Location("");
+            currentLoc.setLatitude(latitude);
+            currentLoc.setLongitude(longitude);
+            Location circleLoc = new Location("");
+
+            for (int i = 0; i < circleList.size(); i++) {
+                circleLoc.setLatitude(circleList.get(i).getCenter().latitude);
+                circleLoc.setLongitude(circleList.get(i).getCenter().longitude);
+
+                if (currentLoc.distanceTo(circleLoc) <= circleList.get(i).getRadius()) {
+                    dangerCount++;
+                }
+            }
+
+            if (dangerCount == 0) {
+                mDangerZoneTextView.setText("Safe");
+                mDangerZoneTextView.setTextColor(Color.WHITE);
+            } else {
+                mDangerZoneTextView.setText("Danger Lv " + dangerCount);
+                mDangerZoneTextView.setTextColor(Color.RED);
+            }
+
+        }
     }
 
     private boolean isMyServiceRunning(Class<?> serviceClass) {
@@ -656,6 +727,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                 try {
                     // JSON Object
                     JSONObject obj = new JSONObject(response);
+                    emergencyList = new ArrayList<EmergencyData>();
                     // When the JSON response has status boolean value assigned with true
                     if (!response.equals(null)) {
 
@@ -752,6 +824,9 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                     circleList.add(mGoogleMap.addCircle(new CircleOptions().center(emergencyList.get(i).getLatlng()).fillColor(0x20ff0000)
                             .radius(Constants.DANGER_ZONE_RADIUS).strokeWidth(0)));
                 }
+
+                //Calculate Dangerzone
+                calculateDangerZone();
             }
         });
     }

@@ -56,6 +56,7 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
     private double longitude;
     private double latitude;
     private String address;
+    private String addressWOcountry;
     private String country;
     private String countryCode;
     private String locality;
@@ -108,18 +109,17 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
         locationRequest = LocationRequest.create();
 
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-
         if (trackType.equals("Standard")) {
             locationRequest.setInterval(Constants.CHECK_INTERVAL);
-            locationRequest.setFastestInterval(Constants.CHECK_FAST_INTERVAL);
+            locationRequest.setFastestInterval(Constants.CHECK_INTERVAL);
             locationRequest.setSmallestDisplacement(Constants.SMALLEST_DISPLACEMENT);
         } else if (trackType.equals("High Alert")) {
             locationRequest.setInterval(Constants.HA_CHECK_INTERVAL);
-            locationRequest.setFastestInterval(Constants.HA_CHECK_FAST_INTERVAL);
+            locationRequest.setFastestInterval(Constants.HA_CHECK_INTERVAL);
             locationRequest.setSmallestDisplacement(Constants.HA_SMALLEST_DISPLACEMENT);
         } else if (trackType.equals("Emergency")) {
             locationRequest.setInterval(Constants.EM_CHECK_INTERVAL);
-            locationRequest.setFastestInterval(Constants.EM_CHECK_FAST_INTERVAL);
+            locationRequest.setFastestInterval(Constants.EM_CHECK_INTERVAL);
             locationRequest.setSmallestDisplacement(Constants.EM_SMALLEST_DISPLACEMENT);
         }
         fusedLocationProviderApi = LocationServices.FusedLocationApi;
@@ -147,7 +147,6 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
 
     @Override
     public void onLocationChanged(Location location) {
-        Toast.makeText(mContext, "Driver location :" + location.getLatitude() + " , " + location.getLongitude(), Toast.LENGTH_SHORT).show();
         latitude = location.getLatitude();
         longitude = location.getLongitude();
         location.getTime();
@@ -186,7 +185,10 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
                 }else{
                     locality = "Not Available";
                 }
-                sb.append(address.getPostalCode()).append(" ");
+                this.addressWOcountry = sb.toString();
+                if(!address.getPostalCode().equals(null)){
+                    sb.append(address.getPostalCode()).append(" ");
+                }
                 this.address = sb.toString();
                 country = address.getCountryName().toString();
                 countryCode = address.getCountryCode().toString();
@@ -197,19 +199,23 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
             if (address == null) {
                 address = "Not Available";
             }
+            if(addressWOcountry == null){
+                addressWOcountry = "Not Available";
+            }
+
             String uname = accessToken.getUserId();
             java.util.Date date = new java.util.Date();
 
             editor = preferences.edit();
             editor.putString("Timestamp", parseDateToddMMyyyy(String.valueOf(new Timestamp(date.getTime()))));
-            editor.putString("Address", address);
+            editor.putString("Address", addressWOcountry);
             editor.putString("Country", country);
             editor.putString("CountryCode", countryCode);
             editor.putString("Locality", locality);
             editor.putString("Longitude", String.valueOf(longitude));
             editor.putString("Latitude", String.valueOf(latitude));
 
-            trackData.add(new EmergencyTrackData(address, parseDateToddMMyyyy(String.valueOf(new Timestamp(date.getTime()))), String.valueOf(longitude), String.valueOf(latitude), country, locality));
+            trackData.add(new EmergencyTrackData(addressWOcountry, parseDateToddMMyyyy(String.valueOf(new Timestamp(date.getTime()))), String.valueOf(longitude), String.valueOf(latitude), country, locality));
 
             editor.putString("TrackData", gson.toJson(trackData, listOfTrack));
 

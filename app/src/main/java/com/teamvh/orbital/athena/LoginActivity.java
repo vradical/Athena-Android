@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.Toast;
 
+import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
@@ -38,7 +39,7 @@ public class LoginActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        loginButton = (LoginButton)findViewById(R.id.login_button);
+        loginButton = (LoginButton) findViewById(R.id.login_button);
 
         preferences = MainActivity.preferences;
         editor = getPreferences(MODE_PRIVATE).edit();
@@ -50,7 +51,7 @@ public class LoginActivity extends Activity {
         loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
-                loginUser(loginResult.getAccessToken().getUserId());
+                loginUser(loginResult.getAccessToken());
                 editor.putString("fbsession", loginResult.getAccessToken().getUserId());
                 finish();
             }
@@ -67,7 +68,7 @@ public class LoginActivity extends Activity {
     }
 
     @Override
-    public void onBackPressed(){
+    public void onBackPressed() {
 
     }
 
@@ -76,35 +77,41 @@ public class LoginActivity extends Activity {
     }
 
     //PREPARE QUERY TO LOGIN USER
-    public void loginUser(String userid){
+    public void loginUser(AccessToken accessToken) {
 
-        profile = Profile.getCurrentProfile();
-        String name = profile.getName();
+        try {
+            String userid = accessToken.getUserId();
+            AccessToken.getCurrentAccessToken();
+            Profile.fetchProfileForCurrentAccessToken();
+            String name = profile.getName();
 
-        // Instantiate Http Request Param Object
-        RequestParams params = new RequestParams();
+            // Instantiate Http Request Param Object
+            RequestParams params = new RequestParams();
 
-        // When Name Edit View, Email Edit View and Password Edit View have values other than Null
-        if(userid != null || name != null){
-                        // Put Http parameter name with value of Name Edit View control
-                        params.put("name", name);
-                        // Put Http parameter username with value of Email Edit View control
-                        params.put("username", userid);
-                        // Invoke RESTful Web Service with Http parameters
-                        invokeWS(params);
-        }
-        // when any of the field is empty from token
-        else{
+            // When Name Edit View, Email Edit View and Password Edit View have values other than Null
+            if (userid != null || name != null) {
+                // Put Http parameter name with value of Name Edit View control
+                params.put("name", name);
+                // Put Http parameter username with value of Email Edit View control
+                params.put("username", userid);
+                // Invoke RESTful Web Service with Http parameters
+                invokeWS(params);
+            }
+            // when any of the field is empty from token
+            else {
+                Toast.makeText(getApplicationContext(), "Failed to Login via Facebook", Toast.LENGTH_LONG).show();
+            }
+        } catch (Exception e) {
             Toast.makeText(getApplicationContext(), "Failed to Login via Facebook", Toast.LENGTH_LONG).show();
         }
 
     }
 
     //SEND QUERY TO ATHENA WEB SERVICE
-    public void invokeWS(RequestParams params){
+    public void invokeWS(RequestParams params) {
         // Make RESTful webservice call using AsyncHttpClient object
         AsyncHttpClient client = new AsyncHttpClient();
-        client.get("http://119.81.223.180:8080/ProjectAthenaWS/login/dologin",params ,new AsyncHttpResponseHandler() {
+        client.get("http://119.81.223.180:8080/ProjectAthenaWS/login/dologin", params, new AsyncHttpResponseHandler() {
             // When the response returned by REST has Http response code '200'
             @Override
             public void onSuccess(String response) {
@@ -112,14 +119,14 @@ public class LoginActivity extends Activity {
                     // JSON Object
                     JSONObject obj = new JSONObject(response);
                     // When the JSON response has status boolean value assigned with true
-                    if(obj.getBoolean("status")){
+                    if (obj.getBoolean("status")) {
                         Toast.makeText(getApplicationContext(), "You are successfully logged in!", Toast.LENGTH_LONG).show();
                         // Navigate to Home screen
                         //navigatetoHomeActivity();
                     }
                     // Else display error message
-                    else{
-                       // errorMsg.setText(obj.getString("error_msg"));
+                    else {
+                        // errorMsg.setText(obj.getString("error_msg"));
                         Toast.makeText(getApplicationContext(), obj.getString("error_msg"), Toast.LENGTH_LONG).show();
                     }
                 } catch (JSONException e) {
@@ -129,20 +136,21 @@ public class LoginActivity extends Activity {
 
                 }
             }
+
             // When the response returned by REST has Http response code other than '200'
             @Override
             public void onFailure(int statusCode, Throwable error,
                                   String content) {
                 // When Http response code is '404'
-                if(statusCode == 404){
+                if (statusCode == 404) {
                     Toast.makeText(getApplicationContext(), "Requested resource not found", Toast.LENGTH_LONG).show();
                 }
                 // When Http response code is '500'
-                else if(statusCode == 500){
+                else if (statusCode == 500) {
                     Toast.makeText(getApplicationContext(), "Something went wrong at server end", Toast.LENGTH_LONG).show();
                 }
                 // When Http response code other than 404, 500
-                else{
+                else {
                     Toast.makeText(getApplicationContext(), "Unexpected Error occcured! [Most common Error: Device might not be connected to Internet or remote server is not up and running]", Toast.LENGTH_LONG).show();
                 }
             }

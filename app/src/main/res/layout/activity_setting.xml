@@ -1,4 +1,4 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -10,161 +10,385 @@
 
     <RelativeLayout
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/setting_RL1">
+        android:layout_height="wrap_content">
 
-        <TextView
-            android:id="@+id/setting_RL1_header"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Basic Functions"
-            style="@style/ThickText"
-            android:paddingBottom="20dp"/>
-
-        <TextView
-            android:id="@+id/setting_trackTV"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Track Interval"
-            style="@style/ThickText"
-            android:paddingBottom="10dp"
-            android:layout_below="@id/setting_RL1_header"/>
-
-        <LinearLayout
+        <RelativeLayout
+            android:id="@+id/setting_RL1"
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_below="@+id/setting_trackTV">
-
-            <SeekBar
-                android:id="@+id/setting_trackSB"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:max="55"
-                android:layout_weight="9"
-                android:paddingTop="2dp"/>
+            android:layout_height="wrap_content">
 
             <TextView
-                android:id="@+id/setting_trackSBTV"
+                android:id="@+id/setting_RL1_header"
+                style="@style/ThickText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="0"
-                style="@style/ThickText"
-                android:paddingBottom="10dp"
-                android:layout_weight="1"/>
+                android:paddingBottom="20dp"
+                android:text="Basics" />
 
-        </LinearLayout>
+        </RelativeLayout>
 
+        <View
+            android:id="@+id/setting_seperator1"
+            android:layout_width="fill_parent"
+            android:layout_height="1dp"
+            android:layout_below="@id/setting_RL1"
+            android:layout_marginBottom="20dp"
+            android:layout_marginTop="20dp"
+            android:background="@android:color/darker_gray" />
 
+        <Button
+            android:id="@+id/setting_advanced"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/setting_seperator1"
+            android:background="@android:color/transparent"
+            android:text="Show Advanced Settings" />
+
+        <RelativeLayout
+            android:id="@+id/setting_advancedLayout"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/setting_advanced"
+            android:visibility="gone">
+
+            <RelativeLayout
+                android:id="@+id/setting_ALRL1"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/setting_trackTV"
+                    style="@style/ThickText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingBottom="10dp"
+                    android:text="Standard: Track Interval" />
+
+                <LinearLayout
+                    android:id="@+id/setting_ALR1_1"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/setting_trackTV"
+                    android:orientation="horizontal">
+
+                    <SeekBar
+                        android:id="@+id/setting_trackSB"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="9"
+                        android:max="55"
+                        android:paddingTop="2dp" />
+
+                    <TextView
+                        android:id="@+id/setting_trackSBTV"
+                        style="@style/ThickText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:paddingBottom="10dp"
+                        android:text="0" />
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/setting_trackDisTV"
+                    style="@style/ThickText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/setting_ALR1_1"
+                    android:paddingBottom="10dp"
+                    android:text="Standard: Distance Between Track" />
+
+                <LinearLayout
+                    android:id="@+id/setting_ALR1_2"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/setting_trackDisTV"
+                    android:orientation="horizontal">
+
+                    <SeekBar
+                        android:id="@+id/setting_trackDisSB"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="9"
+                        android:max="55"
+                        android:paddingTop="2dp" />
+
+                    <TextView
+                        android:id="@+id/setting_trackDisSBTV"
+                        style="@style/ThickText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:paddingBottom="10dp"
+                        android:text="0" />
+
+                </LinearLayout>
+
+            </RelativeLayout>
+
+            <View
+                android:id="@+id/setting_seperator2"
+                android:layout_width="fill_parent"
+                android:layout_height="1dp"
+                android:layout_below="@id/setting_ALRL1"
+                android:layout_marginBottom="20dp"
+                android:layout_marginTop="20dp"
+                android:background="@android:color/darker_gray" />
+
+            <Button
+                android:id="@+id/setting_alertButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/setting_seperator2"
+                android:background="@android:color/transparent"
+                android:text="Show Alert Settings" />
+
+            <RelativeLayout
+                android:id="@+id/setting_alert"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/setting_alertButton"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/setting_alertTV"
+                    style="@style/ThickText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingBottom="10dp"
+                    android:text="Alert: Track Interval" />
+
+                <LinearLayout
+                    android:id="@+id/setting_ALR2_1"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/setting_alertTV"
+                    android:orientation="horizontal">
+
+                    <SeekBar
+                        android:id="@+id/setting_alertSB"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="9"
+                        android:paddingBottom="10dp" />
+
+                    <TextView
+                        android:id="@+id/setting_alertSBTV"
+                        style="@style/ThickText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:paddingBottom="10dp"
+                        android:text="0" />
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/setting_alertDisTV"
+                    style="@style/ThickText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/setting_ALR2_1"
+                    android:paddingBottom="10dp"
+                    android:text="Alert: Distance Between Track" />
+
+                <LinearLayout
+                    android:id="@+id/setting_ALR2_2"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/setting_alertDisTV"
+                    android:orientation="horizontal">
+
+                    <SeekBar
+                        android:id="@+id/setting_alertDisSB"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="9"
+                        android:paddingBottom="10dp" />
+
+                    <TextView
+                        android:id="@+id/setting_alertDisSBTV"
+                        style="@style/ThickText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:paddingBottom="10dp"
+                        android:text="0" />
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/setting_alertTMTV"
+                    style="@style/ThickText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/setting_ALR2_2"
+                    android:paddingBottom="10dp"
+                    android:text="Alert: Prompt Timer" />
+
+                <LinearLayout
+                    android:id="@+id/setting_ALR2_3"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/setting_alertTMTV"
+                    android:orientation="horizontal">
+
+                    <SeekBar
+                        android:id="@+id/setting_alertTMSB"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="9" />
+
+                    <TextView
+                        android:id="@+id/setting_alertTMSBTV"
+                        style="@style/ThickText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:paddingBottom="10dp"
+                        android:text="0" />
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/setting_alertCDTV"
+                    style="@style/ThickText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/setting_ALR2_3"
+                    android:paddingBottom="10dp"
+                    android:text="Alert: Prompt Countdown" />
+
+                <LinearLayout
+                    android:id="@+id/setting_ALR2_4"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/setting_alertCDTV"
+                    android:orientation="horizontal">
+
+                    <SeekBar
+                        android:id="@+id/setting_alertCDSB"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="9" />
+
+                    <TextView
+                        android:id="@+id/setting_alertCDSBTV"
+                        style="@style/ThickText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:paddingBottom="10dp"
+                        android:text="0" />
+
+                </LinearLayout>
+
+            </RelativeLayout>
+
+            <View
+                android:id="@+id/setting_seperator3"
+                android:layout_width="fill_parent"
+                android:layout_height="1dp"
+                android:layout_below="@id/setting_alert"
+                android:layout_marginBottom="20dp"
+                android:layout_marginTop="20dp"
+                android:background="@android:color/darker_gray" />
+
+            <Button
+                android:id="@+id/setting_emergencyButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/setting_seperator3"
+                android:background="@android:color/transparent"
+                android:text="Show Emergency Settings" />
+
+            <RelativeLayout
+                android:id="@+id/setting_emergency"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/setting_emergencyButton"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/setting_emTV"
+                    style="@style/ThickText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingBottom="10dp"
+                    android:text="Emergency: Track Interval" />
+
+                <LinearLayout
+                    android:id="@+id/setting_ALR3_1"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/setting_emTV"
+                    android:orientation="horizontal">
+
+                    <SeekBar
+                        android:id="@+id/setting_emSB"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="9"
+                        android:paddingBottom="10dp" />
+
+                    <TextView
+                        android:id="@+id/setting_emSBTV"
+                        style="@style/ThickText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:paddingBottom="10dp"
+                        android:text="0" />
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/setting_emDisTV"
+                    style="@style/ThickText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/setting_ALR3_1"
+                    android:paddingBottom="10dp"
+                    android:text="Emergency: Distance Between Track" />
+
+                <LinearLayout
+                    android:id="@+id/setting_ALR3_2"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/setting_emDisTV"
+                    android:orientation="horizontal">
+
+                    <SeekBar
+                        android:id="@+id/setting_emDisSB"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="9" />
+
+                    <TextView
+                        android:id="@+id/setting_emDisSBTV"
+                        style="@style/ThickText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:paddingBottom="10dp"
+                        android:text="0" />
+
+                </LinearLayout>
+
+            </RelativeLayout>
+
+        </RelativeLayout>
+
+        <View
+            android:id="@+id/setting_seperatorLast"
+            android:layout_width="fill_parent"
+            android:layout_height="1dp"
+            android:layout_below="@id/setting_advancedLayout"
+            android:layout_marginBottom="20dp"
+            android:layout_marginTop="20dp"
+            android:background="@android:color/darker_gray" />
 
     </RelativeLayout>
 
-    <View
-        android:layout_width="fill_parent"
-        android:layout_height="1dp"
-        android:background="@android:color/darker_gray"
-        android:layout_below="@id/setting_RL1"
-        android:layout_marginTop="20dp"
-        android:layout_marginBottom="20dp"
-        android:id="@+id/setting_seperator1"/>
-
-    <RelativeLayout
-        android:id="@+id/setting_RL2"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/setting_seperator1">
-
-        <TextView
-            android:id="@+id/setting_RL2_header"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Alert Mode"
-            style="@style/ThickText"
-            android:paddingBottom="20dp"/>
-
-        <TextView
-            android:id="@+id/setting_alertTV"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Track Interval"
-            style="@style/ThickText"
-            android:paddingBottom="10dp"
-            android:layout_below="@id/setting_RL2_header"/>
-
-        <SeekBar
-            android:id="@+id/setting_alertSB"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/setting_alertTV"
-            android:paddingBottom="10dp"
-            android:max="5"
-            android:progress="1"/>
-
-        <TextView
-            android:id="@+id/setting_alertCDTV"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Prompt Timer"
-            style="@style/ThickText"
-            android:paddingBottom="10dp"
-            android:layout_below="@id/setting_alertSB"/>
-
-        <SeekBar
-            android:id="@+id/setting_alertCDSB"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/setting_alertCDTV"/>
-    </RelativeLayout>
-
-    <View
-        android:layout_width="fill_parent"
-        android:layout_height="1dp"
-        android:background="@android:color/darker_gray"
-        android:layout_below="@id/setting_RL2"
-        android:layout_marginTop="20dp"
-        android:layout_marginBottom="20dp"
-        android:id="@+id/setting_seperator2"/>
-
-    <RelativeLayout
-        android:id="@+id/setting_RL3"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/setting_seperator2">
-
-        <TextView
-            android:id="@+id/setting_RL3_header"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Emergency"
-            style="@style/ThickText"
-            android:paddingBottom="20dp"/>
-
-        <TextView
-            android:id="@+id/setting_emTV"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Track Interval"
-            style="@style/ThickText"
-            android:paddingBottom="10dp"
-            android:layout_below="@id/setting_RL3_header"/>
-
-        <SeekBar
-            android:id="@+id/setting_emSB"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/setting_emTV"
-            android:paddingBottom="10dp"
-            android:max="60"
-            android:progress="5"/>
-
-        <TextView
-            android:id="@+id/setting_emPassTV"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Passcode"
-            style="@style/ThickText"
-            android:paddingBottom="10dp"
-            android:layout_below="@id/setting_emSB"/>
-    </RelativeLayout>
-
-</RelativeLayout>
+</ScrollView>

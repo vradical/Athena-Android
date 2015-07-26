@@ -2,12 +2,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.teamvh.orbital.athena.MainActivity">
-    <item android:id="@+id/action_contacts" android:title="@string/action_contacts"
-        android:orderInCategory="100" app:showAsAction="never" />
-    <item android:id="@+id/action_helpinfo" android:title="@string/action_helpinfo"
-        android:orderInCategory="100" app:showAsAction="never" />
-    <item android:id="@+id/action_emergencyHistory" android:title="@string/action_emergencyHistory"
-        android:orderInCategory="100" app:showAsAction="never" />
-    <item android:id="@+id/action_settings" android:title="@string/action_settings"
-        android:orderInCategory="100" app:showAsAction="never" />
+    <item android:id="@+id/action_plus"
+        android:title="@string/action_contacts"
+        android:orderInCategory="100"
+        android:icon="@drawable/plus"
+        app:showAsAction="always" />
 </menu>

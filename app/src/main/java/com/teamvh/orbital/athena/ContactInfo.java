@@ -6,8 +6,9 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -44,6 +45,14 @@ public class ContactInfo extends AppCompatActivity {
         listView = (ListView) findViewById(R.id.contact_list);
         adapter = new ContactAdapter(this, R.layout.activity_contact_row, contactList);
         listView.setAdapter(adapter);
+        listView.setDivider(null);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main, menu);
+        return true;
     }
 
     @Override
@@ -51,6 +60,10 @@ public class ContactInfo extends AppCompatActivity {
         switch (item.getItemId()) {
             case android.R.id.home:
                 this.finish();
+                return true;
+            case R.id.action_plus:
+                Intent myIntent = new Intent(ContactInfo.this, AddContact.class);
+                ContactInfo.this.startActivityForResult(myIntent, 1);
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -60,12 +73,6 @@ public class ContactInfo extends AppCompatActivity {
     public void onBackPressed() {
         super.onBackPressed();
         this.finish();
-    }
-
-    public void addContacts(View view) {
-        Intent myIntent = new Intent(ContactInfo.this, AddContact.class);
-        //myIntent.putExtra("key", value); //Optional parameters
-        ContactInfo.this.startActivityForResult(myIntent, 1);
     }
 
     @Override
