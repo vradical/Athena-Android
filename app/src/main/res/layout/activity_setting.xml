@@ -113,7 +113,7 @@
                     android:id="@+id/setting_seperator1"
                     android:layout_width="fill_parent"
                     android:layout_height="2dp"
-                    android:layout_marginBottom="15dp"
+                    android:layout_marginBottom="5dp"
                     android:layout_marginTop="5dp"
                     android:background="#C8C8C8" />
 
@@ -121,9 +121,10 @@
                     android:id="@+id/setting_contactsLL"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="20dp"
                     android:clickable="true"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp">
 
                     <TextView
                         android:id="@+id/setting_contacts"
@@ -144,9 +145,10 @@
                     android:id="@+id/setting_passcodeLL"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="20dp"
                     android:clickable="true"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp">
 
                     <TextView
                         android:id="@+id/setting_passcode"
@@ -167,9 +169,10 @@
                     android:id="@+id/setting_FBShareLL"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="20dp"
                     android:clickable="true"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp">
 
                     <TextView
                         android:id="@+id/setting_shareFB"
@@ -190,9 +193,10 @@
                     android:id="@+id/setting_feedbackLL"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="20dp"
                     android:clickable="true"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="20dp">
 
                     <TextView
                         android:id="@+id/setting_feedback"

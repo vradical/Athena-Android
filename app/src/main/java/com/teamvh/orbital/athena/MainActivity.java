@@ -15,8 +15,10 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Vibrator;
 import android.support.v7.app.ActionBarActivity;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -113,6 +115,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         //INITIALIZE SHARED PREFERENCE
         preferences = getSharedPreferences(getPackageName() + "_preferences", MODE_PRIVATE);
         preferences.registerOnSharedPreferenceChangeListener(this);
+        editor = preferences.edit();
 
         //RESET COUNTRY
         country = "empty";
@@ -127,14 +130,18 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
         displayMain();
 
+        //CHECKS
         if (!isOnline()) {
             Intent intent = new Intent(this, LoginActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(intent);
         }
-
         if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             buildAlertMessageNoGps();
+        }
+
+        if (!preferences.contains("Passcode")) {
+            setPasscode();
         }
 
         //CHECK FOR LOGIN
@@ -147,7 +154,6 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                 if (newAccessToken != null) {
                     profile = Profile.getCurrentProfile();
                     String name = profile.getName();
-                    editor = preferences.edit();
                     editor.putString("fbsession", newAccessToken.getUserId());
                     editor.putString("name", name);
                     editor.commit();
@@ -291,6 +297,41 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(intent);
         }
+    }
+
+    //Check for passcode
+    public void setPasscode() {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = LayoutInflater.from(this);
+        final View textEntryView = inflater.inflate(R.layout.activity_emergency_password, null);
+        builder.setTitle("Passcode");
+        builder.setMessage("No passcode detected. Please key in new passcode.");
+        builder.setCancelable(false);
+        builder.setView(textEntryView);
+        builder.setPositiveButton(android.R.string.ok, null);
+        final AlertDialog dialog = builder.create();
+
+        dialog.show();
+
+        dialog.getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                EditText mUserText;
+                TextView mErrorText;
+                String strPinCode;
+                mUserText = (EditText) textEntryView.findViewById(R.id.editTextPasscode);
+                mErrorText = (TextView) textEntryView.findViewById(R.id.PasscodeError);
+                strPinCode = mUserText.getText().toString();
+
+                if (strPinCode.equals("")) {
+                    mErrorText.setVisibility(View.VISIBLE);
+                    mErrorText.setText("Passcode cannot by empty.");
+                } else {
+                    editor.putString("Passcode", strPinCode).commit();
+                    dialog.cancel();
+                }
+            }
+        });
     }
 
     //Check for GPS

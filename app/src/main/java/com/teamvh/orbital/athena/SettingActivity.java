@@ -3,25 +3,34 @@ package com.teamvh.orbital.athena;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.facebook.Profile;
 import com.facebook.login.LoginManager;
 import com.facebook.login.widget.ProfilePictureView;
 
+import java.util.Set;
+
 public class SettingActivity extends AppCompatActivity {
 
     protected TextView mTitleText;
+    protected SharedPreferences preferences;
+    protected SharedPreferences.Editor editor;
 
     //Facebook
     protected ProfilePictureView mFBIV;
@@ -31,6 +40,9 @@ public class SettingActivity extends AppCompatActivity {
 
     //General
     protected LinearLayout mContactLayout;
+    protected LinearLayout mPasscodeLayout;
+    protected LinearLayout mInviteFriendsLayout;
+    protected LinearLayout mFeedbackLayout;
 
     //Advanced
     protected SeekBar mTrackingSB;
@@ -71,6 +83,9 @@ public class SettingActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         mTitleText = (TextView) findViewById(R.id.mytitle);
         mTitleText.setText("Contacts");
+
+        preferences = MainActivity.preferences;
+        editor = preferences.edit();
 
         setupFacebookSetting();
 
@@ -171,6 +186,138 @@ public class SettingActivity extends AppCompatActivity {
             }
         });
 
+        //Change Passcode
+        mPasscodeLayout = (LinearLayout) findViewById(R.id.setting_passcodeLL);
+        mPasscodeLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                final AlertDialog.Builder builder = new AlertDialog.Builder(SettingActivity.this);
+                LayoutInflater inflater = LayoutInflater.from(SettingActivity.this);
+                final View textEntryView = inflater.inflate(R.layout.activity_emergency_password, null);
+                builder.setTitle("Passcode");
+                builder.setMessage("Please key in your existing passcode to continue.");
+                builder.setView(textEntryView);
+                builder.setPositiveButton(android.R.string.ok, null);
+                builder.setNegativeButton(android.R.string.cancel, null);
+                final AlertDialog dialog = builder.create();
+
+                dialog.show();
+
+                dialog.getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        EditText mUserText;
+                        TextView mErrorText;
+                        mUserText = (EditText) textEntryView.findViewById(R.id.editTextPasscode);
+                        mErrorText = (TextView) textEntryView.findViewById(R.id.PasscodeError);
+                        String strPinCode = mUserText.getText().toString();
+
+                        if (!strPinCode.equals(preferences.getString("Passcode", ""))) {
+                            mErrorText.setVisibility(View.VISIBLE);
+                            mErrorText.setText("Wrong Passcode");
+                        } else {
+                            setPasscode();
+                            dialog.cancel();
+                        }
+                    }
+                });
+
+                dialog.getButton(DialogInterface.BUTTON_NEGATIVE).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        dialog.cancel();
+                    }
+                });
+            }
+        });
+
+        //Invite Friends
+        mInviteFriendsLayout = (LinearLayout) findViewById(R.id.setting_FBShareLL);
+        mInviteFriendsLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(SettingActivity.this);
+                builder.setMessage("Thank you for your interest in sharing Athena with your friends! However, this function is not available yet.")
+                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                dialog.cancel();
+                            }
+                        });
+                AlertDialog alert = builder.create();
+                alert.show();
+            }
+        });
+
+        //Feedback
+        mFeedbackLayout = (LinearLayout) findViewById(R.id.setting_feedbackLL);
+        mFeedbackLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(SettingActivity.this);
+                builder.setMessage("Thank you for your interest in improving Athena! However, this function is not available yet.")
+                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                dialog.cancel();
+                            }
+                        });
+                AlertDialog alert = builder.create();
+                alert.show();
+            }
+        });
+
+        /*
+                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage("No location information found. Please let the track run at least once first.")
+                    .setCancelable(false)
+                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            finish();
+                            dialog.cancel();
+                        }
+                    });
+            AlertDialog alert = builder.create();
+            alert.show();
+         */
+    }
+
+    public void setPasscode(){
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = LayoutInflater.from(this);
+        final View textEntryView = inflater.inflate(R.layout.activity_emergency_password, null);
+        builder.setTitle("Passcode");
+        builder.setMessage("Please key in your new passcode.");
+        builder.setView(textEntryView);
+        builder.setPositiveButton(android.R.string.ok, null);
+        builder.setNegativeButton(android.R.string.cancel, null);
+        final AlertDialog dialog = builder.create();
+
+        dialog.show();
+
+        dialog.getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                EditText mUserText;
+                TextView mErrorText;
+                mUserText = (EditText) textEntryView.findViewById(R.id.editTextPasscode);
+                mErrorText = (TextView) textEntryView.findViewById(R.id.PasscodeError);
+                String strPinCode = mUserText.getText().toString();
+
+                if (strPinCode.equals("")){
+                    mErrorText.setVisibility(View.VISIBLE);
+                    mErrorText.setText("Passcode cannot by empty.");
+                } else {
+                    editor.putString("Passcode", strPinCode).commit();
+                    dialog.cancel();
+                }
+            }
+        });
+
+        dialog.getButton(DialogInterface.BUTTON_NEGATIVE).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dialog.cancel();
+            }
+        });
     }
 
     public void setupAdvancedSetting() {

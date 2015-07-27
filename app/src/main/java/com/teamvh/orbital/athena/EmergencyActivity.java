@@ -57,6 +57,7 @@ public class EmergencyActivity extends AppCompatActivity {
         getSupportActionBar().hide();
 
         preferences = MainActivity.preferences;
+        editor = preferences.edit();
 
         Bundle b = getIntent().getExtras();
         emID = String.valueOf(b.getInt("track_em_id"));
@@ -100,42 +101,51 @@ public class EmergencyActivity extends AppCompatActivity {
     }
 
     public void deactivateEmergency(View view) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
         LayoutInflater inflater = LayoutInflater.from(this);
         final View textEntryView = inflater.inflate(R.layout.activity_emergency_password, null);
         builder.setTitle("Passcode");
-        builder.setMessage("To deactivate please enter your passcode");
+        builder.setMessage("Please key in your passcode to de-activate emergency mode.");
         builder.setView(textEntryView);
-        builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                EditText mUserText;
-                mUserText = (EditText) textEntryView.findViewById(R.id.editTextPasscode);
-                String strPinCode = mUserText.getText().toString();
-                if (strPinCode.equals("1234")) {
-                    Log.d(TAG, "Correct Passcode");
-                    checkTrigger();
+        builder.setPositiveButton(android.R.string.ok, null);
+        builder.setNegativeButton(android.R.string.cancel, null);
+        final AlertDialog dialog = builder.create();
 
+        dialog.show();
+
+        dialog.getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                EditText mUserText;
+                TextView mErrorText;
+                mUserText = (EditText) textEntryView.findViewById(R.id.editTextPasscode);
+                mErrorText = (TextView) textEntryView.findViewById(R.id.PasscodeError);
+                String strPinCode = mUserText.getText().toString();
+
+                if (!strPinCode.equals(preferences.getString("Passcode", ""))) {
+                    mErrorText.setVisibility(View.VISIBLE);
+                    mErrorText.setText("Wrong Passcode");
+                } else {
+                    checkTrigger();
                     stopTracking();
                     startTracking("Standard", 0);
-                } else
-                    Log.d(TAG, "Incorrect Passcode");
+                    dialog.cancel();
+                }
             }
         });
 
-        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-
-            public void onClick(DialogInterface dialog, int which) {
-                // TODO Auto-generated method stub
-                return;
+        dialog.getButton(DialogInterface.BUTTON_NEGATIVE).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dialog.cancel();
             }
         });
-        builder.show();
     }
 
     public void checkTrigger() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Status");
-        builder.setMessage(" ");
+        builder.setMessage("Ensure that you are safe before responding to this prompt!");
         builder.setCancelable(false);
 
         builder.setPositiveButton("Safe", new DialogInterface.OnClickListener() {
@@ -158,7 +168,6 @@ public class EmergencyActivity extends AppCompatActivity {
     //-------------------------LOCATION TRACKING SERVICE------------------------------------//
 
     public void startTracking(String trackType, int emID) {
-        editor = preferences.edit();
         if (trackType.equals("Standard")) {
             editor.putString("Main Status", "TRACKING");
         } else if (trackType.equals("High Alert")) {
