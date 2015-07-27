@@ -66,10 +66,8 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     //menu
     protected FloatingActionMenu actionMenu;
     protected FloatingActionButton helpAB;
-    protected FloatingActionButton contactAB;
     protected FloatingActionButton historyAB;
     protected FloatingActionButton settingAB;
-    protected FloatingActionButton logoutAB;
 
     //Status
     protected TextView mLocationAddressTextView;
@@ -249,19 +247,6 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
             }
         });
 
-        //Contacts
-        contactAB = (FloatingActionButton) findViewById(R.id.menu_contacts);
-        contactAB.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent i = new Intent(MainActivity.this, ContactInfo.class);
-                i.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-                startActivity(i);
-                overridePendingTransition(0, 0);
-                actionMenu.close(false);
-            }
-        });
-
         //History
         historyAB = (FloatingActionButton) findViewById(R.id.menu_history);
         historyAB.setOnClickListener(new View.OnClickListener() {
@@ -281,20 +266,6 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
             @Override
             public void onClick(View view) {
                 Intent i = new Intent(MainActivity.this, SettingActivity.class);
-                i.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-                startActivity(i);
-                overridePendingTransition(0, 0);
-                actionMenu.close(false);
-            }
-        });
-
-        //Logout
-        logoutAB = (FloatingActionButton) findViewById(R.id.menu_logout);
-        logoutAB.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                LoginManager.getInstance().logOut();
-                Intent i = new Intent(MainActivity.this, LoginActivity.class);
                 i.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                 startActivity(i);
                 overridePendingTransition(0, 0);

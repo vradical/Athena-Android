@@ -5,9 +5,11 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.loopj.android.http.AsyncHttpClient;
@@ -17,19 +19,35 @@ import com.loopj.android.http.RequestParams;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class AddContact extends AppCompatActivity {
 
     private SharedPreferences preferences;
-    private EditText nameField;
-    private EditText emailField;
-    private EditText countryField;
-    private EditText phoneField;
+    protected EditText nameField;
+    protected EditText emailField;
+    protected EditText countryField;
+    protected EditText phoneField;
+    protected EditText areaField;
+    protected TextView mTitleText;
+    protected TextView mNameError;
+    protected TextView mEmailError;
+    protected TextView mEmailError2;
+    protected TextView mPhoneError;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_contact);
+
+        //Set up action bar
+        getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
+        getSupportActionBar().setCustomView(R.layout.abs_layout);
         getSupportActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#1e253f")));
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        mTitleText = (TextView) findViewById(R.id.mytitle);
+        mTitleText.setText("Add Contact");
 
         preferences = MainActivity.preferences;
 
@@ -37,6 +55,11 @@ public class AddContact extends AppCompatActivity {
         emailField = (EditText) findViewById(R.id.add_email);
         countryField = (EditText) findViewById(R.id.add_country_code);
         phoneField = (EditText) findViewById(R.id.add_phone_number);
+        areaField = (EditText) findViewById(R.id.add_area_code);
+        mNameError = (TextView) findViewById(R.id.name_helper);
+        mEmailError = (TextView) findViewById(R.id.email_helper);
+        mEmailError2 = (TextView) findViewById(R.id.email_valid);
+        mPhoneError = (TextView) findViewById(R.id.phone_helper);
     }
 
     @Override
@@ -46,15 +69,71 @@ public class AddContact extends AppCompatActivity {
     }
 
     public void completeContact(View view){
-        String name = nameField.getText().toString();
-        String email = emailField.getText().toString();
-        String country = countryField.getText().toString();
-        String phone = phoneField.getText().toString();
+        String name = "";
+        String email = "";
+        String country = "";
+        String phone = "";
 
-        addContact(name, email, country, phone);
-        Intent returnIntent = new Intent();
-        setResult(RESULT_CANCELED, returnIntent);
-        finish();
+        if(isEmpty(nameField)){
+            mNameError.setVisibility(View.VISIBLE);
+        }else{
+            mNameError.setVisibility(View.INVISIBLE);
+            name = nameField.getText().toString();
+        }
+
+        if(isEmpty(emailField)){
+            mEmailError2.setVisibility(View.GONE);
+            mEmailError.setVisibility(View.VISIBLE);
+        }else{
+            mEmailError.setVisibility(View.GONE);
+            email = emailField.getText().toString();
+            if(!isEmailValid(email)){
+                mEmailError2.setVisibility(View.VISIBLE);
+            }
+        }
+
+        if(isEmpty(countryField) || isEmpty(phoneField)){
+            mPhoneError.setVisibility(View.VISIBLE);
+        }else{
+            mPhoneError.setVisibility(View.GONE);
+            country = countryField.getText().toString();
+
+            if(isEmpty(areaField)) {
+                phone = phoneField.getText().toString();
+            }else{
+                phone = areaField.getText().toString() + phoneField.getText().toString();
+            }
+
+        }
+
+        if(!isEmpty(nameField) && !isEmpty(emailField) && !isEmpty(countryField) && !isEmpty(phoneField) && isEmailValid(email)) {
+            addContact(name, email, country, phone);
+            Intent returnIntent = new Intent();
+            setResult(RESULT_CANCELED, returnIntent);
+            finish();
+        }
+    }
+
+    public static boolean isEmailValid(String email) {
+        boolean isValid = false;
+
+        String expression = "^[\\w\\.-]+@([\\w\\-]+\\.)+[A-Z]{2,4}$";
+        CharSequence inputStr = email;
+
+        Pattern pattern = Pattern.compile(expression, Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(inputStr);
+        if (matcher.matches()) {
+            isValid = true;
+        }
+        return isValid;
+    }
+
+    private boolean isEmpty(EditText etText) {
+        if (etText.getText().toString().trim().length() > 0) {
+            return false;
+        } else {
+            return true;
+        }
     }
 
     //PREPARE QUERY TO LOGIN USER

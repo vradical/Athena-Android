@@ -22,6 +22,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Name"
+                android:fontFamily="sans-serif-light"
                 android:textColor="#FFFFFF"
                 android:textSize="20sp"
                 android:textStyle="bold" />
@@ -32,6 +33,7 @@
                 android:layout_height="wrap_content"
                 android:paddingLeft="20dp"
                 android:text="Pending..."
+                android:fontFamily="sans-serif-light"
                 android:textColor="@color/special_green"
                 android:textSize="20sp"
                 android:textStyle="bold" />

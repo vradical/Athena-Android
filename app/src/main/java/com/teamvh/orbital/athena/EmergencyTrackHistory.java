@@ -4,9 +4,11 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.loopj.android.http.AsyncHttpClient;
@@ -29,6 +31,7 @@ public class EmergencyTrackHistory extends AppCompatActivity {
     protected ListView listView;
     protected EmergencyTrackAdapter adapter;
     protected String emID;
+    protected TextView mTitleText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,8 +39,12 @@ public class EmergencyTrackHistory extends AppCompatActivity {
         setContentView(R.layout.activity_emergency_track_history);
 
         //set up action bar
+        getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
+        getSupportActionBar().setCustomView(R.layout.abs_layout);
         getSupportActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#1e253f")));
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        mTitleText = (TextView) findViewById(R.id.mytitle);
+        mTitleText.setText("Track History");
 
         Bundle b = getIntent().getExtras();
         emID = b.getString("emID");

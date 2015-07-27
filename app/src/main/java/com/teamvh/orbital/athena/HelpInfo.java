@@ -10,6 +10,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
@@ -46,6 +47,7 @@ public class HelpInfo extends AppCompatActivity {
     protected TextView mCountryText;
     protected Polyline polyLineStore;
     protected CountryData curCountry;
+    protected TextView mTitleText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,8 +56,12 @@ public class HelpInfo extends AppCompatActivity {
         preferences = MainActivity.preferences;
 
         //set up action bar
+        getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
+        getSupportActionBar().setCustomView(R.layout.abs_layout);
         getSupportActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#1e253f")));
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        mTitleText = (TextView) findViewById(R.id.mytitle);
+        mTitleText.setText("Help Information");
 
         polyLineStore = null;
 

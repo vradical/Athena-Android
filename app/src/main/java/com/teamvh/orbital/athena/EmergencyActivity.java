@@ -69,16 +69,20 @@ public class EmergencyActivity extends AppCompatActivity {
         listView.setAdapter(adapter);
         listView.setDivider(null);
 
+        //initialize receiver
+        sendBroadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+            }
+        };
+        deliveryBroadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+            }
+        };
+
     }
 
-    /*
-    //OnClick = Trigger by activity_nok_emergency_contact
-    public void callNOK(View view){
-        Intent callIntent = new Intent(Intent.ACTION_CALL);
-        final int positionNOK = eNokNameListView.getPositionForView((View) view.getParent());
-        callIntent.setData(Uri.parse("tel:" + nokPhoneArray[positionNOK]));
-        startActivity(callIntent);
-    }*/
     @Override
     public void onBackPressed() {
     }
@@ -86,8 +90,12 @@ public class EmergencyActivity extends AppCompatActivity {
     @Override
 
     public void onStop() {
-        unregisterReceiver(sendBroadcastReceiver);
-        unregisterReceiver(deliveryBroadcastReceiver);
+        try {
+            unregisterReceiver(sendBroadcastReceiver);
+            unregisterReceiver(deliveryBroadcastReceiver);
+        } catch(IllegalArgumentException e) {
+            Log.d(TAG, "Receiver Not Registered");
+        }
         super.onStop();
     }
 
@@ -625,8 +633,8 @@ public class EmergencyActivity extends AppCompatActivity {
             public void onFinish() {
                 adapter.notifyDataSetChanged();
                 mSuccessCheck = new int[contactList.size()][2];
-                sendSMSMessage();
-                sendEmail();
+                //sendSMSMessage();
+                //sendEmail();
             }
         });
     }

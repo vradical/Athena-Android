@@ -5,11 +5,13 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.loopj.android.http.AsyncHttpClient;
@@ -28,6 +30,7 @@ public class ContactInfo extends AppCompatActivity {
     protected ContactAdapter adapter;
     protected ArrayList<ContactData> contactList;
     private SharedPreferences preferences;
+    protected TextView mTitleText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,8 +38,12 @@ public class ContactInfo extends AppCompatActivity {
         setContentView(R.layout.activity_contact_info);
 
         //set up action bar
+        getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
+        getSupportActionBar().setCustomView(R.layout.abs_layout);
         getSupportActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#1e253f")));
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        mTitleText = (TextView) findViewById(R.id.mytitle);
+        mTitleText.setText("Contacts");
 
         preferences = MainActivity.preferences;
         contactList = new ArrayList<ContactData>();
