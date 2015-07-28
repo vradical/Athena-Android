@@ -2,18 +2,36 @@
     xmlns:tools="http://schemas.android.com/tools" android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     tools:context="com.teamvh.orbital.athena.ContactInfo"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:weightSum="1.0">
 
+    <LinearLayout
+        android:id="@+id/help_header"
+        android:layout_width="fill_parent"
+        android:layout_height="0dp"
+        android:background="@color/special_blue"
+        android:gravity="center"
+        android:padding="15dp"
+        android:orientation="horizontal"
+        android:layout_weight="0.10">
+
+        <TextView
+            style="@style/StandardText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Contact List for Emergency" />
+
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="0dp"
+        android:layout_weight="0.9">
 
         <ListView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/contact_list"
-            android:layout_weight="1" />
+            android:id="@+id/contact_list"/>
     </LinearLayout>
 
 </LinearLayout>

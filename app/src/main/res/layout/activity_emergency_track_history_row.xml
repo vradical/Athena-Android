@@ -1,51 +1,82 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:id="@+id/eml_LL1"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical" >
+        android:orientation="horizontal"
+        android:paddingBottom="10dp"
+        android:paddingLeft="@dimen/activity_horizontal_margin"
+        android:paddingRight="@dimen/activity_horizontal_margin"
+        android:paddingTop="10dp"
+        android:weightSum="1.0">
 
-        <TextView
-            android:id="@+id/tvTrackID"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="ID"
-            android:textAppearance="?android:attr/textAppearanceLarge" />
+            android:layout_weight="0.15"
+            android:gravity="center"
+            android:layout_gravity="center">
 
-        <TextView
-            android:id="@+id/tvTrackAddress"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Address" />
+            <TextView
+                android:id="@+id/tvTrackID"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif"
+                android:text="ID "
+                android:textColor="#000000"
+                android:textSize="24sp" />
 
-        <TextView
-            android:id="@+id/tvTrackCountry"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Country" />
+        </LinearLayout>
 
-        <TextView
-            android:id="@+id/tvTrackLong"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Longitude" />
+            android:layout_weight="0.85"
+            android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/tvTrackLat"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Latitude" />
+            <TextView
+                android:id="@+id/tvTrackAddress"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif"
+                android:text="Status"
+                android:textColor="#000000"
+                android:textSize="18sp" />
 
-        <TextView
-            android:id="@+id/tvTrackDateTime"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="0"
-            android:textAppearance="?android:attr/textAppearanceSmall" />
+            <TextView
+                android:id="@+id/tvTrackCountry"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:text="Address"
+                android:textColor="#000000" />
+
+            <TextView
+                android:id="@+id/tvLatLng"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:text="LatLng"
+                android:textColor="#000000" />
+
+            <TextView
+                android:id="@+id/tvDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Start Time "
+                android:textColor="#000000" />
+
+        </LinearLayout>
 
     </LinearLayout>
+
+    <View
+        android:id="@+id/setting_seperator1"
+        android:layout_width="fill_parent"
+        android:layout_height="1dp"
+        android:background="@android:color/darker_gray" />
 
 </LinearLayout>

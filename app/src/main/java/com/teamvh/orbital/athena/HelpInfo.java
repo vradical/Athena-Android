@@ -70,7 +70,7 @@ public class HelpInfo extends AppCompatActivity {
 
         polyLineStore = null;
 
-        if(preferences.getString("Longitude", "").equals("")){
+        if (preferences.getString("Longitude", "").equals("")) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setMessage("No location information found. Please let the track run at least once first.")
                     .setCancelable(false)
@@ -82,7 +82,7 @@ public class HelpInfo extends AppCompatActivity {
                     });
             AlertDialog alert = builder.create();
             alert.show();
-        }else {
+        } else {
             longitude = preferences.getString("Longitude", "");
             latitude = preferences.getString("Latitude", "");
 
@@ -121,14 +121,14 @@ public class HelpInfo extends AppCompatActivity {
         this.finish();
     }
 
-    public void displayEmergencyPhone(){
+    public void displayEmergencyPhone() {
         mPoliceText = (TextView) findViewById(R.id.helpPoliceContact);
         mHospitalText = (TextView) findViewById(R.id.helpHospitalContact);
         mCountryText = (TextView) findViewById(R.id.help_country);
 
-        if(preferences.getString("Country", "").equals("")){
+        if (preferences.getString("Country", "").equals("")) {
             mCountryText.setText("N/A");
-        }else {
+        } else {
             mCountryText.setText(preferences.getString("Country", ""));
             CountryList country = new CountryList();
             curCountry = country.findCountry(preferences.getString("CountryCode", ""));
@@ -143,7 +143,7 @@ public class HelpInfo extends AppCompatActivity {
     }
 
     public void callHospital(View view) {
-        if(!curCountry.getHospitalNum().equals("NA")) {
+        if (!curCountry.getHospitalNum().equals("NA")) {
             try {
                 Intent callIntent = new Intent(Intent.ACTION_CALL);
                 callIntent.setData(Uri.parse("tel:" + curCountry.getHospitalNum()));
@@ -155,7 +155,7 @@ public class HelpInfo extends AppCompatActivity {
     }
 
     public void callPoliceStation(View view) {
-        if(!curCountry.getPoliceNum().equals("NA")) {
+        if (!curCountry.getPoliceNum().equals("NA")) {
             try {
                 Intent callIntent = new Intent(Intent.ACTION_CALL);
                 callIntent.setData(Uri.parse("tel:" + curCountry.getPoliceNum()));
@@ -266,6 +266,14 @@ public class HelpInfo extends AppCompatActivity {
                     title("You are here").
                     icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
 
+            Bitmap bm;
+
+            if (displayChoice.equals("police")) {
+                bm = drawableToBitmap(getResources().getDrawable(R.drawable.police_icon));
+            } else {
+                bm = drawableToBitmap(getResources().getDrawable(R.drawable.hospital_icon));
+            }
+
             for (int i = 0; i < list.size(); i++) {
                 // Creating a marker
                 MarkerOptions markerOptions = new MarkerOptions();
@@ -293,6 +301,8 @@ public class HelpInfo extends AppCompatActivity {
                 // Setting the title for the marker.
                 markerOptions.title(name);
                 markerOptions.snippet(vicinity);
+
+                markerOptions.icon(BitmapDescriptorFactory.fromBitmap(Bitmap.createScaledBitmap(bm, 85, 135, false)));
 
                 // Placing a marker on the touched position
                 Marker marker = mGoogleMap.addMarker(markerOptions);
@@ -398,7 +408,7 @@ public class HelpInfo extends AppCompatActivity {
                 polyLineOptions.color(Color.BLUE);
             }
 
-            if(polyLineStore != null){
+            if (polyLineStore != null) {
                 polyLineStore.remove();
             }
 
@@ -408,17 +418,17 @@ public class HelpInfo extends AppCompatActivity {
     }
 
     //Supporting methods
-    public static Bitmap drawableToBitmap (Drawable drawable) {
+    public static Bitmap drawableToBitmap(Drawable drawable) {
         Bitmap bitmap = null;
 
         if (drawable instanceof BitmapDrawable) {
             BitmapDrawable bitmapDrawable = (BitmapDrawable) drawable;
-            if(bitmapDrawable.getBitmap() != null) {
+            if (bitmapDrawable.getBitmap() != null) {
                 return bitmapDrawable.getBitmap();
             }
         }
 
-        if(drawable.getIntrinsicWidth() <= 0 || drawable.getIntrinsicHeight() <= 0) {
+        if (drawable.getIntrinsicWidth() <= 0 || drawable.getIntrinsicHeight() <= 0) {
             bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888);
         } else {
             bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);

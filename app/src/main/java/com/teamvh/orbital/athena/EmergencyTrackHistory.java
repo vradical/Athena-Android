@@ -7,10 +7,21 @@ import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.CircleOptions;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
@@ -32,6 +43,8 @@ public class EmergencyTrackHistory extends AppCompatActivity {
     protected EmergencyTrackAdapter adapter;
     protected String emID;
     protected TextView mTitleText;
+    protected GoogleMap mGoogleMap;
+    protected ArrayList<Marker> markerList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +69,18 @@ public class EmergencyTrackHistory extends AppCompatActivity {
         listView = (ListView) findViewById(R.id.emergency_track_list);
         adapter = new EmergencyTrackAdapter(this, R.layout.activity_emergency_track_history_row, emergencyTrackList);
         listView.setAdapter(adapter);
+
+        SupportMapFragment fragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.em_track_map);
+        // Getting Google Map
+        mGoogleMap = fragment.getMap();
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                LatLng ll = new LatLng(Double.parseDouble(emergencyTrackList.get(i).getLatitude()), Double.parseDouble(emergencyTrackList.get(i).getLongitude()));
+                mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(ll, 18));
+            }
+        });
     }
 
     @Override
@@ -72,6 +97,30 @@ public class EmergencyTrackHistory extends AppCompatActivity {
     public void onBackPressed() {
         super.onBackPressed();
         this.finish();
+    }
+
+    public void populateMap(){
+        mGoogleMap.clear();
+
+        markerList = new ArrayList<Marker>();
+
+        if(emergencyTrackList.size() == 1){
+            LatLng ll = new LatLng(Double.parseDouble(emergencyTrackList.get(0).getLatitude()), Double.parseDouble(emergencyTrackList.get(0).getLongitude()));
+            markerList.add(mGoogleMap.addMarker(new MarkerOptions().position(ll)));
+            mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(ll, 18));
+
+        }else {
+
+            LatLngBounds.Builder builder = new LatLngBounds.Builder();
+            for (int i = 0; i < emergencyTrackList.size(); i++) {
+                LatLng ll = new LatLng(Double.parseDouble(emergencyTrackList.get(i).getLatitude()), Double.parseDouble(emergencyTrackList.get(i).getLongitude()));
+                markerList.add(mGoogleMap.addMarker(new MarkerOptions().position(ll)));
+                builder.include(ll);
+            }
+
+            LatLngBounds bounds = builder.build();
+            mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 5));
+        }
     }
 
     //PREPARE QUERY TO GET CONTACT LIST
@@ -167,6 +216,9 @@ public class EmergencyTrackHistory extends AppCompatActivity {
             @Override
             public void onFinish() {
                 adapter.notifyDataSetChanged();
+                if(emergencyTrackList.size() > 0) {
+                    populateMap();
+                }
             }
         });
     }

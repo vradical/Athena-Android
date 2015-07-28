@@ -27,6 +27,7 @@ import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
 import com.facebook.FacebookSdk;
 import com.facebook.Profile;
+import com.facebook.ProfileTracker;
 import com.facebook.login.LoginManager;
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
@@ -82,6 +83,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
     protected SlidingUpPanelLayout mPanelLayout;
 
+    protected ProfileTracker mProfileTracker;
     protected Profile profile;
 
     //--------------------------------------------Nearby----------------------------------------
@@ -147,17 +149,25 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         //CHECK FOR LOGIN
         isLoggedIn();
 
+        //CHECK FOR FACEBOOK PROFILE
+        mProfileTracker = new ProfileTracker() {
+            @Override
+            protected void onCurrentProfileChanged(Profile oldProfile, Profile newProfile) {
+                if(newProfile != null){
+                    profile = Profile.getCurrentProfile();
+                    String name = profile.getName();
+                    editor.putString("Name", name).commit();
+                }
+            }
+        };
+
         //CHECK FOR FACEBOOK ACCESS TOKEN
         accessTokenTracker = new AccessTokenTracker() {
             @Override
             protected void onCurrentAccessTokenChanged(AccessToken oldAccessToken, AccessToken newAccessToken) {
                 if (newAccessToken != null) {
-                    profile = Profile.getCurrentProfile();
-                    String name = profile.getName();
                     editor.putString("fbsession", newAccessToken.getUserId());
-                    editor.putString("name", name);
                     editor.commit();
-                    editor.apply();
                 }
             }
         };
@@ -325,7 +335,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
                 if (strPinCode.equals("")) {
                     mErrorText.setVisibility(View.VISIBLE);
-                    mErrorText.setText("Passcode cannot by empty.");
+                    mErrorText.setText("Passcode cannot be empty.");
                 } else {
                     editor.putString("Passcode", strPinCode).commit();
                     dialog.cancel();
@@ -648,7 +658,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         if (uname != null) {
             params.put("username", uname);
             params.put("em_times", String.valueOf(emID));
-            params.put("country", preferences.getString("Country", ""));
+            params.put("country", preferences.getString("CountryCode", ""));
             params.put("address", preferences.getString("Address", ""));
             params.put("latitude", preferences.getString("Latitude", ""));
             params.put("longitude", preferences.getString("Longitude", ""));

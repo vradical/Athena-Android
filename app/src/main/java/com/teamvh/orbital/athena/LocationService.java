@@ -191,7 +191,12 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
                 }
                 this.address = sb.toString();
                 country = address.getCountryName().toString();
-                countryCode = address.getCountryCode().toString();
+
+                if(address.getCountryCode() != null) {
+                    countryCode = address.getCountryCode().toString();
+                }else{
+                    countryCode = "Not Available";
+                }
             }
         } catch (IOException e) {
             Log.e(TAG, "Unable connect to Geocoder", e);
@@ -230,7 +235,7 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
                 params.put("longitude", String.valueOf(longitude));
                 params.put("latitude", String.valueOf(latitude));
                 params.put("address", address);
-                params.put("country", country);
+                params.put("country", countryCode);
                 params.put("track_type", trackType);
                 params.put("track_em_id", emID);
                 params.put("locality", locality);

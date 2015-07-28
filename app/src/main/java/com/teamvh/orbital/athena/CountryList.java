@@ -263,4 +263,19 @@ public class CountryList {
 
         return country;
     }
+
+    public String findNameByCode(String code){
+
+        String country = "Not Available";
+
+        for(int i = 0; i < countryList.size(); i++){
+            if(countryList.get(i).getCountryCode().equals(code)){
+                country =  countryList.get(i).getCountryName();
+                break;
+            }
+        }
+
+        return country;
+    }
+
 }

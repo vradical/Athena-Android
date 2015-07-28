@@ -24,6 +24,8 @@ import com.facebook.Profile;
 import com.facebook.login.LoginManager;
 import com.facebook.login.widget.ProfilePictureView;
 
+import org.w3c.dom.Text;
+
 import java.util.Set;
 
 public class SettingActivity extends AppCompatActivity {
@@ -139,6 +141,7 @@ public class SettingActivity extends AppCompatActivity {
 
         mFBIV.setProfileId(profile.getId());
         mUsernameTV.setText(profile.getName());
+        mEmailTV.setText(preferences.getString("Email",""));
 
         mLogout.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -265,19 +268,6 @@ public class SettingActivity extends AppCompatActivity {
             }
         });
 
-        /*
-                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setMessage("No location information found. Please let the track run at least once first.")
-                    .setCancelable(false)
-                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            finish();
-                            dialog.cancel();
-                        }
-                    });
-            AlertDialog alert = builder.create();
-            alert.show();
-         */
     }
 
     public void setPasscode(){

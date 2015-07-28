@@ -44,6 +44,7 @@ public class EmergencyActivity extends AppCompatActivity {
     protected TextView mContactStatus;
     protected Boolean smsDelivered;
     protected int[][] mSuccessCheck;
+    protected Boolean isFinishByMethod;
 
     protected BroadcastReceiver sendBroadcastReceiver;
     protected BroadcastReceiver deliveryBroadcastReceiver;
@@ -62,6 +63,8 @@ public class EmergencyActivity extends AppCompatActivity {
         Bundle b = getIntent().getExtras();
         emID = String.valueOf(b.getInt("track_em_id"));
         uname = preferences.getString("fbsession", "");
+
+        isFinishByMethod = false;
 
         contactList = new ArrayList<ContactData>();
         getContact();
@@ -89,8 +92,13 @@ public class EmergencyActivity extends AppCompatActivity {
     }
 
     @Override
-
     public void onStop() {
+
+        if(!isFinishByMethod) {
+            emStatus = "Disrupted";
+            endEmergency();
+        }
+
         try {
             unregisterReceiver(sendBroadcastReceiver);
             unregisterReceiver(deliveryBroadcastReceiver);
@@ -126,6 +134,7 @@ public class EmergencyActivity extends AppCompatActivity {
                     mErrorText.setVisibility(View.VISIBLE);
                     mErrorText.setText("Wrong Passcode");
                 } else {
+                    isFinishByMethod = true;
                     checkTrigger();
                     stopTracking();
                     startTracking("Standard", 0);
@@ -201,7 +210,7 @@ public class EmergencyActivity extends AppCompatActivity {
     //PREPARE QUERY TO GET CONTACT LIST
     public void endEmergency() {
 
-        //Empty country for update
+        //Empty country for update of dangerzone
         MainActivity.country = "empty";
 
         // Instantiate Http Request Param Object

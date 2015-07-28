@@ -17,7 +17,7 @@ public class EmergencyTrackData {
 
     String locality;
 
-    public EmergencyTrackData(String address, String dateTime, String longitude, String latitude, String country, String locality) {
+    public EmergencyTrackData(String address, String dateTime, String latitude, String longitude, String country, String locality) {
         this.address = address;
         this.dateTime = dateTime;
         this.longitude = longitude;

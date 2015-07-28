@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.facebook.AccessToken;
@@ -12,6 +13,8 @@ import com.facebook.AccessTokenTracker;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
 import com.facebook.Profile;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
@@ -22,6 +25,8 @@ import com.loopj.android.http.RequestParams;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Arrays;
+
 /**
  * Project Athena Login Page [Facebook Login]
  */
@@ -29,8 +34,6 @@ public class LoginActivity extends Activity {
 
     private LoginButton loginButton;
     private CallbackManager callbackManager;
-    private AccessTokenTracker accessTokenTracker;
-    private Profile profile;
     private SharedPreferences preferences;
     private SharedPreferences.Editor editor;
 
@@ -40,9 +43,10 @@ public class LoginActivity extends Activity {
         setContentView(R.layout.activity_login);
 
         loginButton = (LoginButton) findViewById(R.id.login_button);
+        loginButton.setReadPermissions(Arrays.asList("public_profile, email, user_birthday, user_friends"));
 
         preferences = MainActivity.preferences;
-        editor = getPreferences(MODE_PRIVATE).edit();
+        editor = preferences.edit();
 
         //INITIALIZE FACEBOOK CALLBACK
         callbackManager = CallbackManager.Factory.create();
@@ -51,9 +55,31 @@ public class LoginActivity extends Activity {
         loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
-                loginUser(loginResult.getAccessToken());
-                editor.putString("fbsession", loginResult.getAccessToken().getUserId());
-                finish();
+
+                GraphRequest request = GraphRequest.newMeRequest(
+                        loginResult.getAccessToken(),
+                        new GraphRequest.GraphJSONObjectCallback() {
+                            @Override
+                            public void onCompleted(
+                                    JSONObject object,
+                                    GraphResponse response) {
+                                try {
+                                    System.out.println(object);
+                                    editor.putString("fbsession", object.getString("id"));
+                                    editor.putString("Email", object.getString("email"));
+                                    editor.putString("Name", object.getString("name"));
+                                    editor.apply();
+                                    editor.commit();
+                                    loginUser();
+                                } catch (JSONException e) {
+                                    Toast.makeText(getApplicationContext(), "Failed to get facebook information", Toast.LENGTH_LONG).show();
+                                }
+                            }
+                        });
+                Bundle parameters = new Bundle();
+                parameters.putString("fields", "id,name,email,gender, birthday");
+                request.setParameters(parameters);
+                request.executeAsync();
             }
 
             @Override
@@ -77,19 +103,17 @@ public class LoginActivity extends Activity {
     }
 
     //PREPARE QUERY TO LOGIN USER
-    public void loginUser(AccessToken accessToken) {
+    public void loginUser() {
 
         try {
-            String userid = accessToken.getUserId();
-            AccessToken.getCurrentAccessToken();
-            Profile.fetchProfileForCurrentAccessToken();
-            String name = profile.getName();
+            String userid = preferences.getString("fbsession", "");
+            String name = preferences.getString("Name", "");
 
             // Instantiate Http Request Param Object
             RequestParams params = new RequestParams();
 
             // When Name Edit View, Email Edit View and Password Edit View have values other than Null
-            if (userid != null || name != null) {
+            if (!userid.equals("") || !name.equals("")) {
                 // Put Http parameter name with value of Name Edit View control
                 params.put("name", name);
                 // Put Http parameter username with value of Email Edit View control
@@ -116,13 +140,10 @@ public class LoginActivity extends Activity {
             @Override
             public void onSuccess(String response) {
                 try {
-                    // JSON Object
                     JSONObject obj = new JSONObject(response);
-                    // When the JSON response has status boolean value assigned with true
+
                     if (obj.getBoolean("status")) {
                         Toast.makeText(getApplicationContext(), "You are successfully logged in!", Toast.LENGTH_LONG).show();
-                        // Navigate to Home screen
-                        //navigatetoHomeActivity();
                     }
                     // Else display error message
                     else {
@@ -154,6 +175,12 @@ public class LoginActivity extends Activity {
                     Toast.makeText(getApplicationContext(), "Unexpected Error occcured! [Most common Error: Device might not be connected to Internet or remote server is not up and running]", Toast.LENGTH_LONG).show();
                 }
             }
+
+            @Override
+            public void onFinish() {
+                finish();
+            }
+
         });
     }
 

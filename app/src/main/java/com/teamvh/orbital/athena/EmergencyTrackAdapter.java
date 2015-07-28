@@ -15,12 +15,15 @@ public class EmergencyTrackAdapter extends ArrayAdapter<EmergencyTrackData> {
     LayoutInflater vi;
     int Resource;
     ViewHolder holder;
+    CountryList cl;
 
     public EmergencyTrackAdapter(Context context, int resource, ArrayList<EmergencyTrackData> objects) {
         super(context, resource, objects);
         vi = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         Resource = resource;
         emergencyList = objects;
+
+        cl = new CountryList();
     }
 
     @Override
@@ -32,9 +35,8 @@ public class EmergencyTrackAdapter extends ArrayAdapter<EmergencyTrackData> {
             v = vi.inflate(Resource, null);
             holder.tvTrackID = (TextView) v.findViewById(R.id.tvTrackID);
             holder.tvTrackAddress = (TextView) v.findViewById(R.id.tvTrackAddress);
-            holder.tvTrackLong = (TextView) v.findViewById(R.id.tvTrackLong);
-            holder.tvTrackLat = (TextView) v.findViewById(R.id.tvTrackLat);
-            holder.tvTrackDateTime = (TextView) v.findViewById(R.id.tvTrackDateTime);
+            holder.tvTrackLatLng = (TextView) v.findViewById(R.id.tvLatLng);
+            holder.tvTrackDate = (TextView) v.findViewById(R.id.tvDate);
             holder.tvTrackCountry = (TextView) v.findViewById(R.id.tvTrackCountry);
             v.setTag(holder);
         } else {
@@ -42,22 +44,20 @@ public class EmergencyTrackAdapter extends ArrayAdapter<EmergencyTrackData> {
         }
         holder.tvTrackID.setText(String.valueOf(position + 1));
         if(emergencyList.get(position).getLocality().equals("Not Available")){
-            holder.tvTrackCountry.setText(emergencyList.get(position).getCountry());
+            holder.tvTrackCountry.setText(cl.findNameByCode(emergencyList.get(position).getCountry()));
         }else{
-            holder.tvTrackCountry.setText(emergencyList.get(position).getLocality()+ ", " + emergencyList.get(position).getCountry());
+            holder.tvTrackCountry.setText(emergencyList.get(position).getLocality()+ ", " + cl.findNameByCode(emergencyList.get(position).getCountry()));
         }
-        holder.tvTrackLong.setText(emergencyList.get(position).getLongitude());
-        holder.tvTrackLat.setText(emergencyList.get(position).getLatitude());
-        holder.tvTrackDateTime.setText(emergencyList.get(position).getDateTime());
+        holder.tvTrackLatLng.setText(emergencyList.get(position).getLatitude() + ", " + emergencyList.get(position).getLongitude());
+        holder.tvTrackDate.setText(emergencyList.get(position).getDateTime());
         holder.tvTrackAddress.setText(emergencyList.get(position).getAddress());
         return v;
     }
 
     static class ViewHolder {
         public TextView tvTrackAddress;
-        public TextView tvTrackLong;
-        public TextView tvTrackLat;
-        public TextView tvTrackDateTime;
+        public TextView tvTrackLatLng;
+        public TextView tvTrackDate;
         public TextView tvTrackID;
         public TextView tvTrackCountry;
     }
