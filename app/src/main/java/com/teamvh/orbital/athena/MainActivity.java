@@ -212,7 +212,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                     stopTracking();
                     mStartUpdatesButton.setBackgroundResource(R.drawable.track_button);
                 } else {
-                    startTracking("Standard", 0);
+                    startTracking("Standard");
                     mStartUpdatesButton.setBackgroundResource(R.drawable.track_stop);
                 }
             }
@@ -554,23 +554,25 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
     //------------------------------------------------Location-------------------------------------------------//
 
-    public void startTracking(String trackType, int emID) {
+    public void startTracking(String trackType) {
         editor = preferences.edit();
         if (trackType.equals("Standard")) {
             editor.putString("Main Status", "TRACKING");
+            editor.putString("Start Mode", "Standard");
+            editor.putString("emID", "0");
         } else if (trackType.equals("High Alert")) {
             editor.putString("Main Status", "TRACKING (ALERT MODE)");
+            editor.putString("Start Mode", "High Alert");
+            editor.putString("emID", "0");
         } else {
             editor.putString("Main Status", "EMERGENCY MODE ON");
+            editor.putString("Start Mode", "Emergency");
+            editor.putString("emID", String.valueOf(emID));
         }
         editor.commit();
         editor.apply();
 
         Intent intent = new Intent(this, LocationService.class);
-        intent.putExtra("fb_token", AccessToken.getCurrentAccessToken());
-        intent.putExtra("track_type", trackType);
-        intent.putExtra("track_em_id", emID);
-        intent.putExtra("address", "address");
         startService(intent);
     }
 
@@ -595,14 +597,14 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
     protected void startHighAlert() {
         stopTracking();
-        startTracking("High Alert", 0);
+        startTracking("High Alert");
         highAlertCD = new SafetyCountDown(Constants.ALERT_COUNTDOWN, 1000, 1);
         highAlertCD.start();
     }
 
     protected void stopHighAlert() {
         stopTracking();
-        startTracking("Standard", 0);
+        startTracking("Standard");
         highAlertCD.cancel();
     }
 
@@ -721,9 +723,8 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
             @Override
             public void onFinish() {
-                startTracking("Emergency", emID);
+                startTracking("Emergency");
                 Intent i = new Intent(MainActivity.this, EmergencyActivity.class);
-                i.putExtra("track_em_id", emID);
                 i.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                 startActivity(i);
                 overridePendingTransition(0, 0);

@@ -50,7 +50,6 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
     private LocationRequest locationRequest;
     private GoogleApiClient googleApiClient;
     private FusedLocationProviderApi fusedLocationProviderApi;
-    private AccessToken accessToken;
     private String trackType;
     private String emID;
     private double longitude;
@@ -76,10 +75,8 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
         Log.e(TAG, "onStartCommand");
         super.onStartCommand(intent, flags, startId);
         geocoder = new Geocoder(this, Locale.getDefault());
-        Bundle b = intent.getExtras();
-        accessToken = (AccessToken) b.get("fb_token");
-        trackType = b.getString("track_type");
-        emID = String.valueOf(b.getInt("track_em_id"));
+        trackType = preferences.getString("Start Mode", "");
+        emID = preferences.getString("emID", "");
         getLocation();
         return START_STICKY;
     }
@@ -208,7 +205,7 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
                 addressWOcountry = "Not Available";
             }
 
-            String uname = accessToken.getUserId();
+            String uname = preferences.getString("fbsession", "");
             java.util.Date date = new java.util.Date();
 
             editor = preferences.edit();

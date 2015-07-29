@@ -38,13 +38,12 @@ public class EmergencyActivity extends AppCompatActivity {
     protected ArrayList<ContactData> contactList;
     protected SharedPreferences preferences;
     protected SharedPreferences.Editor editor;
-    protected String emID;
     protected String emStatus;
-    protected String uname;
     protected TextView mContactStatus;
     protected Boolean smsDelivered;
     protected int[][] mSuccessCheck;
     protected Boolean isFinishByMethod;
+    protected String emID;
 
     protected BroadcastReceiver sendBroadcastReceiver;
     protected BroadcastReceiver deliveryBroadcastReceiver;
@@ -60,9 +59,7 @@ public class EmergencyActivity extends AppCompatActivity {
         preferences = MainActivity.preferences;
         editor = preferences.edit();
 
-        Bundle b = getIntent().getExtras();
-        emID = String.valueOf(b.getInt("track_em_id"));
-        uname = preferences.getString("fbsession", "");
+        emID = preferences.getString("emID", "");
 
         isFinishByMethod = false;
 
@@ -94,7 +91,7 @@ public class EmergencyActivity extends AppCompatActivity {
     @Override
     public void onStop() {
 
-        if(!isFinishByMethod) {
+        if (!isFinishByMethod) {
             emStatus = "Disrupted";
             endEmergency();
         }
@@ -102,7 +99,7 @@ public class EmergencyActivity extends AppCompatActivity {
         try {
             unregisterReceiver(sendBroadcastReceiver);
             unregisterReceiver(deliveryBroadcastReceiver);
-        } catch(IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             Log.d(TAG, "Receiver Not Registered");
         }
         super.onStop();
@@ -137,7 +134,7 @@ public class EmergencyActivity extends AppCompatActivity {
                     isFinishByMethod = true;
                     checkTrigger();
                     stopTracking();
-                    startTracking("Standard", 0);
+                    startTracking("Standard");
                     dialog.cancel();
                 }
             }
@@ -176,27 +173,28 @@ public class EmergencyActivity extends AppCompatActivity {
 
     //-------------------------LOCATION TRACKING SERVICE------------------------------------//
 
-    public void startTracking(String trackType, int emID) {
+    public void startTracking(String trackType) {
+        editor = preferences.edit();
         if (trackType.equals("Standard")) {
             editor.putString("Main Status", "TRACKING");
+            editor.putString("Start Mode", "Standard");
+            editor.putString("emID", "0");
         } else if (trackType.equals("High Alert")) {
             editor.putString("Main Status", "TRACKING (ALERT MODE)");
+            editor.putString("Start Mode", "High Alert");
+            editor.putString("emID", "0");
         } else {
             editor.putString("Main Status", "EMERGENCY MODE ON");
+            editor.putString("Start Mode", "Emergency");
         }
         editor.commit();
         editor.apply();
 
         Intent intent = new Intent(this, LocationService.class);
-        intent.putExtra("fb_token", AccessToken.getCurrentAccessToken());
-        intent.putExtra("track_type", trackType);
-        intent.putExtra("track_em_id", emID);
-        intent.putExtra("address", "address");
         startService(intent);
     }
 
     public void stopTracking() {
-
         editor = preferences.edit();
         editor.putString("Main Status", "IDLE");
         editor.commit();
@@ -207,7 +205,6 @@ public class EmergencyActivity extends AppCompatActivity {
 
     //-------------------------END EMERGENCY------------------------------------------------//
 
-    //PREPARE QUERY TO GET CONTACT LIST
     public void endEmergency() {
 
         //Empty country for update of dangerzone
@@ -215,24 +212,10 @@ public class EmergencyActivity extends AppCompatActivity {
 
         // Instantiate Http Request Param Object
         RequestParams params = new RequestParams();
+        params.put("username", preferences.getString("fbsession", ""));
+        params.put("track_em_id", emID);
+        params.put("emStatus", emStatus);
 
-        if (uname != null) {
-            params.put("username", uname);
-            params.put("track_em_id", emID);
-            params.put("emStatus", emStatus);
-
-            // Invoke RESTful Web Service with Http parameters
-            invokeEmergencyWS(params);
-        }
-        // when any of the field is empty from token
-        else {
-            Toast.makeText(getApplicationContext(), "Failed to end Emergency", Toast.LENGTH_LONG).show();
-        }
-
-    }
-
-    //SEND QUERY TO ATHENA WEB SERVICE
-    public void invokeEmergencyWS(RequestParams params) {
         // Make RESTful webservice call using AsyncHttpClient object
         AsyncHttpClient client = new AsyncHttpClient();
         client.get("http://119.81.223.180:8080/ProjectAthenaWS/emergency/endem", params, new AsyncHttpResponseHandler() {
@@ -290,32 +273,18 @@ public class EmergencyActivity extends AppCompatActivity {
 
     //-------------------------SEND EMAIL --------------------------------------------------------//
 
-
-    protected void sendEmail() {
-
+    //SEND QUERY TO ATHENA WEB SERVICE
+    public void sendEmail() {
         // Instantiate Http Request Param Object
         RequestParams params = new RequestParams();
 
-        if (uname != null) {
-            params.put("username", uname);
-            params.put("name", preferences.getString("name", ""));
-            params.put("country", preferences.getString("Country", ""));
-            params.put("address", preferences.getString("Address", ""));
-            params.put("latitude", preferences.getString("Latitude", ""));
-            params.put("longitude", preferences.getString("Longitude", ""));
+        params.put("username", preferences.getString("fbsession", ""));
+        params.put("name", preferences.getString("name", ""));
+        params.put("country", preferences.getString("Country", ""));
+        params.put("address", preferences.getString("Address", ""));
+        params.put("latitude", preferences.getString("Latitude", ""));
+        params.put("longitude", preferences.getString("Longitude", ""));
 
-            // Invoke RESTful Web Service with Http parameters
-            invokeEmailWS(params);
-        }
-        // when any of the field is empty from token
-        else {
-            Toast.makeText(getApplicationContext(), "Failed to send email", Toast.LENGTH_LONG).show();
-        }
-
-    }
-
-    //SEND QUERY TO ATHENA WEB SERVICE
-    public void invokeEmailWS(RequestParams params) {
         // Make RESTful webservice call using AsyncHttpClient object
         AsyncHttpClient client = new AsyncHttpClient();
         client.get("http://119.81.223.180:8080/ProjectAthenaWS/emergency/sendmail", params, new AsyncHttpResponseHandler() {
@@ -336,15 +305,15 @@ public class EmergencyActivity extends AppCompatActivity {
 
                         String[] errorList = obj.getString("status").split(" ");
 
-                        for (int i = 0; i < errorList.length ;i++){
+                        for (int i = 0; i < errorList.length; i++) {
 
-                            for(int j = 0; j < contactList.size(); j++)
+                            for (int j = 0; j < contactList.size(); j++)
 
-                            if (contactList.get(j).getEmail().equals(errorList[i])) {
-                                mSuccessCheck[j][1] = 0;
-                            } else {
-                                mSuccessCheck[j][1] = 1;
-                            }
+                                if (contactList.get(j).getEmail().equals(errorList[i])) {
+                                    mSuccessCheck[j][1] = 0;
+                                } else {
+                                    mSuccessCheck[j][1] = 1;
+                                }
 
                         }
 
@@ -423,8 +392,7 @@ public class EmergencyActivity extends AppCompatActivity {
 
     }
 
-    public void sendSMS(final String phoneNumber, String message)
-    {
+    public void sendSMS(final String phoneNumber, String message) {
         String SENT = "SMS_SENT";
         String DELIVERED = "SMS_DELIVERED";
 
@@ -452,14 +420,13 @@ public class EmergencyActivity extends AppCompatActivity {
             }
         };
 
-        deliveryBroadcastReceiver = new BroadcastReceiver(){
+        deliveryBroadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context arg0, Intent arg1) {
-                switch (getResultCode())
-                {
+                switch (getResultCode()) {
                     case Activity.RESULT_OK:
-                        for(int i = 0; i < contactList.size(); i++){
-                            if(phoneNumber == contactList.get(i).getPhone()){
+                        for (int i = 0; i < contactList.size(); i++) {
+                            if (phoneNumber.equals(contactList.get(i).getPhone())) {
                                 mSuccessCheck[i][0] = 1;
                             }
                         }
@@ -480,33 +447,18 @@ public class EmergencyActivity extends AppCompatActivity {
         sms.sendTextMessage(phoneNumber, null, message, sentPI, deliveredPI);
     }
 
-    //if above failed, use web service to send
-    protected void sendSMSWS() {
+    //SEND QUERY TO ATHENA WEB SERVICE
+    public void invokeSMSWS() {
 
-        // Instantiate Http Request Param Object
         RequestParams params = new RequestParams();
 
-        if (uname != null) {
-            params.put("username", uname);
-            params.put("name", preferences.getString("name", ""));
-            params.put("country", preferences.getString("Country", ""));
-            params.put("address", preferences.getString("Address", ""));
-            params.put("latitude", preferences.getString("Latitude", ""));
-            params.put("longitude", preferences.getString("Longitude", ""));
+        params.put("username", preferences.getString("fbsession", ""));
+        params.put("name", preferences.getString("name", ""));
+        params.put("country", preferences.getString("Country", ""));
+        params.put("address", preferences.getString("Address", ""));
+        params.put("latitude", preferences.getString("Latitude", ""));
+        params.put("longitude", preferences.getString("Longitude", ""));
 
-            // Invoke RESTful Web Service with Http parameters
-            invokeSMSWS(params);
-        }
-        // when any of the field is empty from token
-        else {
-            Toast.makeText(getApplicationContext(), "Failed to send sms", Toast.LENGTH_LONG).show();
-        }
-
-
-    }
-
-    //SEND QUERY TO ATHENA WEB SERVICE
-    public void invokeSMSWS(RequestParams params) {
         // Make RESTful webservice call using AsyncHttpClient object
         AsyncHttpClient client = new AsyncHttpClient();
         client.get("http://119.81.223.180:8080/ProjectAthenaWS/emergency/sendsms", params, new AsyncHttpResponseHandler() {
@@ -555,27 +507,12 @@ public class EmergencyActivity extends AppCompatActivity {
 
     //-------------------------GET CONTACTS CODE--------------------------------------------------//
 
-    //PREPARE QUERY TO GET CONTACT LIST
+    //SEND QUERY TO ATHENA WEB SERVICE
     public void getContact() {
 
-        // Instantiate Http Request Param Object
         RequestParams params = new RequestParams();
+        params.put("username", preferences.getString("fbsession", ""));
 
-        if (uname != null) {
-            params.put("username", uname);
-
-            // Invoke RESTful Web Service with Http parameters
-            invokeContactWS(params);
-        }
-        // when any of the field is empty from token
-        else {
-            Toast.makeText(getApplicationContext(), "Failed to retrieve contacts", Toast.LENGTH_LONG).show();
-        }
-
-    }
-
-    //SEND QUERY TO ATHENA WEB SERVICE
-    public void invokeContactWS(RequestParams params) {
         // Make RESTful webservice call using AsyncHttpClient object
         AsyncHttpClient client = new AsyncHttpClient();
         client.get("http://119.81.223.180:8080/ProjectAthenaWS/contacts/getcontact", params, new AsyncHttpResponseHandler() {
