@@ -134,7 +134,6 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         markerList = new ArrayList<Marker>();
         circleList = new ArrayList<Circle>();
         dzMarkerList = new ArrayList<Marker>();
-        specialZoneList = new ArrayList<SpecialZoneData>();
 
 
         //INITIALIZE FACEBOOK
@@ -425,6 +424,11 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         //CHECK TO ENSURE GPS ON AGAIN
         if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             buildAlertMessageNoGps();
+        }
+
+        if(country.equals("restart")){
+            country = preferences.getString("Country", "");
+            getSpecialZone();
         }
 
         super.onResume();
@@ -734,7 +738,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         RequestParams params = new RequestParams();
         params.put("latitude", preferences.getString("Latitude", ""));
         params.put("longitude", preferences.getString("Longitude", ""));
-        params.put("distance", String.valueOf(Constants.DANGER_ZONE_DISTANCE));
+        params.put("distance", Constants.DANGER_ZONE_DISTANCE);
 
         // Make RESTful webservice call using AsyncHttpClient object
         AsyncHttpClient client = new AsyncHttpClient();
@@ -742,6 +746,8 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
             // When the response returned by REST has Http response code '200'
             @Override
             public void onSuccess(String response) {
+
+                specialZoneList = new ArrayList<SpecialZoneData>();
 
                 try {
                     // JSON Object
@@ -820,14 +826,6 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         });
     }
 
-    //Capture result
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == 1) {
-            getSpecialZone();
-        }
-    }
-
     private void calculateDangerZone() {
 
         //Check if there is any emergency records
@@ -862,15 +860,11 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
         //Reset circle list and remove from map
         for (int i = 0; i < circleList.size(); i++) {
-
-            if (i < circleList.size()) {
                 circleList.get(i).remove();
-            }
 
             if (i < dzMarkerList.size()) {
                 dzMarkerList.get(i).remove();
             }
-
         }
         circleList.clear();
         dzMarkerList.clear();
@@ -903,14 +897,15 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                 final HashMap<String, String> marker_data = extraMarkerInfo.get(marker.getId());
 
                 final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                builder.setMessage("Report this zone?")
-                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                builder.setTitle(marker.getTitle());
+                builder.setMessage(marker.getSnippet())
+                        .setPositiveButton("Report Zone", new DialogInterface.OnClickListener() {
                             public void onClick(@SuppressWarnings("unused") final DialogInterface dialog, @SuppressWarnings("unused") final int id) {
                                 setupReport(marker_data.get("dz_id"));
                                 dialog.cancel();
                             }
                         })
-                        .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                             public void onClick(final DialogInterface dialog, @SuppressWarnings("unused") final int id) {
                                 dialog.cancel();
                             }
@@ -1067,7 +1062,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                                 Intent myIntent = new Intent(MainActivity.this, AddDangerZone.class);
                                 myIntent.putExtra("latitude", latLng.latitude);
                                 myIntent.putExtra("longitude", latLng.longitude);
-                                MainActivity.this.startActivityForResult(myIntent, 1);
+                                MainActivity.this.startActivity(myIntent);
                             }
                         })
                         .setNegativeButton("No", new DialogInterface.OnClickListener() {

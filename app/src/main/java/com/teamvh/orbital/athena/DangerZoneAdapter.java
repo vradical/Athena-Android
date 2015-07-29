@@ -73,8 +73,9 @@ public class DangerZoneAdapter extends ArrayAdapter<DangerZoneData> {
             @Override
             public void onClick(View view) {
 
+                int selectPos = position + 1;
                 AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-                builder.setMessage("Delete danger zone " + position + " from your list?")
+                builder.setMessage("Delete danger zone " + selectPos + " from your list?")
                         .setCancelable(false)
                         .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                             public void onClick(@SuppressWarnings("unused") final DialogInterface dialog, @SuppressWarnings("unused") final int id) {
@@ -166,7 +167,7 @@ public class DangerZoneAdapter extends ArrayAdapter<DangerZoneData> {
             @Override
             public void onFinish() {
                 dangerZoneList.remove(position);
-                MainActivity.country = "empty";
+                MainActivity.country = "restart";
                 notifyDataSetChanged();
             }
 

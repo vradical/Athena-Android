@@ -234,8 +234,7 @@ public class AddDangerZone extends AppCompatActivity {
 
             @Override
             public void onFinish() {
-                Intent returnIntent = new Intent();
-                setResult(RESULT_CANCELED, returnIntent);
+                MainActivity.country = "restart";
                 finish();
             }
         });
