@@ -18,6 +18,7 @@ import android.support.v7.app.ActionBarActivity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -41,6 +42,8 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.loopj.android.http.AsyncHttpClient;
@@ -57,6 +60,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 
 
 public class MainActivity extends ActionBarActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
@@ -71,6 +75,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     protected FloatingActionButton helpAB;
     protected FloatingActionButton historyAB;
     protected FloatingActionButton settingAB;
+    protected FloatingActionButton dangerzoneAB;
 
     //Status
     protected TextView mLocationAddressTextView;
@@ -103,11 +108,16 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     protected double latitude;
     protected double longitude;
     protected Marker lastLocationMark;
-    protected ArrayList<EmergencyData> emergencyList;
     protected LatLngBounds.Builder bounds;
     protected static String country;
     protected ArrayList<Marker> markerList;
     protected ArrayList<Circle> circleList;
+    protected ArrayList<Marker> dzMarkerList;
+    protected ArrayList<SpecialZoneData> specialZoneList;
+    protected Polyline route;
+
+    //test
+    HashMap<String, HashMap> extraMarkerInfo = new HashMap<String, HashMap>();
 
     //-------------------------------------GENERAL METHOD------------------------------------------//
     @Override
@@ -123,6 +133,9 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         country = "empty";
         markerList = new ArrayList<Marker>();
         circleList = new ArrayList<Circle>();
+        dzMarkerList = new ArrayList<Marker>();
+        specialZoneList = new ArrayList<SpecialZoneData>();
+
 
         //INITIALIZE FACEBOOK
         FacebookSdk.sdkInitialize(getApplicationContext());
@@ -153,7 +166,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         mProfileTracker = new ProfileTracker() {
             @Override
             protected void onCurrentProfileChanged(Profile oldProfile, Profile newProfile) {
-                if(newProfile != null){
+                if (newProfile != null) {
                     profile = Profile.getCurrentProfile();
                     String name = profile.getName();
                     editor.putString("Name", name).commit();
@@ -203,14 +216,6 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                     startTracking("Standard", 0);
                     mStartUpdatesButton.setBackgroundResource(R.drawable.track_stop);
                 }
-            }
-        });
-
-        mStartUpdatesButton.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View view) {
-                startHighAlert();
-                return false;
             }
         });
 
@@ -282,6 +287,32 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
             @Override
             public void onClick(View view) {
                 Intent i = new Intent(MainActivity.this, SettingActivity.class);
+                i.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                startActivity(i);
+                overridePendingTransition(0, 0);
+                actionMenu.close(false);
+            }
+        });
+
+        //Settings
+        settingAB = (FloatingActionButton) findViewById(R.id.menu_setting);
+        settingAB.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent i = new Intent(MainActivity.this, SettingActivity.class);
+                i.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                startActivity(i);
+                overridePendingTransition(0, 0);
+                actionMenu.close(false);
+            }
+        });
+
+        //Dangerzone
+        dangerzoneAB = (FloatingActionButton) findViewById(R.id.menu_dangerzone);
+        dangerzoneAB.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent i = new Intent(MainActivity.this, DangerZoneList.class);
                 i.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                 startActivity(i);
                 overridePendingTransition(0, 0);
@@ -406,15 +437,25 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
     @Override
     public void onDestroy() {
-        //CLEAR TRACKDATA AND COUNTRY FOR NEW UPDATES
+        //CLEAR TRACKDATA FOR NEW UPDATES
         super.onDestroy();
         accessTokenTracker.stopTracking();
         stopTracking();
         preferences.edit().remove("TrackData").commit();
     }
 
+    @Override
+    public void onBackPressed() {
+        if (actionMenu.isOpened()) {
+            actionMenu.close(false);
+        } else {
+            super.onBackPressed();
+        }
+    }
+
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
 
+        //Only if location has changed.
         if (key.equals("Latitude") || key.equals("Longitude")) {
 
             DecimalFormat df = new DecimalFormat("0.0000");
@@ -423,43 +464,52 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
             latitude = Double.parseDouble(sharedPreferences.getString("Latitude", ""));
             mLastUpdateTimeText.setText(sharedPreferences.getString("Timestamp", ""));
 
+            //Check if address is available. Display Latlng if not.
             if (sharedPreferences.getString("Address", "").equals("Not Available")) {
                 mLocationAddressTextView.setText("Lat: " + df.format(latitude) + ", Lng: " + df.format(longitude));
             } else {
                 mLocationAddressTextView.setText(sharedPreferences.getString("Address", ""));
             }
 
+            //Check if locality is available. display with or without locality in country.
             if (sharedPreferences.getString("Locality", "").equals("Not Available")) {
                 mCountryTextView.setText(sharedPreferences.getString("Country", ""));
             } else {
                 mCountryTextView.setText(sharedPreferences.getString("Locality", "") + ", " + sharedPreferences.getString("Country", ""));
             }
 
+            //If country is country is different from existing country, repopulate emergency and dangerzone.
+            if (!country.equals(sharedPreferences.getString("Country", ""))) {
+                country = sharedPreferences.getString("Country", "");
+                getSpecialZone();
+            }
+
+            //Get this session track data.
             Gson gson = new Gson();
-            Type listOfTrack = new TypeToken<ArrayList<EmergencyTrackData>>() {
-            }.getType();
-
+            Type listOfTrack = new TypeToken<ArrayList<EmergencyTrackData>>() {}.getType();
             ArrayList<EmergencyTrackData> trackData = gson.fromJson(preferences.getString("TrackData", ""), listOfTrack);
-            //ArrayList<LatLng> latlngList = new ArrayList<LatLng>();
 
-            /* //Add Path
-            for(int i = 0; i < trackData.size(); i++){
+            //Clear path
+            if (route != null) {
+                route.remove();
+            }
+
+            //Add Path
+            ArrayList<LatLng> latlngList = new ArrayList<LatLng>();
+            for (int i = 0; i < trackData.size(); i++) {
                 LatLng ll = new LatLng(Double.parseDouble(trackData.get(i).getLatitude()), Double.parseDouble(trackData.get(i).getLongitude()));
                 latlngList.add(ll);
             }
-            Polyline route = mGoogleMap.addPolyline(new PolylineOptions().width(5).color(Color.parseColor("#5E65B5")).geodesic(true));
+            route = mGoogleMap.addPolyline(new PolylineOptions().width(5).color(Color.parseColor("#5E65B5")).geodesic(true));
             route.setPoints(latlngList);
-            */
 
-            if (!country.equals(sharedPreferences.getString("Country", ""))) {
-                country = sharedPreferences.getString("Country", "");
-                getCountryEM();
-            }
 
+            /*
             //Clear all previous marker on map
             for (int i = 0; i < markerList.size(); i++) {
                 markerList.get(i).remove();
             }
+
             //Reset marker list
             markerList.clear();
 
@@ -467,53 +517,24 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
             for (int i = 0; i < trackData.size() - 1; i++) {
                 LatLng ll = new LatLng(Double.parseDouble(trackData.get(i).getLatitude()), Double.parseDouble(trackData.get(i).getLongitude()));
                 markerList.add(mGoogleMap.addMarker(new MarkerOptions().position(ll)));
-            }
+            }*/
 
-            // Enabling go to current location in Google Map
+            //Go to current location in Google Map
             LatLng ll = new LatLng(latitude, longitude);
             CameraUpdate update = CameraUpdateFactory.newLatLngZoom(ll, 18);
             mGoogleMap.animateCamera(update);
 
+            //Check if last location exist, if exist, delete and prepare for new one.
             if (lastLocationMark != null) {
                 lastLocationMark.remove();
             }
-            lastLocationMark = mGoogleMap.addMarker(new MarkerOptions().position(ll).title("Last Location"));
+            lastLocationMark = mGoogleMap.addMarker(new MarkerOptions().position(ll));
 
             calculateDangerZone();
         }
 
         if (key.equals("Main Status")) {
             mStatusTextView.setText(sharedPreferences.getString("Main Status", ""));
-        }
-    }
-
-    private void calculateDangerZone() {
-        if (!circleList.isEmpty()) {
-
-            int dangerCount = 0;
-
-            Location currentLoc = new Location("");
-            currentLoc.setLatitude(latitude);
-            currentLoc.setLongitude(longitude);
-            Location circleLoc = new Location("");
-
-            for (int i = 0; i < circleList.size(); i++) {
-                circleLoc.setLatitude(circleList.get(i).getCenter().latitude);
-                circleLoc.setLongitude(circleList.get(i).getCenter().longitude);
-
-                if (currentLoc.distanceTo(circleLoc) <= circleList.get(i).getRadius()) {
-                    dangerCount++;
-                }
-            }
-
-            if (dangerCount == 0) {
-                mDangerZoneTextView.setText("Safe");
-                mDangerZoneTextView.setTextColor(Color.WHITE);
-            } else {
-                mDangerZoneTextView.setText("Danger Lv " + dangerCount);
-                mDangerZoneTextView.setTextColor(Color.RED);
-            }
-
         }
     }
 
@@ -560,8 +581,6 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
     //-------------------------------------------HIGH ALERT-------------------------------------------------------------//
 
-    //additionl method for high alert
-
     public void startHighAlertMode(View view) {
         startHighAlert();
     }
@@ -595,19 +614,12 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         getEMID();
     }
 
+    //SEND QUERY TO ATHENA WEB SERVICE
     public void getEMID() {
         String uname = preferences.getString("fbsession", "");
         RequestParams params = new RequestParams();
-        if (uname != null) {
-            params.put("username", uname);
-            invokeGetEMID(params);
-        } else {
-            Toast.makeText(getApplicationContext(), "EMID : Username null", Toast.LENGTH_LONG).show();
-        }
-    }
+        params.put("username", uname);
 
-    //SEND QUERY TO ATHENA WEB SERVICE
-    public void invokeGetEMID(RequestParams params) {
         // Make RESTful webservice call using AsyncHttpClient object
         AsyncHttpClient client = new AsyncHttpClient();
         client.get("http://119.81.223.180:8080/ProjectAthenaWS/emergency/getemcount", params, new AsyncHttpResponseHandler() {
@@ -651,26 +663,18 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         });
     }
 
-    //PREPARE QUERY TO GET CONTACT LIST
+    //QUERY TO GET CONTACT LIST
     public void createEMID() {
         String uname = preferences.getString("fbsession", "");
         RequestParams params = new RequestParams();
-        if (uname != null) {
-            params.put("username", uname);
-            params.put("em_times", String.valueOf(emID));
-            params.put("country", preferences.getString("CountryCode", ""));
-            params.put("address", preferences.getString("Address", ""));
-            params.put("latitude", preferences.getString("Latitude", ""));
-            params.put("longitude", preferences.getString("Longitude", ""));
-            params.put("locality", preferences.getString("Locality", ""));
-            invokeCreateEMID(params);
-        } else {
-            Toast.makeText(getApplicationContext(), "Failed to create contacts", Toast.LENGTH_LONG).show();
-        }
-    }
+        params.put("username", uname);
+        params.put("em_times", String.valueOf(emID));
+        params.put("country", preferences.getString("CountryCode", ""));
+        params.put("address", preferences.getString("Address", ""));
+        params.put("latitude", preferences.getString("Latitude", ""));
+        params.put("longitude", preferences.getString("Longitude", ""));
+        params.put("locality", preferences.getString("Locality", ""));
 
-    //SEND QUERY TO ATHENA WEB SERVICE
-    public void invokeCreateEMID(RequestParams params) {
         // Make RESTful webservice call using AsyncHttpClient object
         AsyncHttpClient client = new AsyncHttpClient();
         client.get("http://119.81.223.180:8080/ProjectAthenaWS/emergency/createemid", params, new AsyncHttpResponseHandler() {
@@ -725,82 +729,60 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
     //-------------------------------------GIS FUNCTION-------------------------------------------//
 
-    //PREPARE QUERY TO GET CONTACT LIST
-    public void getCountryEM() {
-        String country = preferences.getString("Country", "");
-        RequestParams params = new RequestParams();
-        if (country != null) {
-            params.put("country", country);
-            params.put("locality", preferences.getString("Locality", ""));
-            invokeCountryEM(params);
-        } else {
-            Toast.makeText(getApplicationContext(), "Failed to get Country EM", Toast.LENGTH_LONG).show();
-        }
-    }
+    public void getSpecialZone() {
 
-    //SEND QUERY TO ATHENA WEB SERVICE
-    public void invokeCountryEM(RequestParams params) {
+        RequestParams params = new RequestParams();
+        params.put("latitude", preferences.getString("Latitude", ""));
+        params.put("longitude", preferences.getString("Longitude", ""));
+        params.put("distance", String.valueOf(Constants.DANGER_ZONE_DISTANCE));
+
         // Make RESTful webservice call using AsyncHttpClient object
         AsyncHttpClient client = new AsyncHttpClient();
-        client.get("http://119.81.223.180:8080/ProjectAthenaWS/emergency/getcountryem", params, new AsyncHttpResponseHandler() {
+        client.get("http://119.81.223.180:8080/ProjectAthenaWS/dangerzone/getspecialz", params, new AsyncHttpResponseHandler() {
             // When the response returned by REST has Http response code '200'
             @Override
             public void onSuccess(String response) {
+
                 try {
                     // JSON Object
                     JSONObject obj = new JSONObject(response);
-                    emergencyList = new ArrayList<EmergencyData>();
+
                     // When the JSON response has status boolean value assigned with true
                     if (!response.equals(null)) {
-
                         try {
-                            JSONObject object = obj.getJSONObject("emergencyData");
+                            JSONObject object = obj.getJSONObject("specialZoneData");
 
-                            EmergencyData emergency = new EmergencyData();
+                            SpecialZoneData sz = new SpecialZoneData();
 
-                            if (object.getString("endTime").equals("Not Available")) {
-                                emergency.setEndTime("Not Available");
-                            } else {
-                                emergency.setEndTime(parseDateToddMMyyyy(object.getString("endTime")));
-                            }
-                            emergency.setNumOfTrack(object.getString("numOfTrack"));
-                            emergency.setStartTime(parseDateToddMMyyyy(object.getString("startTime")));
-                            emergency.setEmID(String.valueOf(object.getInt("emID")));
-                            emergency.setAddress(object.getString("address"));
-                            emergency.setCountry(object.getString("country"));
-                            emergency.setStatus(object.getString("status"));
-                            emergency.setLatlng(new LatLng(Double.parseDouble(object.getString("latitude")), Double.parseDouble(object.getString("longitude"))));
-                            emergency.setLocality(object.getString("locality"));
+                            sz.setDz_id(object.getString("dz_id"));
+                            sz.setDateTime(parseDateToddMMyyyy(object.getString("dateTime")));
+                            sz.setDz_info(object.getString("dz_info"));
+                            sz.setDz_title(object.getString("dz_title"));
+                            sz.setZone_type(object.getString("zone_type"));
+                            sz.setCoordinate(new LatLng(Double.parseDouble(object.getString("latitude")), Double.parseDouble(object.getString("longitude"))));
 
-                            emergencyList.add(emergency);
+                            specialZoneList.add(sz);
 
                         } catch (JSONException e) {
-                            JSONArray jarray = obj.getJSONArray("emergencyData");
+                            JSONArray jarray = obj.getJSONArray("specialZoneData");
 
                             for (int i = 0; i < jarray.length(); i++) {
                                 JSONObject object = jarray.getJSONObject(i);
 
-                                EmergencyData emergency = new EmergencyData();
+                                SpecialZoneData sz = new SpecialZoneData();
 
-                                if (object.getString("endTime").equals("Not Available")) {
-                                    emergency.setEndTime("Not Available");
-                                } else {
-                                    emergency.setEndTime(parseDateToddMMyyyy(object.getString("endTime")));
-                                }
-                                emergency.setNumOfTrack(object.getString("numOfTrack"));
-                                emergency.setStartTime(parseDateToddMMyyyy(object.getString("startTime")));
-                                emergency.setEmID(String.valueOf(object.getInt("emID")));
-                                emergency.setAddress(object.getString("address"));
-                                emergency.setCountry(object.getString("country"));
-                                emergency.setStatus(object.getString("status"));
-                                emergency.setLatlng(new LatLng(Double.parseDouble(object.getString("latitude")), Double.parseDouble(object.getString("longitude"))));
-                                emergency.setLocality(object.getString("locality"));
+                                sz.setDz_id(object.getString("dz_id"));
+                                sz.setDateTime(parseDateToddMMyyyy(object.getString("dateTime")));
+                                sz.setDz_info(object.getString("dz_info"));
+                                sz.setDz_title(object.getString("dz_title"));
+                                sz.setZone_type(object.getString("zone_type"));
+                                sz.setCoordinate(new LatLng(Double.parseDouble(object.getString("latitude")), Double.parseDouble(object.getString("longitude"))));
 
-                                emergencyList.add(emergency);
+                                specialZoneList.add(sz);
                             }
                         }
 
-                        Toast.makeText(getApplicationContext(), "Get Country EM Successfully", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getApplicationContext(), "Get Special Zone Successfully", Toast.LENGTH_LONG).show();
 
                     } else {
                         // errorMsg.setText(obj.getString("error_msg"));
@@ -808,7 +790,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                     }
                 } catch (JSONException e) {
                     // TODO Auto-generated catch block
-                    Toast.makeText(getApplicationContext(), "Error Occured in get country EM.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "Error Occured in getting Special Zone.", Toast.LENGTH_LONG).show();
                     e.printStackTrace();
                 }
             }
@@ -819,56 +801,243 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                                   String content) {
                 // When Http response code is '404'
                 if (statusCode == 404) {
-                    Toast.makeText(getApplicationContext(), "Country EM: Requested resource not found", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "Danger Zone: Requested resource not found", Toast.LENGTH_LONG).show();
                 }
                 // When Http response code is '500'
                 else if (statusCode == 500) {
-                    Toast.makeText(getApplicationContext(), "Country EM: Something went wrong at server end", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "Danger Zone: Something went wrong at server end", Toast.LENGTH_LONG).show();
                 }
                 // When Http response code other than 404, 500
                 else {
-                    Toast.makeText(getApplicationContext(), "Country EM: Unexpected Error occcured!", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "Danger Zone: Unexpected Error occcured!", Toast.LENGTH_LONG).show();
                 }
             }
 
             @Override
             public void onFinish() {
-
-                //Reset circle list and remove from map
-                for (int i = 0; i < circleList.size(); i++) {
-                    circleList.get(i).remove();
-                }
-                circleList.clear();
-
-
-                //Repopulate map
-                for (int i = 0; i < emergencyList.size(); i++) {
-                    circleList.add(mGoogleMap.addCircle(new CircleOptions().center(emergencyList.get(i).getLatlng()).fillColor(0x20ff0000)
-                            .radius(Constants.DANGER_ZONE_RADIUS).strokeWidth(0)));
-                }
-
-                //Calculate Dangerzone
-                calculateDangerZone();
+                populateMap();
             }
         });
     }
 
-    public String parseDateToddMMyyyy(String time) {
-        String inputPattern = "yyyy-MM-dd HH:mm:ss";
-        String outputPattern = "dd-MMM-yyyy h:mm a";
-        SimpleDateFormat inputFormat = new SimpleDateFormat(inputPattern);
-        SimpleDateFormat outputFormat = new SimpleDateFormat(outputPattern);
-
-        Date date = null;
-        String str = null;
-
-        try {
-            date = inputFormat.parse(time);
-            str = outputFormat.format(date);
-        } catch (ParseException e) {
-            e.printStackTrace();
+    //Capture result
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == 1) {
+            getSpecialZone();
         }
-        return str;
+    }
+
+    private void calculateDangerZone() {
+
+        //Check if there is any emergency records
+        int dangerCount = 0;
+
+        Location currentLoc = new Location("");
+        currentLoc.setLatitude(latitude);
+        currentLoc.setLongitude(longitude);
+
+        Location circleLoc = new Location("");
+
+        //calculate emergency count (overlaps)
+        for (int i = 0; i < circleList.size(); i++) {
+            circleLoc.setLatitude(circleList.get(i).getCenter().latitude);
+            circleLoc.setLongitude(circleList.get(i).getCenter().longitude);
+
+            if (currentLoc.distanceTo(circleLoc) <= circleList.get(i).getRadius()) {
+                dangerCount++;
+            }
+        }
+
+        if (dangerCount == 0) {
+            mDangerZoneTextView.setText("Safe");
+            mDangerZoneTextView.setTextColor(Color.WHITE);
+        } else {
+            mDangerZoneTextView.setText("Danger Lv " + dangerCount);
+            mDangerZoneTextView.setTextColor(Color.RED);
+        }
+    }
+
+    private void populateMap() {
+
+        //Reset circle list and remove from map
+        for (int i = 0; i < circleList.size(); i++) {
+
+            if (i < circleList.size()) {
+                circleList.get(i).remove();
+            }
+
+            if (i < dzMarkerList.size()) {
+                dzMarkerList.get(i).remove();
+            }
+
+        }
+        circleList.clear();
+        dzMarkerList.clear();
+
+        CircleOptions co = new CircleOptions().radius(Constants.DANGER_ZONE_RADIUS).strokeWidth(0);
+        MarkerOptions mo = new MarkerOptions();
+
+        //Repopulate map
+        for (int i = 0; i < specialZoneList.size(); i++) {
+            SpecialZoneData sz = specialZoneList.get(i);
+
+            if (specialZoneList.get(i).getZone_type().equals("Danger")) {
+                circleList.add(mGoogleMap.addCircle(co.center(sz.getCoordinate()).fillColor(0x20ffff00)));
+                Marker mz = mGoogleMap.addMarker(mo.position(sz.getCoordinate()).title(sz.getDz_title()).snippet(sz.getDz_info()));
+                dzMarkerList.add(mz);
+
+                HashMap<String, String> data = new HashMap<String, String>();
+                data.put("dz_id", sz.getDz_id());
+                extraMarkerInfo.put(mz.getId(),data);
+            } else {
+                circleList.add(mGoogleMap.addCircle(co.center(sz.getCoordinate()).fillColor(0x20ff0000)));
+            }
+        }
+
+        //mGoogleMap.setInfoWindowAdapter(new WinInfoAdapter());
+        mGoogleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(final Marker marker) {
+
+                final HashMap<String, String> marker_data = extraMarkerInfo.get(marker.getId());
+
+                final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setMessage("Report this zone?")
+                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                            public void onClick(@SuppressWarnings("unused") final DialogInterface dialog, @SuppressWarnings("unused") final int id) {
+                                setupReport(marker_data.get("dz_id"));
+                                dialog.cancel();
+                            }
+                        })
+                        .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                            public void onClick(final DialogInterface dialog, @SuppressWarnings("unused") final int id) {
+                                dialog.cancel();
+                            }
+                        });
+                final AlertDialog alert = builder.create();
+                alert.show();
+                return false;
+            }
+        });
+
+        //Calculate Dangerzone
+        calculateDangerZone();
+    }
+
+    public void setupReport(final String dz_id) {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = LayoutInflater.from(this);
+        final View textEntryView = inflater.inflate(R.layout.activity_feedback_box, null);
+        builder.setTitle("Report Zone");
+        builder.setMessage("Please key in your reporting reason.");
+        builder.setView(textEntryView);
+        builder.setPositiveButton(android.R.string.ok, null);
+        builder.setNegativeButton(android.R.string.cancel, null);
+        final AlertDialog dialog = builder.create();
+
+        dialog.show();
+
+        dialog.getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                EditText mTypeText;
+                EditText mDetailText;
+                TextView mTypeError;
+                TextView mDetailError;
+                mTypeText = (EditText) textEntryView.findViewById(R.id.editType);
+                mDetailText = (EditText) textEntryView.findViewById(R.id.editDetail);
+                mTypeError = (TextView) textEntryView.findViewById(R.id.typeError);
+                mDetailError = (TextView) textEntryView.findViewById(R.id.detailError);
+                String type = mTypeText.getText().toString();
+                String detail = mTypeText.getText().toString();
+
+                if (isEmpty(mTypeText) && isEmpty(mDetailText)) {
+                    mTypeError.setVisibility(View.VISIBLE);
+                    mDetailError.setVisibility(View.VISIBLE);
+                } else if (isEmpty(mTypeText) && !isEmpty(mDetailText)) {
+                    mTypeError.setVisibility(View.VISIBLE);
+                    mDetailError.setVisibility(View.INVISIBLE);
+                } else if (!isEmpty(mTypeText) && isEmpty(mDetailText)) {
+                    mTypeError.setVisibility(View.INVISIBLE);
+                    mDetailError.setVisibility(View.VISIBLE);
+                } else {
+                    reportZone(dz_id, type, detail);
+                    dialog.cancel();
+                }
+            }
+        });
+
+        dialog.getButton(DialogInterface.BUTTON_NEGATIVE).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dialog.cancel();
+            }
+        });
+
+    }
+
+    private boolean isEmpty(EditText etText) {
+        if (etText.getText().toString().trim().length() > 0) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    public void reportZone(String dz_id, String type, String detail) {
+
+        RequestParams params = new RequestParams();
+        params.put("username", preferences.getString("fbsession", ""));
+        params.put("dz_id", dz_id);
+        params.put("type", type);
+        params.put("detail", detail);
+
+        // Make RESTful webservice call using AsyncHttpClient object
+        AsyncHttpClient client = new AsyncHttpClient();
+        client.get("http://119.81.223.180:8080/ProjectAthenaWS/dangerzone/reportdz", params, new AsyncHttpResponseHandler() {
+            // When the response returned by REST has Http response code '200'
+            @Override
+            public void onSuccess(String response) {
+                try {
+                    // JSON Object
+                    JSONObject obj = new JSONObject(response);
+                    // When the JSON response has status boolean value assigned with true
+                    if (obj.getBoolean("status")) {
+                        Toast.makeText(getApplicationContext(), "Status Change Successful", Toast.LENGTH_LONG).show();
+
+                    } else {
+                        Toast.makeText(getApplicationContext(), obj.getString("error_msg"), Toast.LENGTH_LONG).show();
+                    }
+                } catch (JSONException e) {
+                    // TODO Auto-generated catch block
+                    Toast.makeText(getApplicationContext(), "Error Occured in Changing Status", Toast.LENGTH_LONG).show();
+                    e.printStackTrace();
+                }
+            }
+
+            // When the response returned by REST has Http response code other than '200'
+            @Override
+            public void onFailure(int statusCode, Throwable error,
+                                  String content) {
+                // When Http response code is '404'
+                if (statusCode == 404) {
+                    Toast.makeText(getApplicationContext(), "Change Status : Requested resource not found", Toast.LENGTH_LONG).show();
+                }
+                // When Http response code is '500'
+                else if (statusCode == 500) {
+                    Toast.makeText(getApplicationContext(), "Change Status : Something went wrong at server end", Toast.LENGTH_LONG).show();
+                }
+                // When Http response code other than 404, 500
+                else {
+                    Toast.makeText(getApplicationContext(), "Change Status : Unexpected Error occcured!", Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onFinish() {
+            }
+        });
     }
 
     //-------------------------------------MAP FUNCTION------------------------------------------//
@@ -888,9 +1057,49 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                 }
             }
         });*/
+        mGoogleMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
+            @Override
+            public void onMapLongClick(final LatLng latLng) {
+                final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setMessage("Create a danger zone at this location?")
+                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                            public void onClick(@SuppressWarnings("unused") final DialogInterface dialog, @SuppressWarnings("unused") final int id) {
+                                Intent myIntent = new Intent(MainActivity.this, AddDangerZone.class);
+                                myIntent.putExtra("latitude", latLng.latitude);
+                                myIntent.putExtra("longitude", latLng.longitude);
+                                MainActivity.this.startActivityForResult(myIntent, 1);
+                            }
+                        })
+                        .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                            public void onClick(final DialogInterface dialog, @SuppressWarnings("unused") final int id) {
+                                dialog.cancel();
+                            }
+                        });
+                final AlertDialog alert = builder.create();
+                alert.show();
+            }
+        });
     }
 
     //--------------------------------SUPPORTING CLASS ------------------------------------------//
+    public String parseDateToddMMyyyy(String time) {
+        String inputPattern = "yyyy-MM-dd HH:mm:ss";
+        String outputPattern = "dd-MMM-yyyy h:mm a";
+        SimpleDateFormat inputFormat = new SimpleDateFormat(inputPattern);
+        SimpleDateFormat outputFormat = new SimpleDateFormat(outputPattern);
+
+        Date date = null;
+        String str = null;
+
+        try {
+            date = inputFormat.parse(time);
+            str = outputFormat.format(date);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return str;
+    }
+
     public class SafetyCountDown extends CountDownTimer {
 
         protected int cdType;
@@ -949,5 +1158,32 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
     }
 
+    /*
+    public class WinInfoAdapter implements GoogleMap.InfoWindowAdapter {
+
+        private final View myContentsView;
+
+        WinInfoAdapter() {
+            LayoutInflater inflater = LayoutInflater.from(getApplicationContext());
+            myContentsView = inflater.inflate(R.layout.wininfo_layout, null);
+        }
+
+        @Override
+        public View getInfoContents(Marker marker) {
+
+            TextView tvTitle = ((TextView) myContentsView.findViewById(R.id.title));
+            tvTitle.setText(marker.getTitle());
+            TextView tvSnippet = ((TextView) myContentsView.findViewById(R.id.snippet));
+            tvSnippet.setText(marker.getSnippet());
+
+            return myContentsView;
+        }
+
+        @Override
+        public View getInfoWindow(Marker marker) {
+            // TODO Auto-generated method stub
+            return null;
+        }
+    }*/
 }
 

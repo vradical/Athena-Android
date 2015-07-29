@@ -205,6 +205,7 @@ public class EmergencyAdapter extends ArrayAdapter<EmergencyData> {
             @Override
             public void onFinish() {
                 emergencyList.get(position).setStatus(status);
+                MainActivity.country = "empty";
                 notifyDataSetChanged();
             }
         });

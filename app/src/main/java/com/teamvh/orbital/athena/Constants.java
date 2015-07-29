@@ -18,4 +18,5 @@ public final class Constants {
     public static int ALERT_COUNTDOWN = 60000;
 
     public static int DANGER_ZONE_RADIUS = 200;
+    public static int DANGER_ZONE_DISTANCE = 1;
 }

@@ -89,6 +89,15 @@
                 android:value="com.teamvh.orbital.athena.ContactInfo" />
         </activity>
         <activity
+            android:name=".AddDangerZone"
+            android:label="@string/title_activity_add_danger_zone"
+            android:parentActivityName=".MainActivity"
+            android:screenOrientation="portrait" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.teamvh.orbital.athena.MainActivity" />
+        </activity>
+        <activity
             android:name=".LoginActivity"
             android:label="@string/title_activity_display_message"
             android:screenOrientation="portrait" >
@@ -124,6 +133,10 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.teamvh.orbital.athena.MainActivity" />
+        </activity>
+        <activity
+            android:name=".DangerZoneList"
+            android:label="@string/title_activity_danger_zone_list" >
         </activity>
     </application>
 

@@ -18,14 +18,16 @@
     <string name="title_activity_display_message">Main Activity</string>
     <string name="title_activity_contact_info">ContactInfo</string>
 
-    <string name="hello_world">Hello world!</string>
-    <string name="title_activity_add_contact">AddContact</string>
-    <string name="title_activity_testing">testing</string>
-    <string name="title_activity_emergency">EmergencyActivity</string>
-    <string name="title_activity_help_info">HelpInfo</string>
-    <string name="title_activity_emergency_history">EmergencyHistory</string>
-    <string name="title_activity_emergency_track_history">EmergencyTrackHistory</string>
+    <string name="title_activity_add_contact">Add Contact</string>
+    <string name="title_activity_emergency">Emergency</string>
+    <string name="title_activity_help_info">Help Information</string>
+    <string name="title_activity_emergency_history">Emergency History</string>
+    <string name="title_activity_emergency_track_history">Emergency Track History</string>
     <string name="title_activity_setting">Setting</string>
+    <string name="title_activity_add_danger_zone">Add Danger Zone</string>
+    <string name="title_activity_danger_zone_list">DangerZoneList</string>
+
+    <string name="hello_world">Hello world!</string>
 
 
 </resources>

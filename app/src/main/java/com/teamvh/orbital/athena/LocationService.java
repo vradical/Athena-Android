@@ -186,7 +186,7 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
                     locality = "Not Available";
                 }
                 this.addressWOcountry = sb.toString();
-                if(!address.getPostalCode().equals(null)){
+                if(address.getPostalCode() != (null)){
                     sb.append(address.getPostalCode()).append(" ");
                 }
                 this.address = sb.toString();

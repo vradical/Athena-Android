@@ -1,0 +1,38 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+android:layout_height="match_parent"
+android:orientation="vertical"
+android:weightSum="1.0"
+tools:context="com.teamvh.orbital.athena.DangerZoneList">
+
+<LinearLayout
+    android:id="@+id/help_header"
+    android:layout_width="fill_parent"
+    android:layout_height="0dp"
+    android:background="@color/special_blue"
+    android:gravity="center"
+    android:padding="15dp"
+    android:orientation="horizontal"
+    android:layout_weight="0.10">
+
+    <TextView
+        style="@style/StandardText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Danger Zone Contribution" />
+
+</LinearLayout>
+
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_weight = "0.9"
+    android:layout_height="0dp">
+
+    <ListView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/dangerzone_list"
+        android:clickable="true"/>
+</LinearLayout>
+
+</LinearLayout>
