@@ -97,7 +97,8 @@
                 android:layout_height="120dp"
                 android:layout_gravity="center_horizontal|bottom"
                 android:background="@drawable/track_button"
-                android:onClick="startUpdatesButtonHandler" />
+                android:onClick="startUpdatesButtonHandler"
+                style="Material.Drawable.Ripple.Touch.Light"/>
         </FrameLayout>
 
         <RelativeLayout

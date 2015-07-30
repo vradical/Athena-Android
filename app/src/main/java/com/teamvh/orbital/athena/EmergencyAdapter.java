@@ -19,6 +19,8 @@ import com.google.android.gms.maps.model.LatLng;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
+import com.rey.material.app.Dialog;
+import com.rey.material.app.SimpleDialog;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -102,23 +104,35 @@ public class EmergencyAdapter extends ArrayAdapter<EmergencyData> {
         holder.IBChangeStat.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-                builder.setTitle("Emergency Status");
-                builder.setMessage("Please set the correct status for this activation. A correct status will help to improve the accuracy of danger zone.");
 
-                builder.setPositiveButton("Emergency", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int whichButton) {
-                        changeStatus(position, "Emergency");
+                Dialog.Builder builder = null;
+                builder = new SimpleDialog.Builder(R.style.SimpleDialogLight);
+                ((SimpleDialog.Builder) builder).message("Please set the correct status for this activation. A correct status will help to improve the accuracy of danger zone.")
+                        .positiveAction("EMERGENCY")
+                        .negativeAction("FALSE ALARM")
+                        .title("Emergency Status");
+                final Dialog dialog = builder.build(getContext());
+                dialog.show();
+                dialog.setCanceledOnTouchOutside(false);
+                dialog.positiveActionClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        if(!emergencyList.get(position).getStatus().equals("Emergency")) {
+                            changeStatus(position, "Emergency");
+                        }
+                        dialog.cancel();
+                    }
+                });
+                dialog.negativeActionClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        if(!emergencyList.get(position).getStatus().equals("False Alarm")) {
+                            changeStatus(position, "False Alarm");
+                        }
+                        dialog.cancel();
                     }
                 });
 
-                builder.setNegativeButton("False Alarm", new DialogInterface.OnClickListener() {
-
-                    public void onClick(DialogInterface dialog, int which) {
-                        changeStatus(position, "False Alarm");
-                    }
-                });
-                builder.show();
             }
         });
 
@@ -157,16 +171,30 @@ public class EmergencyAdapter extends ArrayAdapter<EmergencyData> {
                     JSONObject obj = new JSONObject(response);
                     // When the JSON response has status boolean value assigned with true
                     if (obj.getBoolean("status")) {
-                        Toast.makeText(getContext(), "Status Change Successful", Toast.LENGTH_LONG).show();
                         emergencyList.get(position).setStatus(status);
                         MainActivity.country = "restart";
+
+                        Dialog.Builder builder = null;
+                        builder = new SimpleDialog.Builder(R.style.SimpleDialogLight);
+                        ((SimpleDialog.Builder) builder).message("Emergency status change successfully.")
+                                .positiveAction("OK")
+                                .title("Status Change");
+                        final Dialog dialog = builder.build(getContext());
+                        dialog.show();
+                        dialog.setCanceledOnTouchOutside(false);
+                        dialog.positiveActionClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                dialog.cancel();
+                            }
+                        });
+
+
                     } else {
-                        // errorMsg.setText(obj.getString("error_msg"));
-                        Toast.makeText(getContext(), obj.getString("error_msg"), Toast.LENGTH_LONG).show();
+                        displayDialog("", 1);
                     }
                 } catch (JSONException e) {
-                    // TODO Auto-generated catch block
-                    Toast.makeText(getContext(), "Error Occured in Changing Status", Toast.LENGTH_LONG).show();
+                    displayDialog("", 1);
                     e.printStackTrace();
                 }
             }
@@ -175,18 +203,7 @@ public class EmergencyAdapter extends ArrayAdapter<EmergencyData> {
             @Override
             public void onFailure(int statusCode, Throwable error,
                                   String content) {
-                // When Http response code is '404'
-                if (statusCode == 404) {
-                    Toast.makeText(getContext(), "Change Status : Requested resource not found", Toast.LENGTH_LONG).show();
-                }
-                // When Http response code is '500'
-                else if (statusCode == 500) {
-                    Toast.makeText(getContext(), "Change Status : Something went wrong at server end", Toast.LENGTH_LONG).show();
-                }
-                // When Http response code other than 404, 500
-                else {
-                    Toast.makeText(getContext(), "Change Status : Unexpected Error occcured!", Toast.LENGTH_LONG).show();
-                }
+                displayDialog("", 2);
             }
 
             @Override
@@ -230,5 +247,29 @@ public class EmergencyAdapter extends ArrayAdapter<EmergencyData> {
             e.printStackTrace();
         }
         return str;
+    }
+
+    public void displayDialog(String message, int i) {
+
+        if(i == 1){
+            message = "Unable to get information from server.";
+        }else if(i == 2){
+            message = "Unable to connect to server.";
+        }
+
+        Dialog.Builder builder = null;
+        builder = new SimpleDialog.Builder(R.style.SimpleDialogLight);
+        ((SimpleDialog.Builder) builder).message(message)
+                .positiveAction("OK")
+                .title("Error");
+        final Dialog dialog = builder.build(getContext());
+        dialog.show();
+        dialog.setCanceledOnTouchOutside(false);
+        dialog.positiveActionClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dialog.cancel();
+            }
+        });
     }
 }

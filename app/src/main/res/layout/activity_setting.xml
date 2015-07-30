@@ -1,4 +1,5 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:facebook="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -123,8 +124,8 @@
                     android:layout_height="wrap_content"
                     android:clickable="true"
                     android:orientation="vertical"
-                    android:paddingTop="10dp"
-                    android:paddingBottom="10dp">
+                    android:paddingBottom="10dp"
+                    android:paddingTop="10dp">
 
                     <TextView
                         android:id="@+id/setting_contacts"
@@ -147,8 +148,8 @@
                     android:layout_height="wrap_content"
                     android:clickable="true"
                     android:orientation="vertical"
-                    android:paddingTop="10dp"
-                    android:paddingBottom="10dp">
+                    android:paddingBottom="10dp"
+                    android:paddingTop="10dp">
 
                     <TextView
                         android:id="@+id/setting_passcode"
@@ -171,8 +172,8 @@
                     android:layout_height="wrap_content"
                     android:clickable="true"
                     android:orientation="vertical"
-                    android:paddingTop="10dp"
-                    android:paddingBottom="10dp">
+                    android:paddingBottom="10dp"
+                    android:paddingTop="10dp">
 
                     <TextView
                         android:id="@+id/setting_shareFB"
@@ -195,8 +196,8 @@
                     android:layout_height="wrap_content"
                     android:clickable="true"
                     android:orientation="vertical"
-                    android:paddingTop="10dp"
-                    android:paddingBottom="20dp">
+                    android:paddingBottom="20dp"
+                    android:paddingTop="10dp">
 
                     <TextView
                         android:id="@+id/setting_feedback"
@@ -312,7 +313,7 @@
                             android:id="@+id/setting_standard_track"
                             android:layout_width="fill_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginBottom="20dp"
+                            android:layout_marginBottom="15dp"
                             android:orientation="vertical">
 
                             <TextView
@@ -322,36 +323,35 @@
                                 android:layout_height="wrap_content"
                                 android:text="Standard: Track Interval" />
 
-                            <TextView
+                            <LinearLayout
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:background="@android:color/transparent"
-                                android:text="Minutes before next location track." />
-
-                            <LinearLayout
-                                android:id="@+id/setting_ALR1_1"
-                                android:layout_width="fill_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="5dp"
                                 android:orientation="horizontal">
-
-                                <SeekBar
-                                    android:id="@+id/setting_trackSB"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="9"
-                                    android:max="55"
-                                    android:paddingTop="2dp" />
 
                                 <TextView
                                     android:id="@+id/setting_trackSBTV"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:layout_weight="1"
-                                    android:paddingBottom="10dp"
                                     android:text="0" />
 
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:background="@android:color/transparent"
+                                    android:text=" minutes before next location track." />
+
                             </LinearLayout>
+
+                            <com.rey.material.widget.Slider
+                                android:id="@+id/setting_trackSB"
+                                style="@style/Material.Widget.Slider"
+                                android:layout_width="fill_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center"
+                                android:paddingTop="10dp"
+                                app:sl_maxValue="60"
+                                app:sl_minValue="5"
+                                app:sl_primaryColor="#5E65B5" />
 
                         </LinearLayout>
 
@@ -359,7 +359,7 @@
                             android:id="@+id/setting_standard_dis"
                             android:layout_width="fill_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginBottom="20dp"
+                            android:layout_marginBottom="15dp"
                             android:orientation="vertical">
 
                             <TextView
@@ -369,36 +369,35 @@
                                 android:layout_height="wrap_content"
                                 android:text="Standard: Distance Between Track" />
 
-                            <TextView
+                            <LinearLayout
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:background="@android:color/transparent"
-                                android:text="Minimum distance before next location track." />
-
-                            <LinearLayout
-                                android:id="@+id/setting_ALR1_2"
-                                android:layout_width="fill_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="5dp"
                                 android:orientation="horizontal">
-
-                                <SeekBar
-                                    android:id="@+id/setting_trackDisSB"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="9"
-                                    android:max="55"
-                                    android:paddingTop="2dp" />
 
                                 <TextView
                                     android:id="@+id/setting_trackDisSBTV"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:layout_weight="1"
                                     android:text="0" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:background="@android:color/transparent"
+                                    android:text=" meters before next location track." />
 
                             </LinearLayout>
 
+                            <com.rey.material.widget.Slider
+                                android:id="@+id/setting_trackDisSB"
+                                style="@style/Material.Widget.Slider"
+                                android:layout_width="fill_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center"
+                                android:paddingTop="10dp"
+                                app:sl_maxValue="1000"
+                                app:sl_minValue="50"
+                                app:sl_primaryColor="#5E65B5" />
                         </LinearLayout>
 
                     </LinearLayout>
@@ -450,7 +449,7 @@
                             android:id="@+id/setting_alert_track"
                             android:layout_width="fill_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginBottom="20dp"
+                            android:layout_marginBottom="15dp"
                             android:orientation="vertical">
 
                             <TextView
@@ -460,35 +459,35 @@
                                 android:layout_height="wrap_content"
                                 android:text="Alert: Track Interval" />
 
-                            <TextView
+                            <LinearLayout
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:background="@android:color/transparent"
-                                android:text="Minutes before next location track." />
-
-                            <LinearLayout
-                                android:id="@+id/setting_ALR2_1"
-                                android:layout_width="fill_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="5dp"
                                 android:orientation="horizontal">
-
-                                <SeekBar
-                                    android:id="@+id/setting_alertSB"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="9"
-                                    android:max="55"
-                                    android:paddingTop="2dp" />
 
                                 <TextView
                                     android:id="@+id/setting_alertSBTV"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:layout_weight="1"
                                     android:text="0" />
 
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:background="@android:color/transparent"
+                                    android:text=" minutes before next location track." />
+
                             </LinearLayout>
+
+                            <com.rey.material.widget.Slider
+                                android:id="@+id/setting_alertSB"
+                                style="@style/Material.Widget.Slider"
+                                android:layout_width="fill_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center"
+                                android:paddingTop="10dp"
+                                app:sl_maxValue="5"
+                                app:sl_minValue="1"
+                                app:sl_primaryColor="#5E65B5" />
 
                         </LinearLayout>
 
@@ -496,7 +495,7 @@
                             android:id="@+id/setting_alert_dis"
                             android:layout_width="fill_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginBottom="20dp"
+                            android:layout_marginBottom="15dp"
                             android:orientation="vertical">
 
                             <TextView
@@ -506,35 +505,35 @@
                                 android:layout_height="wrap_content"
                                 android:text="Alert: Distance Between Track" />
 
-                            <TextView
+                            <LinearLayout
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:background="@android:color/transparent"
-                                android:text="Distances before next location track." />
-
-                            <LinearLayout
-                                android:id="@+id/setting_ALR2_2"
-                                android:layout_width="fill_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="5dp"
                                 android:orientation="horizontal">
-
-                                <SeekBar
-                                    android:id="@+id/setting_alertDisSB"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="9"
-                                    android:max="55"
-                                    android:paddingTop="2dp" />
 
                                 <TextView
                                     android:id="@+id/setting_alertDisSBTV"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:layout_weight="1"
                                     android:text="0" />
 
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:background="@android:color/transparent"
+                                    android:text=" meters before next location track." />
+
                             </LinearLayout>
+
+                            <com.rey.material.widget.Slider
+                                android:id="@+id/setting_alertDisSB"
+                                style="@style/Material.Widget.Slider"
+                                android:layout_width="fill_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center"
+                                android:paddingTop="10dp"
+                                app:sl_maxValue="100"
+                                app:sl_minValue="0"
+                                app:sl_primaryColor="#5E65B5" />
 
                         </LinearLayout>
 
@@ -542,7 +541,7 @@
                             android:id="@+id/setting_alert_timer"
                             android:layout_width="fill_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginBottom="20dp"
+                            android:layout_marginBottom="15dp"
                             android:orientation="vertical">
 
                             <TextView
@@ -552,35 +551,35 @@
                                 android:layout_height="wrap_content"
                                 android:text="Alert: Prompt Timer" />
 
-                            <TextView
+                            <LinearLayout
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:background="@android:color/transparent"
-                                android:text="Minutes before Athena will give you a prompt." />
-
-                            <LinearLayout
-                                android:id="@+id/setting_ALR2_3"
-                                android:layout_width="fill_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="5dp"
                                 android:orientation="horizontal">
-
-                                <SeekBar
-                                    android:id="@+id/setting_alertTMSB"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="9"
-                                    android:max="55"
-                                    android:paddingTop="2dp" />
 
                                 <TextView
                                     android:id="@+id/setting_alertTMSBTV"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:layout_weight="1"
                                     android:text="0" />
 
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:background="@android:color/transparent"
+                                    android:text=" minutes before Athena will give you a prompt." />
+
                             </LinearLayout>
+
+                            <com.rey.material.widget.Slider
+                                android:id="@+id/setting_alertTMSB"
+                                style="@style/Material.Widget.Slider"
+                                android:layout_width="fill_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center"
+                                android:paddingTop="10dp"
+                                app:sl_maxValue="60"
+                                app:sl_minValue="5"
+                                app:sl_primaryColor="#5E65B5" />
 
                         </LinearLayout>
 
@@ -588,7 +587,7 @@
                             android:id="@+id/setting_alert_countdown"
                             android:layout_width="fill_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginBottom="20dp"
+                            android:layout_marginBottom="15dp"
                             android:orientation="vertical">
 
                             <TextView
@@ -598,35 +597,35 @@
                                 android:layout_height="wrap_content"
                                 android:text="Alert: Timer Countdown" />
 
-                            <TextView
+                            <LinearLayout
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:background="@android:color/transparent"
-                                android:text="Duration before Athena will take it as no-response." />
-
-                            <LinearLayout
-                                android:id="@+id/setting_ALR2_4"
-                                android:layout_width="fill_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="5dp"
                                 android:orientation="horizontal">
-
-                                <SeekBar
-                                    android:id="@+id/setting_alertCDSB"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="9"
-                                    android:max="55"
-                                    android:paddingTop="2dp" />
 
                                 <TextView
                                     android:id="@+id/setting_alertCDSBTV"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:layout_weight="1"
                                     android:text="0" />
 
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:background="@android:color/transparent"
+                                    android:text=" seconds given to response to the prompt." />
+
                             </LinearLayout>
+
+                            <com.rey.material.widget.Slider
+                                android:id="@+id/setting_alertCDSB"
+                                style="@style/Material.Widget.Slider"
+                                android:layout_width="fill_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center"
+                                android:paddingTop="10dp"
+                                app:sl_maxValue="180"
+                                app:sl_minValue="30"
+                                app:sl_primaryColor="#5E65B5" />
 
                         </LinearLayout>
 
@@ -679,7 +678,7 @@
                             android:id="@+id/setting_emergency_track"
                             android:layout_width="fill_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginBottom="20dp"
+                            android:layout_marginBottom="15dp"
                             android:orientation="vertical">
 
                             <TextView
@@ -687,38 +686,38 @@
                                 style="@style/StandardTextBlack"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Standard: Track Interval" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:background="@android:color/transparent"
-                                android:text="Minutes before next location track." />
+                                android:text="Emergency: Track Interval" />
 
                             <LinearLayout
-                                android:id="@+id/setting_ALR3_1"
-                                android:layout_width="fill_parent"
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="5dp"
                                 android:orientation="horizontal">
-
-                                <SeekBar
-                                    android:id="@+id/setting_emSB"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="9"
-                                    android:max="55"
-                                    android:paddingTop="2dp" />
 
                                 <TextView
                                     android:id="@+id/setting_emSBTV"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_weight="1"
-                                    android:paddingBottom="10dp"
                                     android:text="0" />
 
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:background="@android:color/transparent"
+                                    android:text=" seconds before next location track." />
+
                             </LinearLayout>
+
+                            <com.rey.material.widget.Slider
+                                android:id="@+id/setting_emSB"
+                                style="@style/Material.Widget.Slider"
+                                android:layout_width="fill_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center"
+                                android:paddingTop="10dp"
+                                app:sl_maxValue="60"
+                                app:sl_minValue="5"
+                                app:sl_primaryColor="#5E65B5" />
 
                         </LinearLayout>
 
@@ -726,7 +725,7 @@
                             android:id="@+id/setting_emergency_dis"
                             android:layout_width="fill_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginBottom="20dp"
+                            android:layout_marginBottom="15dp"
                             android:orientation="vertical">
 
                             <TextView
@@ -736,26 +735,10 @@
                                 android:layout_height="wrap_content"
                                 android:text="Emergency: Distance Between Track" />
 
-                            <TextView
+                            <LinearLayout
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:background="@android:color/transparent"
-                                android:text="Minimum distance before next location track." />
-
-                            <LinearLayout
-                                android:id="@+id/setting_ALR3_2"
-                                android:layout_width="fill_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="5dp"
                                 android:orientation="horizontal">
-
-                                <SeekBar
-                                    android:id="@+id/setting_emDisSB"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="9"
-                                    android:max="55"
-                                    android:paddingTop="2dp" />
 
                                 <TextView
                                     android:id="@+id/setting_emDisSBTV"
@@ -764,18 +747,59 @@
                                     android:layout_weight="1"
                                     android:text="0" />
 
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:background="@android:color/transparent"
+                                    android:text=" meters before next location track." />
+
                             </LinearLayout>
+
+                            <com.rey.material.widget.Slider
+                                android:id="@+id/setting_emDisSB"
+                                style="@style/Material.Widget.Slider"
+                                android:layout_width="fill_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center"
+                                android:paddingTop="10dp"
+                                app:sl_maxValue="50"
+                                app:sl_minValue="0"
+                                app:sl_primaryColor="#5E65B5" />
 
                         </LinearLayout>
 
                     </LinearLayout>
 
-                    <Button
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="fill_parent"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:text="RESET ADVANCED TO DEFAULT" />
+                        android:gravity="bottom|right"
+                        android:orientation="horizontal">
 
+                        <com.rey.material.widget.Button
+                            android:id="@+id/setting_btnreset"
+                            style="@style/Material.Drawable.Ripple.Touch.Light"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginRight="15dp"
+                            android:background="@drawable/rounded_corner"
+                            android:fontFamily="sans-serif"
+                            android:text="RESET"
+                            android:textColor="#000000"
+                            app:rd_enable="true"/>
+
+                        <com.rey.material.widget.Button
+                            android:id="@+id/setting_btnsave"
+                            style="@style/Material.Drawable.Ripple.Touch.Light"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@android:color/transparent"
+                            android:fontFamily="sans-serif"
+                            android:text="SAVE"
+                            android:textColor="#000000"
+                            app:rd_enable="true"/>
+
+                    </LinearLayout>
 
                 </LinearLayout>
 

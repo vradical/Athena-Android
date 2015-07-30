@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="@color/special_blue"
     android:gravity="center_horizontal"
     android:orientation="vertical"
@@ -70,18 +71,25 @@
         android:layout_weight="0.8" />
 
     <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:layout_height="0dp"
         android:layout_weight="0.1"
+        android:orientation="horizontal"
         android:gravity="center">
 
-        <ImageButton
-            android:id="@+id/btnDeactivate"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:onClick="deactivateEmergency"
-            android:background="@drawable/deactive_button"/>
+            <com.rey.material.widget.Button
+                android:id="@+id/deactivate_em"
+                style="@style/Material.Drawable.Ripple.Touch.Light"
+                android:layout_width="fill_parent"
+                android:layout_height="50dp"
+                android:background="@android:color/transparent"
+                android:fontFamily="sans-serif"
+                android:text="DE-ACTIVATE EMERGENCY"
+                android:textColor="#ffffff"
+                app:rd_enable="true"
+                android:onClick="deactivateEmergency" />
 
-    </LinearLayout>
+
+        </LinearLayout>
 
 </LinearLayout>

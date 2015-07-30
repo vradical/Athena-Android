@@ -18,8 +18,11 @@ import android.support.v7.app.ActionBarActivity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.EditText;
+
+import com.rey.material.widget.EditText;
+
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -49,6 +52,10 @@ import com.google.gson.reflect.TypeToken;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
+import com.rey.material.app.Dialog;
+import com.rey.material.app.DialogFragment;
+import com.rey.material.app.SimpleDialog;
+import com.rey.material.widget.Spinner;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -95,7 +102,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
     //high alert function
     protected CountDownTimer highAlertCD;
-    protected AlertDialog safeAlert;
+    protected Dialog safeAlert;
     protected int safetyCount = 1;
     protected TextView alertMessage;
     protected Vibrator v;
@@ -248,6 +255,41 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
             }
         });
 
+        //Prepare setting
+        if(!preferences.contains("CHECK_INTERVAL")){
+            editor.putInt("CHECK_INTERVAL", Constants.CHECK_INTERVAL);
+        }
+
+        if(!preferences.contains("SMALLEST_DISPLACEMENT")){
+            editor.putFloat("SMALLEST_DISPLACEMENT", Constants.SMALLEST_DISPLACEMENT);
+        }
+
+        if(!preferences.contains("HA_CHECK_INTERVAL")){
+            editor.putInt("HA_CHECK_INTERVAL", Constants.HA_CHECK_INTERVAL);
+        }
+
+        if(!preferences.contains("HA_SMALLEST_DISPLACEMENT")){
+            editor.putFloat("HA_SMALLEST_DISPLACEMENT", Constants.HA_SMALLEST_DISPLACEMENT);
+        }
+
+        if(!preferences.contains("EM_CHECK_INTERVAL")){
+            editor.putInt("EM_CHECK_INTERVAL", Constants.EM_CHECK_INTERVAL);
+        }
+
+        if(!preferences.contains("EM_SMALLEST_DISPLACEMENT")){
+            editor.putFloat("EM_SMALLEST_DISPLACEMENT", Constants.EM_SMALLEST_DISPLACEMENT);
+        }
+
+        if(!preferences.contains("ALERT_TIMER")){
+            editor.putInt("ALERT_TIMER", Constants.ALERT_TIMER);
+        }
+
+        if(!preferences.contains("ALERT_COUNTDOWN")){
+            editor.putInt("ALERT_COUNTDOWN", Constants.ALERT_COUNTDOWN);
+        }
+        editor.apply();
+        editor.commit();
+
     }
 
     //Prepare menu
@@ -341,56 +383,58 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
     //Check for passcode
     public void setPasscode() {
-        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
         LayoutInflater inflater = LayoutInflater.from(this);
         final View textEntryView = inflater.inflate(R.layout.activity_emergency_password, null);
-        builder.setTitle("Passcode");
-        builder.setMessage("No passcode detected. Please key in new passcode.");
-        builder.setCancelable(false);
-        builder.setView(textEntryView);
-        builder.setPositiveButton(android.R.string.ok, null);
-        final AlertDialog dialog = builder.create();
-
-        dialog.show();
-
-        dialog.getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
+        final Dialog dialog = new Dialog(this, 0);
+        dialog.contentView(textEntryView);
+        dialog.setCanceledOnTouchOutside(false);
+        dialog.setCancelable(false);
+        dialog.positiveAction("OK");
+        dialog.positiveActionRipple(R.style.Material_Drawable_Ripple_Touch_Light);
+        dialog.title("Please set your new passcode.");
+        dialog.positiveActionClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 EditText mUserText;
-                TextView mErrorText;
                 String strPinCode;
                 mUserText = (EditText) textEntryView.findViewById(R.id.editTextPasscode);
-                mErrorText = (TextView) textEntryView.findViewById(R.id.PasscodeError);
                 strPinCode = mUserText.getText().toString();
 
                 if (strPinCode.equals("")) {
-                    mErrorText.setVisibility(View.VISIBLE);
-                    mErrorText.setText("Passcode cannot be empty.");
+                    mUserText.setError("Password is Required");
                 } else {
                     editor.putString("Passcode", strPinCode).commit();
                     dialog.cancel();
                 }
             }
         });
+        dialog.show();
     }
 
     //Check for GPS
     private void buildAlertMessageNoGps() {
-        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage("Your GPS seems to be disabled and it may affect the tracking quality, do you want to enable it?")
-                .setCancelable(false)
-                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                    public void onClick(@SuppressWarnings("unused") final DialogInterface dialog, @SuppressWarnings("unused") final int id) {
-                        startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
-                    }
-                })
-                .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                    public void onClick(final DialogInterface dialog, @SuppressWarnings("unused") final int id) {
-                        dialog.cancel();
-                    }
-                });
-        final AlertDialog alert = builder.create();
-        alert.show();
+
+        Dialog.Builder builder = null;
+        builder = new SimpleDialog.Builder(R.style.SimpleDialogLight);
+        ((SimpleDialog.Builder) builder).message("Your GPS seems to be disabled and it may affect the tracking quality, do you want to enable it?")
+                .positiveAction("Yes")
+                .negativeAction("No");
+        final Dialog dialog = builder.build(MainActivity.this);
+        dialog.show();
+        dialog.setCanceledOnTouchOutside(false);
+        dialog.positiveActionClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+            }
+        });
+        dialog.negativeActionClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dialog.cancel();
+            }
+        });
     }
 
     @Override
@@ -426,7 +470,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
             buildAlertMessageNoGps();
         }
 
-        if(country.equals("restart")){
+        if (country.equals("restart")) {
             country = preferences.getString("Country", "");
             getSpecialZone();
         }
@@ -490,7 +534,8 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
             //Get this session track data.
             Gson gson = new Gson();
-            Type listOfTrack = new TypeToken<ArrayList<EmergencyTrackData>>() {}.getType();
+            Type listOfTrack = new TypeToken<ArrayList<EmergencyTrackData>>() {
+            }.getType();
             ArrayList<EmergencyTrackData> trackData = gson.fromJson(preferences.getString("TrackData", ""), listOfTrack);
 
             //Clear path
@@ -635,9 +680,9 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                 try {
                     JSONObject obj = new JSONObject(response);
                     emID = obj.getInt("status");
+                    createEMID();
                 } catch (JSONException e) {
-                    // TODO Auto-generated catch block
-                    Toast.makeText(getApplicationContext(), "Unable to get EM ID from WS", Toast.LENGTH_LONG).show();
+                    displayDialog("", 1);
                     e.printStackTrace();
 
                 }
@@ -647,23 +692,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
             @Override
             public void onFailure(int statusCode, Throwable error,
                                   String content) {
-                // When Http response code is '404'
-                if (statusCode == 404) {
-                    Toast.makeText(getApplicationContext(), "GetEMID : Requested resource not found", Toast.LENGTH_LONG).show();
-                }
-                // When Http response code is '500'
-                else if (statusCode == 500) {
-                    Toast.makeText(getApplicationContext(), "Get EMID : Something went wrong at server end", Toast.LENGTH_LONG).show();
-                }
-                // When Http response code other than 404, 500
-                else {
-                    Toast.makeText(getApplicationContext(), " Get EMID : Unexpected Error occcured!", Toast.LENGTH_LONG).show();
-                }
-            }
-
-            @Override
-            public void onFinish() {
-                createEMID();
+                displayDialog("", 2);
             }
 
         });
@@ -691,13 +720,17 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                     JSONObject obj = new JSONObject(response);
 
                     if (obj.getBoolean("status")) {
-                        Toast.makeText(getApplicationContext(), "EMID Create Successful", Toast.LENGTH_LONG).show();
+                        startTracking("Emergency");
+                        Intent i = new Intent(MainActivity.this, EmergencyActivity.class);
+                        i.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                        startActivity(i);
+                        overridePendingTransition(0, 0);
                     } else {
-                        Toast.makeText(getApplicationContext(), obj.getString("error_msg"), Toast.LENGTH_LONG).show();
+                        displayDialog("", 1);
                     }
                 } catch (JSONException e) {
                     // TODO Auto-generated catch block
-                    Toast.makeText(getApplicationContext(), "Create EMID: Error Occured!", Toast.LENGTH_LONG).show();
+                    displayDialog("", 1);
                     e.printStackTrace();
 
                 }
@@ -707,27 +740,12 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
             @Override
             public void onFailure(int statusCode, Throwable error,
                                   String content) {
-                // When Http response code is '404'
-                if (statusCode == 404) {
-                    Toast.makeText(getApplicationContext(), "Create EMID: Requested resource not found", Toast.LENGTH_LONG).show();
-                }
-                // When Http response code is '500'
-                else if (statusCode == 500) {
-                    Toast.makeText(getApplicationContext(), "Create EMID: Something went wrong at server end", Toast.LENGTH_LONG).show();
-                }
-                // When Http response code other than 404, 500
-                else {
-                    Toast.makeText(getApplicationContext(), "Create EMID: Unexpected Error occcured!", Toast.LENGTH_LONG).show();
-                }
+                displayDialog("", 2);
             }
 
             @Override
             public void onFinish() {
-                startTracking("Emergency");
-                Intent i = new Intent(MainActivity.this, EmergencyActivity.class);
-                i.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-                startActivity(i);
-                overridePendingTransition(0, 0);
+
             }
         });
     }
@@ -789,15 +807,11 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                             }
                         }
 
-                        Toast.makeText(getApplicationContext(), "Get Special Zone Successfully", Toast.LENGTH_LONG).show();
-
                     } else {
-                        // errorMsg.setText(obj.getString("error_msg"));
-                        Toast.makeText(getApplicationContext(), obj.getString("error_msg"), Toast.LENGTH_LONG).show();
+                        displayDialog("", 1);
                     }
                 } catch (JSONException e) {
-                    // TODO Auto-generated catch block
-                    Toast.makeText(getApplicationContext(), "Error Occured in getting Special Zone.", Toast.LENGTH_LONG).show();
+                    displayDialog("", 1);
                     e.printStackTrace();
                 }
             }
@@ -806,18 +820,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
             @Override
             public void onFailure(int statusCode, Throwable error,
                                   String content) {
-                // When Http response code is '404'
-                if (statusCode == 404) {
-                    Toast.makeText(getApplicationContext(), "Danger Zone: Requested resource not found", Toast.LENGTH_LONG).show();
-                }
-                // When Http response code is '500'
-                else if (statusCode == 500) {
-                    Toast.makeText(getApplicationContext(), "Danger Zone: Something went wrong at server end", Toast.LENGTH_LONG).show();
-                }
-                // When Http response code other than 404, 500
-                else {
-                    Toast.makeText(getApplicationContext(), "Danger Zone: Unexpected Error occcured!", Toast.LENGTH_LONG).show();
-                }
+                displayDialog("", 2);
             }
 
             @Override
@@ -861,7 +864,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
         //Reset circle list and remove from map
         for (int i = 0; i < circleList.size(); i++) {
-                circleList.get(i).remove();
+            circleList.get(i).remove();
 
             if (i < dzMarkerList.size()) {
                 dzMarkerList.get(i).remove();
@@ -884,7 +887,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
                 HashMap<String, String> data = new HashMap<String, String>();
                 data.put("dz_id", sz.getDz_id());
-                extraMarkerInfo.put(mz.getId(),data);
+                extraMarkerInfo.put(mz.getId(), data);
             } else {
                 circleList.add(mGoogleMap.addCircle(co.center(sz.getCoordinate()).fillColor(0x20ff0000)));
             }
@@ -895,24 +898,35 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
             @Override
             public boolean onMarkerClick(final Marker marker) {
 
-                final HashMap<String, String> marker_data = extraMarkerInfo.get(marker.getId());
+                if (extraMarkerInfo.get(marker.getId()) != null) {
+                    marker.hideInfoWindow();
 
-                final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                builder.setTitle(marker.getTitle());
-                builder.setMessage(marker.getSnippet())
-                        .setPositiveButton("Report Zone", new DialogInterface.OnClickListener() {
-                            public void onClick(@SuppressWarnings("unused") final DialogInterface dialog, @SuppressWarnings("unused") final int id) {
-                                setupReport(marker_data.get("dz_id"));
-                                dialog.cancel();
-                            }
-                        })
-                        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                            public void onClick(final DialogInterface dialog, @SuppressWarnings("unused") final int id) {
-                                dialog.cancel();
-                            }
-                        });
-                final AlertDialog alert = builder.create();
-                alert.show();
+                    final HashMap<String, String> marker_data = extraMarkerInfo.get(marker.getId());
+
+                    Dialog.Builder builder = null;
+                    builder = new SimpleDialog.Builder(R.style.SimpleDialogLight);
+                    ((SimpleDialog.Builder) builder).message(marker.getSnippet())
+                            .title(marker.getTitle())
+                            .positiveAction("REPORT")
+                            .negativeAction("CANCEL");
+                    final Dialog dialog = builder.build(MainActivity.this);
+                    dialog.show();
+                    dialog.positiveActionClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            setupReport(marker_data.get("dz_id"));
+                            dialog.cancel();
+                        }
+                    });
+                    dialog.negativeActionClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            dialog.cancel();
+                        }
+                    });
+
+                }
+
                 return false;
             }
         });
@@ -922,55 +936,53 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     }
 
     public void setupReport(final String dz_id) {
-        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
         LayoutInflater inflater = LayoutInflater.from(this);
         final View textEntryView = inflater.inflate(R.layout.activity_feedback_box, null);
-        builder.setTitle("Report Zone");
-        builder.setMessage("Please key in your reporting reason.");
-        builder.setView(textEntryView);
-        builder.setPositiveButton(android.R.string.ok, null);
-        builder.setNegativeButton(android.R.string.cancel, null);
-        final AlertDialog dialog = builder.create();
-
-        dialog.show();
-
-        dialog.getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
+        final Dialog dialog = new Dialog(this, 0);
+        dialog.contentView(textEntryView);
+        dialog.setCanceledOnTouchOutside(false);
+        dialog.positiveAction("OK");
+        dialog.positiveActionRipple(R.style.Material_Drawable_Ripple_Touch_Light);
+        dialog.negativeAction("CANCEL");
+        dialog.negativeActionRipple(R.style.Material_Drawable_Ripple_Touch_Light);
+        dialog.title("Please key in your reporting reason.");
+        dialog.positiveActionClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 EditText mTypeText;
                 EditText mDetailText;
-                TextView mTypeError;
-                TextView mDetailError;
                 mTypeText = (EditText) textEntryView.findViewById(R.id.editType);
                 mDetailText = (EditText) textEntryView.findViewById(R.id.editDetail);
-                mTypeError = (TextView) textEntryView.findViewById(R.id.typeError);
-                mDetailError = (TextView) textEntryView.findViewById(R.id.detailError);
-                String type = mTypeText.getText().toString();
-                String detail = mTypeText.getText().toString();
 
-                if (isEmpty(mTypeText) && isEmpty(mDetailText)) {
-                    mTypeError.setVisibility(View.VISIBLE);
-                    mDetailError.setVisibility(View.VISIBLE);
-                } else if (isEmpty(mTypeText) && !isEmpty(mDetailText)) {
-                    mTypeError.setVisibility(View.VISIBLE);
-                    mDetailError.setVisibility(View.INVISIBLE);
-                } else if (!isEmpty(mTypeText) && isEmpty(mDetailText)) {
-                    mTypeError.setVisibility(View.INVISIBLE);
-                    mDetailError.setVisibility(View.VISIBLE);
+                String type = mTypeText.getText().toString();
+                String detail = mDetailText.getText().toString();
+
+                if (isEmpty(mDetailText) && isEmpty(mTypeText)) {
+                    mDetailText.setError("Detail is required.");
+                    mTypeText.setError("Type is required.");
+                } else if (!isEmpty(mDetailText) && isEmpty(mTypeText)) {
+                    mTypeText.setError("Type is required.");
+                } else if (isEmpty(mDetailText) && !isEmpty(mTypeText)) {
+                    mDetailText.setError("Detail is required.");
                 } else {
                     reportZone(dz_id, type, detail);
                     dialog.cancel();
                 }
             }
+
         });
 
-        dialog.getButton(DialogInterface.BUTTON_NEGATIVE).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                dialog.cancel();
-            }
-        });
+        dialog.negativeActionClickListener(new View.OnClickListener() {
 
+                                               @Override
+                                               public void onClick(View view) {
+                                                   dialog.cancel();
+                                               }
+                                           }
+
+        );
+        dialog.show();
     }
 
     private boolean isEmpty(EditText etText) {
@@ -1000,14 +1012,13 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                     JSONObject obj = new JSONObject(response);
                     // When the JSON response has status boolean value assigned with true
                     if (obj.getBoolean("status")) {
-                        Toast.makeText(getApplicationContext(), "Status Change Successful", Toast.LENGTH_LONG).show();
-
+                        displayDialog("Report submit successfully.", 0);
                     } else {
-                        Toast.makeText(getApplicationContext(), obj.getString("error_msg"), Toast.LENGTH_LONG).show();
+                        displayDialog("You have already reported before.", 0);
                     }
                 } catch (JSONException e) {
                     // TODO Auto-generated catch block
-                    Toast.makeText(getApplicationContext(), "Error Occured in Changing Status", Toast.LENGTH_LONG).show();
+                    displayDialog("", 1);
                     e.printStackTrace();
                 }
             }
@@ -1016,18 +1027,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
             @Override
             public void onFailure(int statusCode, Throwable error,
                                   String content) {
-                // When Http response code is '404'
-                if (statusCode == 404) {
-                    Toast.makeText(getApplicationContext(), "Change Status : Requested resource not found", Toast.LENGTH_LONG).show();
-                }
-                // When Http response code is '500'
-                else if (statusCode == 500) {
-                    Toast.makeText(getApplicationContext(), "Change Status : Something went wrong at server end", Toast.LENGTH_LONG).show();
-                }
-                // When Http response code other than 404, 500
-                else {
-                    Toast.makeText(getApplicationContext(), "Change Status : Unexpected Error occcured!", Toast.LENGTH_LONG).show();
-                }
+                displayDialog("", 2);
             }
 
             @Override
@@ -1056,23 +1056,31 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         mGoogleMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
             @Override
             public void onMapLongClick(final LatLng latLng) {
-                final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                builder.setMessage("Create a danger zone at this location?")
-                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                            public void onClick(@SuppressWarnings("unused") final DialogInterface dialog, @SuppressWarnings("unused") final int id) {
-                                Intent myIntent = new Intent(MainActivity.this, AddDangerZone.class);
-                                myIntent.putExtra("latitude", latLng.latitude);
-                                myIntent.putExtra("longitude", latLng.longitude);
-                                MainActivity.this.startActivity(myIntent);
-                            }
-                        })
-                        .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                            public void onClick(final DialogInterface dialog, @SuppressWarnings("unused") final int id) {
-                                dialog.cancel();
-                            }
-                        });
-                final AlertDialog alert = builder.create();
-                alert.show();
+
+                Dialog.Builder builder = null;
+                builder = new SimpleDialog.Builder(R.style.SimpleDialogLight);
+                ((SimpleDialog.Builder) builder).message("Create a danger zone at this location?")
+                        .positiveAction("YES")
+                        .negativeAction("NO");
+                final Dialog dialog = builder.build(MainActivity.this);
+                dialog.show();
+                dialog.setCanceledOnTouchOutside(false);
+                dialog.positiveActionClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Intent myIntent = new Intent(MainActivity.this, AddDangerZone.class);
+                        myIntent.putExtra("latitude", latLng.latitude);
+                        myIntent.putExtra("longitude", latLng.longitude);
+                        MainActivity.this.startActivity(myIntent);
+                        dialog.cancel();
+                    }
+                });
+                dialog.negativeActionClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        dialog.cancel();
+                    }
+                });
             }
         });
     }
@@ -1099,7 +1107,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     public class SafetyCountDown extends CountDownTimer {
 
         protected int cdType;
-        protected AlertDialog.Builder safetyCheck;
+        protected Dialog.Builder safetyCheck;
         protected CountDownTimer TriggerCountDown;
 
 
@@ -1111,21 +1119,25 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         @Override
         public void onFinish() {
             if (cdType == 1) {
-                safetyCheck = new AlertDialog.Builder(MainActivity.this, 4);
-                safetyCheck.setCancelable(false);
-                safetyCheck.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
+
+                safetyCheck = new SimpleDialog.Builder(R.style.SimpleDialogLight);
+                ((SimpleDialog.Builder) safetyCheck).message("Counting down...")
+                        .positiveAction("YES")
+                        .title("Are you safe?");
+                final Dialog safeAlert = safetyCheck.build(MainActivity.this);
+                safeAlert.show();
+                safeAlert.setCanceledOnTouchOutside(false);
+                safeAlert.setCancelable(true);
+                safeAlert.positiveActionClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
                         safetyCount = 1;
                         TriggerCountDown.cancel();
                         v.cancel();
-                        dialog.cancel();
+                        safeAlert.cancel();
                         stillSafe();
                     }
                 });
-                safetyCheck.setTitle("Are you safe?");
-                safetyCheck.setMessage("Counting down...");
-                safeAlert = safetyCheck.create();
-                safeAlert.show();
                 alertMessage = (TextView) safeAlert.findViewById(android.R.id.message);
                 TriggerCountDown = new SafetyCountDown(Constants.ALERT_COUNTDOWN, 1000, 2);
                 TriggerCountDown.start();
@@ -1154,32 +1166,28 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
     }
 
-    /*
-    public class WinInfoAdapter implements GoogleMap.InfoWindowAdapter {
+    public void displayDialog(String message, int i) {
 
-        private final View myContentsView;
-
-        WinInfoAdapter() {
-            LayoutInflater inflater = LayoutInflater.from(getApplicationContext());
-            myContentsView = inflater.inflate(R.layout.wininfo_layout, null);
+        if(i == 1){
+            message = "Unable to get information from server.";
+        }else if(i == 2){
+            message = "Unable to connect to server.";
         }
 
-        @Override
-        public View getInfoContents(Marker marker) {
-
-            TextView tvTitle = ((TextView) myContentsView.findViewById(R.id.title));
-            tvTitle.setText(marker.getTitle());
-            TextView tvSnippet = ((TextView) myContentsView.findViewById(R.id.snippet));
-            tvSnippet.setText(marker.getSnippet());
-
-            return myContentsView;
-        }
-
-        @Override
-        public View getInfoWindow(Marker marker) {
-            // TODO Auto-generated method stub
-            return null;
-        }
-    }*/
+        Dialog.Builder builder = null;
+        builder = new SimpleDialog.Builder(R.style.SimpleDialogLight);
+        ((SimpleDialog.Builder) builder).message(message)
+                .positiveAction("OK")
+                .title("Error");
+        final Dialog dialog = builder.build(MainActivity.this);
+        dialog.show();
+        dialog.setCanceledOnTouchOutside(false);
+        dialog.positiveActionClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dialog.cancel();
+            }
+        });
+    }
 }
 

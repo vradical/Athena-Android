@@ -24,6 +24,8 @@ import com.facebook.AccessToken;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
+import com.rey.material.app.Dialog;
+import com.rey.material.app.SimpleDialog;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -106,30 +108,27 @@ public class EmergencyActivity extends AppCompatActivity {
     }
 
     public void deactivateEmergency(View view) {
-        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
         LayoutInflater inflater = LayoutInflater.from(this);
         final View textEntryView = inflater.inflate(R.layout.activity_emergency_password, null);
-        builder.setTitle("Passcode");
-        builder.setMessage("Please key in your passcode to de-activate emergency mode.");
-        builder.setView(textEntryView);
-        builder.setPositiveButton(android.R.string.ok, null);
-        builder.setNegativeButton(android.R.string.cancel, null);
-        final AlertDialog dialog = builder.create();
-
-        dialog.show();
-
-        dialog.getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
+        final Dialog dialog = new Dialog(this, 0);
+        dialog.contentView(textEntryView);
+        dialog.setCanceledOnTouchOutside(false);
+        dialog.positiveAction("OK");
+        dialog.positiveActionRipple(R.style.Material_Drawable_Ripple_Touch_Light);
+        dialog.negativeAction("CANCEL");
+        dialog.negativeActionRipple(R.style.Material_Drawable_Ripple_Touch_Light);
+        dialog.title("Please key in your passcode to de-activate emergency mode.");
+        dialog.positiveActionClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                EditText mUserText;
-                TextView mErrorText;
-                mUserText = (EditText) textEntryView.findViewById(R.id.editTextPasscode);
-                mErrorText = (TextView) textEntryView.findViewById(R.id.PasscodeError);
-                String strPinCode = mUserText.getText().toString();
+                com.rey.material.widget.EditText mUserText;
+                String strPinCode;
+                mUserText = (com.rey.material.widget.EditText) textEntryView.findViewById(R.id.editTextPasscode);
+                strPinCode = mUserText.getText().toString();
 
                 if (!strPinCode.equals(preferences.getString("Passcode", ""))) {
-                    mErrorText.setVisibility(View.VISIBLE);
-                    mErrorText.setText("Wrong Passcode");
+                    mUserText.setError("Wrong Passcode");
                 } else {
                     isFinishByMethod = true;
                     checkTrigger();
@@ -140,35 +139,45 @@ public class EmergencyActivity extends AppCompatActivity {
             }
         });
 
-        dialog.getButton(DialogInterface.BUTTON_NEGATIVE).setOnClickListener(new View.OnClickListener() {
+        dialog.negativeActionClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 dialog.cancel();
             }
         });
+
+        dialog.show();
     }
 
     public void checkTrigger() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Status");
-        builder.setMessage("Ensure that you are safe before responding to this prompt!");
-        builder.setCancelable(false);
 
-        builder.setPositiveButton("Safe", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
+        Dialog.Builder builder = null;
+        builder = new SimpleDialog.Builder(R.style.SimpleDialogLight);
+        ((SimpleDialog.Builder) builder).message("Ensure that you are safe before responding to this prompt! Was it an actual emergency?")
+                .title("Status")
+                .positiveAction("EMERGENCY")
+                .negativeAction("FALSE ALARM");
+        final Dialog dialog = builder.build(EmergencyActivity.this);
+        dialog.show();
+        dialog.setCanceledOnTouchOutside(false);
+        dialog.cancelable(false);
+        dialog.positiveActionClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
                 emStatus = "Emergency";
                 endEmergency();
+                dialog.cancel();
             }
         });
-
-        builder.setNegativeButton("False Alarm", new DialogInterface.OnClickListener() {
-
-            public void onClick(DialogInterface dialog, int which) {
+        dialog.negativeActionClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
                 emStatus = "False Alarm";
                 endEmergency();
+                dialog.cancel();
             }
         });
-        builder.show();
+
     }
 
     //-------------------------LOCATION TRACKING SERVICE------------------------------------//
@@ -227,16 +236,17 @@ public class EmergencyActivity extends AppCompatActivity {
                     JSONObject obj = new JSONObject(response);
                     // When the JSON response has status boolean value assigned with true
                     if (obj.getBoolean("status")) {
-                        Toast.makeText(getApplicationContext(), "End Emergency Successful", Toast.LENGTH_LONG).show();
-
-                        // Else display error message
+                        if (emStatus.equals("Emergency")) {
+                            Intent i = new Intent(EmergencyActivity.this, HelpInfo.class);
+                            i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                            startActivity(i);
+                        }
+                        finish();
                     } else {
-                        // errorMsg.setText(obj.getString("error_msg"));
-                        Toast.makeText(getApplicationContext(), obj.getString("error_msg"), Toast.LENGTH_LONG).show();
+                        displayDialog("", 1);
                     }
                 } catch (JSONException e) {
-                    // TODO Auto-generated catch block
-                    Toast.makeText(getApplicationContext(), "Error Occured in End Emergency", Toast.LENGTH_LONG).show();
+                    displayDialog("", 1);
                     e.printStackTrace();
                 }
             }
@@ -245,28 +255,11 @@ public class EmergencyActivity extends AppCompatActivity {
             @Override
             public void onFailure(int statusCode, Throwable error,
                                   String content) {
-                // When Http response code is '404'
-                if (statusCode == 404) {
-                    Toast.makeText(getApplicationContext(), "End EM : Requested resource not found", Toast.LENGTH_LONG).show();
-                }
-                // When Http response code is '500'
-                else if (statusCode == 500) {
-                    Toast.makeText(getApplicationContext(), "End EM : Something went wrong at server end", Toast.LENGTH_LONG).show();
-                }
-                // When Http response code other than 404, 500
-                else {
-                    Toast.makeText(getApplicationContext(), "End EM : Unexpected Error occcured!", Toast.LENGTH_LONG).show();
-                }
+                displayDialog("", 2);
             }
 
             @Override
             public void onFinish() {
-                if (emStatus.equals("Emergency")) {
-                    Intent i = new Intent(EmergencyActivity.this, HelpInfo.class);
-                    i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                    startActivity(i);
-                }
-                finish();
             }
         });
     }
@@ -553,15 +546,11 @@ public class EmergencyActivity extends AppCompatActivity {
                             }
                         }
 
-                        Toast.makeText(getApplicationContext(), "Contacts Retrieve Successful", Toast.LENGTH_LONG).show();
-
                     } else {
-                        // errorMsg.setText(obj.getString("error_msg"));
-                        Toast.makeText(getApplicationContext(), obj.getString("error_msg"), Toast.LENGTH_LONG).show();
+                        displayDialog("", 1);
                     }
                 } catch (JSONException e) {
-                    // TODO Auto-generated catch block
-                    Toast.makeText(getApplicationContext(), "Error Occured in get Contacts.", Toast.LENGTH_LONG).show();
+                    displayDialog("", 1);
                     e.printStackTrace();
                 }
             }
@@ -570,18 +559,7 @@ public class EmergencyActivity extends AppCompatActivity {
             @Override
             public void onFailure(int statusCode, Throwable error,
                                   String content) {
-                // When Http response code is '404'
-                if (statusCode == 404) {
-                    Toast.makeText(getApplicationContext(), "Get Contact : Requested resource not found", Toast.LENGTH_LONG).show();
-                }
-                // When Http response code is '500'
-                else if (statusCode == 500) {
-                    Toast.makeText(getApplicationContext(), "Get Contact : Something went wrong at server end", Toast.LENGTH_LONG).show();
-                }
-                // When Http response code other than 404, 500
-                else {
-                    Toast.makeText(getApplicationContext(), "Get Contact : Unexpected Error occcured!", Toast.LENGTH_LONG).show();
-                }
+                displayDialog("", 2);
             }
 
             @Override
@@ -590,6 +568,30 @@ public class EmergencyActivity extends AppCompatActivity {
                 mSuccessCheck = new int[contactList.size()][2];
                 //sendSMSMessage();
                 //sendEmail();
+            }
+        });
+    }
+
+    public void displayDialog(String message, int i) {
+
+        if(i == 1){
+            message = "Unable to get information from server.";
+        }else if(i == 2){
+            message = "Unable to connect to server.";
+        }
+
+        Dialog.Builder builder = null;
+        builder = new SimpleDialog.Builder(R.style.SimpleDialogLight);
+        ((SimpleDialog.Builder) builder).message(message)
+                .positiveAction("OK")
+                .title("Error");
+        final Dialog dialog = builder.build(EmergencyActivity.this);
+        dialog.show();
+        dialog.setCanceledOnTouchOutside(false);
+        dialog.positiveActionClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dialog.cancel();
             }
         });
     }

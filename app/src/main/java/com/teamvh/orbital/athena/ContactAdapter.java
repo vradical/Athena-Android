@@ -19,6 +19,8 @@ import android.widget.Toast;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
+import com.rey.material.app.Dialog;
+import com.rey.material.app.SimpleDialog;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -83,24 +85,30 @@ public class ContactAdapter extends ArrayAdapter<ContactData> {
             @Override
             public void onClick(View view) {
 
-                AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-                builder.setMessage("Delete " + contactList.get(position).getName() + " from your contact list?")
-                        .setCancelable(false)
-                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                            public void onClick(@SuppressWarnings("unused") final DialogInterface dialog, @SuppressWarnings("unused") final int id) {
-                                deleteContact(position);
-                                contactList.remove(position);
-                                notifyDataSetChanged();
-                                dialog.cancel();
-                            }
-                        })
-                        .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                            public void onClick(final DialogInterface dialog, @SuppressWarnings("unused") final int id) {
-                                dialog.cancel();
-                            }
-                        });
-                AlertDialog alert = builder.create();
-                alert.show();
+                Dialog.Builder builder = null;
+                builder = new SimpleDialog.Builder(R.style.SimpleDialogLight);
+                ((SimpleDialog.Builder) builder).message("Delete " + contactList.get(position).getName() + " from your contact list?")
+                        .positiveAction("YES")
+                        .negativeAction("NO")
+                        .title("Delete Contact");
+                final Dialog dialog = builder.build(getContext());
+                dialog.show();
+                dialog.setCanceledOnTouchOutside(false);
+                dialog.positiveActionClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        deleteContact(position);
+                        contactList.remove(position);
+                        notifyDataSetChanged();
+                        dialog.cancel();
+                    }
+                });
+                dialog.negativeActionClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        dialog.cancel();
+                    }
+                });
             }
         });
 
@@ -142,17 +150,29 @@ public class ContactAdapter extends ArrayAdapter<ContactData> {
                     JSONObject obj = new JSONObject(response);
                     // When the JSON response has status boolean value assigned with true
                     if (obj.getBoolean("status")) {
-                        Toast.makeText(getContext(), "Contact Deleted!", Toast.LENGTH_LONG).show();
-                        // Navigate to Home screen
+
+                        Dialog.Builder builder = null;
+                        builder = new SimpleDialog.Builder(R.style.SimpleDialogLight);
+                        ((SimpleDialog.Builder) builder).message("Contact delete successfully.")
+                                .positiveAction("OK")
+                                .title("Delete Contact");
+                        final Dialog dialog = builder.build(getContext());
+                        dialog.show();
+                        dialog.setCanceledOnTouchOutside(false);
+                        dialog.positiveActionClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                dialog.cancel();
+                            }
+                        });
+
                     }
                     // Else display error message
                     else {
-                        // errorMsg.setText(obj.getString("error_msg"));
-                        Toast.makeText(getContext(), obj.getString("error_msg"), Toast.LENGTH_LONG).show();
+                        displayDialog("", 1);
                     }
                 } catch (JSONException e) {
-                    // TODO Auto-generated catch block
-                    Toast.makeText(getContext(), "Error Occured Deleting Contact!", Toast.LENGTH_LONG).show();
+                    displayDialog("", 1);
                     e.printStackTrace();
 
                 }
@@ -162,24 +182,37 @@ public class ContactAdapter extends ArrayAdapter<ContactData> {
             @Override
             public void onFailure(int statusCode, Throwable error,
                                   String content) {
-                // When Http response code is '404'
-                if (statusCode == 404) {
-                    Toast.makeText(getContext(), "GetEMID : Requested resource not found", Toast.LENGTH_LONG).show();
-                }
-                // When Http response code is '500'
-                else if (statusCode == 500) {
-                    Toast.makeText(getContext(), "Get EMID : Something went wrong at server end", Toast.LENGTH_LONG).show();
-                }
-                // When Http response code other than 404, 500
-                else {
-                    Toast.makeText(getContext(), " Get EMID : Unexpected Error occcured!", Toast.LENGTH_LONG).show();
-                }
+                displayDialog("", 2);
             }
 
             @Override
             public void onFinish() {
             }
 
+        });
+    }
+
+    public void displayDialog(String message, int i) {
+
+        if(i == 1){
+            message = "Unable to get information from server.";
+        }else if(i == 2){
+            message = "Unable to connect to server.";
+        }
+
+        Dialog.Builder builder = null;
+        builder = new SimpleDialog.Builder(R.style.SimpleDialogLight);
+        ((SimpleDialog.Builder) builder).message(message)
+                .positiveAction("OK")
+                .title("Error");
+        final Dialog dialog = builder.build(getContext());
+        dialog.show();
+        dialog.setCanceledOnTouchOutside(false);
+        dialog.positiveActionClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dialog.cancel();
+            }
         });
     }
 

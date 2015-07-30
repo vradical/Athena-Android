@@ -21,7 +21,6 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -326,8 +325,6 @@ public class HelpInfo extends AppCompatActivity {
 
 
     public void getRoute(double destinationLat, double destinationLng) {
-        Toast.makeText(HelpInfo.this, destinationLat + " " + destinationLng, Toast.LENGTH_SHORT).show();
-
         String startPoint = "origin=" + latitude + "," + longitude;
         String destPoint = "destination=" + destinationLat + "," + destinationLng;
         String mode = "mode=" + Constants.PATH_TYPE;
