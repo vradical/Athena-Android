@@ -131,7 +131,8 @@ public class DangerZoneAdapter extends ArrayAdapter<DangerZoneData> {
                     // When the JSON response has status boolean value assigned with true
                     if (obj.getBoolean("status")) {
                         Toast.makeText(getContext(), "Zone Deleted!", Toast.LENGTH_LONG).show();
-                        // Navigate to Home screen
+                        dangerZoneList.remove(position);
+                        MainActivity.country = "restart";
                     }
                     // Else display error message
                     else {
@@ -166,8 +167,6 @@ public class DangerZoneAdapter extends ArrayAdapter<DangerZoneData> {
 
             @Override
             public void onFinish() {
-                dangerZoneList.remove(position);
-                MainActivity.country = "restart";
                 notifyDataSetChanged();
             }
 

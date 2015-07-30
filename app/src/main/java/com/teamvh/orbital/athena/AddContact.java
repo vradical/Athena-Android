@@ -108,9 +108,6 @@ public class AddContact extends AppCompatActivity {
 
         if(!isEmpty(nameField) && !isEmpty(emailField) && !isEmpty(countryField) && !isEmpty(phoneField) && isEmailValid(email)) {
             addContact(name, email, country, phone);
-            Intent returnIntent = new Intent();
-            setResult(RESULT_CANCELED, returnIntent);
-            finish();
         }
     }
 
@@ -175,6 +172,9 @@ public class AddContact extends AppCompatActivity {
                     // When the JSON response has status boolean value assigned with true
                     if (obj.getBoolean("status")) {
                         Toast.makeText(getApplicationContext(), "Record Successful", Toast.LENGTH_LONG).show();
+                        Intent returnIntent = new Intent();
+                        setResult(RESULT_CANCELED, returnIntent);
+                        finish();
                     }
                     // Else display error message
                     else {

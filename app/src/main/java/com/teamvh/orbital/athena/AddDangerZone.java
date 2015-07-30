@@ -200,6 +200,8 @@ public class AddDangerZone extends AppCompatActivity {
                     // When the JSON response has status boolean value assigned with true
                     if (obj.getBoolean("status")) {
                         Toast.makeText(getApplicationContext(), "Record Successful", Toast.LENGTH_LONG).show();
+                        MainActivity.country = "restart";
+                        finish();
                     }
                     // Else display error message
                     else {
@@ -232,11 +234,6 @@ public class AddDangerZone extends AppCompatActivity {
                 }
             }
 
-            @Override
-            public void onFinish() {
-                MainActivity.country = "restart";
-                finish();
-            }
         });
 
     }

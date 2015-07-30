@@ -135,30 +135,17 @@ public class EmergencyAdapter extends ArrayAdapter<EmergencyData> {
         public ImageButton IBChangeStat;
     }
 
-    public void changeStatus(int position, String status){
+    //SEND QUERY TO ATHENA WEB SERVICE
+    public void changeStatus(final int position, final String status) {
 
         String uname = preferences.getString("fbsession", null);
 
-        // Instantiate Http Request Param Object
         RequestParams params = new RequestParams();
 
-        if (uname != null) {
-            params.put("username", uname);
-            params.put("track_em_id", emergencyList.get(position).getEmID());
-            params.put("emStatus", status);
+        params.put("username", uname);
+        params.put("track_em_id", emergencyList.get(position).getEmID());
+        params.put("emStatus", status);
 
-            // Invoke RESTful Web Service with Http parameters
-            invokeEmergencyWS(params, position, status);
-        }
-        // when any of the field is empty from token
-        else {
-            Toast.makeText(getContext(), "Failed to change status.", Toast.LENGTH_LONG).show();
-        }
-
-    }
-
-    //SEND QUERY TO ATHENA WEB SERVICE
-    public void invokeEmergencyWS(RequestParams params, final int position, final String status) {
         // Make RESTful webservice call using AsyncHttpClient object
         AsyncHttpClient client = new AsyncHttpClient();
         client.get("http://119.81.223.180:8080/ProjectAthenaWS/emergency/changestatus", params, new AsyncHttpResponseHandler() {
@@ -171,8 +158,8 @@ public class EmergencyAdapter extends ArrayAdapter<EmergencyData> {
                     // When the JSON response has status boolean value assigned with true
                     if (obj.getBoolean("status")) {
                         Toast.makeText(getContext(), "Status Change Successful", Toast.LENGTH_LONG).show();
-
-                        // Else display error message
+                        emergencyList.get(position).setStatus(status);
+                        MainActivity.country = "restart";
                     } else {
                         // errorMsg.setText(obj.getString("error_msg"));
                         Toast.makeText(getContext(), obj.getString("error_msg"), Toast.LENGTH_LONG).show();
@@ -204,8 +191,6 @@ public class EmergencyAdapter extends ArrayAdapter<EmergencyData> {
 
             @Override
             public void onFinish() {
-                emergencyList.get(position).setStatus(status);
-                MainActivity.country = "restart";
                 notifyDataSetChanged();
             }
         });

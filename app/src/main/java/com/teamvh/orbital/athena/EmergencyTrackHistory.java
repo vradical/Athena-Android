@@ -99,17 +99,17 @@ public class EmergencyTrackHistory extends AppCompatActivity {
         this.finish();
     }
 
-    public void populateMap(){
+    public void populateMap() {
         mGoogleMap.clear();
 
         markerList = new ArrayList<Marker>();
 
-        if(emergencyTrackList.size() == 1){
+        if (emergencyTrackList.size() == 1) {
             LatLng ll = new LatLng(Double.parseDouble(emergencyTrackList.get(0).getLatitude()), Double.parseDouble(emergencyTrackList.get(0).getLongitude()));
             markerList.add(mGoogleMap.addMarker(new MarkerOptions().position(ll)));
             mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(ll, 18));
 
-        }else {
+        } else {
 
             LatLngBounds.Builder builder = new LatLngBounds.Builder();
             for (int i = 0; i < emergencyTrackList.size(); i++) {
@@ -123,30 +123,16 @@ public class EmergencyTrackHistory extends AppCompatActivity {
         }
     }
 
-    //PREPARE QUERY TO GET CONTACT LIST
+    //SEND QUERY TO ATHENA WEB SERVICE
     public void getTracks() {
 
         String uname = preferences.getString("fbsession", "");
 
         // Instantiate Http Request Param Object
         RequestParams params = new RequestParams();
+        params.put("username", uname);
+        params.put("track_em_id", emID);
 
-        if (uname != null) {
-            params.put("username", uname);
-            params.put("track_em_id", emID);
-
-            // Invoke RESTful Web Service with Http parameters
-            invokeWS(params);
-        }
-        // when any of the field is empty from token
-        else {
-            Toast.makeText(getApplicationContext(), "Failed to retrieve contacts", Toast.LENGTH_LONG).show();
-        }
-
-    }
-
-    //SEND QUERY TO ATHENA WEB SERVICE
-    public void invokeWS(RequestParams params) {
         // Make RESTful webservice call using AsyncHttpClient object
         AsyncHttpClient client = new AsyncHttpClient();
         client.get("http://119.81.223.180:8080/ProjectAthenaWS/emergency/gettrack", params, new AsyncHttpResponseHandler() {
@@ -216,7 +202,7 @@ public class EmergencyTrackHistory extends AppCompatActivity {
             @Override
             public void onFinish() {
                 adapter.notifyDataSetChanged();
-                if(emergencyTrackList.size() > 0) {
+                if (emergencyTrackList.size() > 0) {
                     populateMap();
                 }
             }
