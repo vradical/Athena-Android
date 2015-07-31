@@ -6,7 +6,11 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
@@ -21,6 +25,7 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.rey.material.widget.EditText;
 
 import android.widget.ImageButton;
@@ -151,22 +156,9 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
         bounds = new LatLngBounds.Builder();
         manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        preferences.getString("NoGPS", "").equals("No");
 
         displayMain();
-
-        //CHECKS
-        if (!isOnline()) {
-            Intent intent = new Intent(this, LoginActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            startActivity(intent);
-        }
-        if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            buildAlertMessageNoGps();
-        }
-
-        if (!preferences.contains("Passcode")) {
-            setPasscode();
-        }
 
         //CHECK FOR LOGIN
         isLoggedIn();
@@ -422,6 +414,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         Dialog.Builder builder = null;
         builder = new SimpleDialog.Builder(R.style.SimpleDialogLight);
         ((SimpleDialog.Builder) builder).message("Your GPS seems to be disabled and it may affect the tracking quality, do you want to enable it?")
+                .title("GPS Not Found")
                 .positiveAction("Yes")
                 .negativeAction("No");
         final Dialog dialog = builder.build(MainActivity.this);
@@ -431,11 +424,13 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
             @Override
             public void onClick(View view) {
                 startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                dialog.cancel();
             }
         });
         dialog.negativeActionClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                editor.putString("NoGPS", "Yes").commit();
                 dialog.cancel();
             }
         });
@@ -454,6 +449,23 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     @Override
     public void onResume() {
 
+        //CHECKS
+        if (!isOnline()) {
+            Intent intent = new Intent(this, LoginActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(intent);
+        }
+
+        if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            if(!preferences.getString("NoGPS", "").equals("Yes")){
+                buildAlertMessageNoGps();
+            }
+        }
+
+        if (!preferences.contains("Passcode")) {
+            setPasscode();
+        }
+
         //CHECK AND SHOW CORRECT STATUS
         if (isMyServiceRunning(LocationService.class) && preferences.getString("Main Status", "").equals("TRACKING")) {
             mStartUpdatesButton.setBackgroundResource(R.drawable.track_stop);
@@ -461,18 +473,6 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
             mStartUpdatesButton.setBackgroundResource(R.drawable.alert_stop);
         }
         mPanelLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
-
-        //CHECK TO ENSURE ONLINE
-        if (!isOnline()) {
-            Intent intent = new Intent(this, LoginActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            startActivity(intent);
-        }
-
-        //CHECK TO ENSURE GPS ON AGAIN
-        if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            buildAlertMessageNoGps();
-        }
 
         if (country.equals("restart")) {
             country = preferences.getString("Country", "");
@@ -530,6 +530,11 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                 mCountryTextView.setText(sharedPreferences.getString("Locality", "") + ", " + sharedPreferences.getString("Country", ""));
             }
 
+            //Go to current location in Google Map
+            LatLng ll = new LatLng(latitude, longitude);
+            CameraUpdate update = CameraUpdateFactory.newLatLngZoom(ll, 16);
+            mGoogleMap.animateCamera(update);
+
             //If country is different from existing country, repopulate emergency and dangerzone.
             if (!country.equals(sharedPreferences.getString("Country", ""))) {
                 country = sharedPreferences.getString("Country", "");
@@ -551,17 +556,13 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                 markerList.add(mGoogleMap.addMarker(new MarkerOptions().position(ll)));
             }*/
 
-
-            //Go to current location in Google Map
-            LatLng ll = new LatLng(latitude, longitude);
-            CameraUpdate update = CameraUpdateFactory.newLatLngZoom(ll, 18);
-            mGoogleMap.animateCamera(update);
-
             //Check if last location exist, if exist, delete and prepare for new one.
             if (lastLocationMark != null) {
                 lastLocationMark.remove();
             }
-            lastLocationMark = mGoogleMap.addMarker(new MarkerOptions().position(ll));
+
+            Bitmap bm = drawableToBitmap(getResources().getDrawable(R.drawable.location_icon));
+            lastLocationMark = mGoogleMap.addMarker(new MarkerOptions().position(ll).icon(BitmapDescriptorFactory.fromBitmap(Bitmap.createScaledBitmap(bm, bm.getWidth()/2, bm.getHeight()/2, false))));
 
 
             //Get this session track data.
@@ -883,14 +884,15 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
         CircleOptions co = new CircleOptions().radius(Constants.DANGER_ZONE_RADIUS).strokeWidth(0);
         MarkerOptions mo = new MarkerOptions();
+        Bitmap bm;
 
         //Repopulate map
         for (int i = 0; i < specialZoneList.size(); i++) {
             SpecialZoneData sz = specialZoneList.get(i);
-
             if (specialZoneList.get(i).getZone_type().equals("Danger")) {
+                bm = drawableToBitmap(getResources().getDrawable(R.drawable.emergency_icon));
                 circleList.add(mGoogleMap.addCircle(co.center(sz.getCoordinate()).fillColor(0x20ffff00)));
-                Marker mz = mGoogleMap.addMarker(mo.position(sz.getCoordinate()));
+                Marker mz = mGoogleMap.addMarker(mo.position(sz.getCoordinate()).icon(BitmapDescriptorFactory.fromBitmap(Bitmap.createScaledBitmap(bm, bm.getWidth()/2, bm.getHeight()/2, false))));
                 dzMarkerList.add(mz);
 
                 HashMap<String, String> data = new HashMap<String, String>();
@@ -1214,6 +1216,28 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                 dialog.cancel();
             }
         });
+    }
+
+    public static Bitmap drawableToBitmap(Drawable drawable) {
+        Bitmap bitmap = null;
+
+        if (drawable instanceof BitmapDrawable) {
+            BitmapDrawable bitmapDrawable = (BitmapDrawable) drawable;
+            if (bitmapDrawable.getBitmap() != null) {
+                return bitmapDrawable.getBitmap();
+            }
+        }
+
+        if (drawable.getIntrinsicWidth() <= 0 || drawable.getIntrinsicHeight() <= 0) {
+            bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888);
+        } else {
+            bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+        }
+
+        Canvas canvas = new Canvas(bitmap);
+        drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+        drawable.draw(canvas);
+        return bitmap;
     }
 }
 

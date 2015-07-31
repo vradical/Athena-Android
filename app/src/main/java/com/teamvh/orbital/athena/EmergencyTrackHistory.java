@@ -1,8 +1,12 @@
 package com.teamvh.orbital.athena;
 
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -17,6 +21,7 @@ import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
@@ -103,12 +108,13 @@ public class EmergencyTrackHistory extends AppCompatActivity {
 
     public void populateMap() {
         mGoogleMap.clear();
-
+        Bitmap bm;
+        bm = drawableToBitmap(getResources().getDrawable(R.drawable.location_icon));
         markerList = new ArrayList<Marker>();
 
         if (emergencyTrackList.size() == 1) {
             LatLng ll = new LatLng(Double.parseDouble(emergencyTrackList.get(0).getLatitude()), Double.parseDouble(emergencyTrackList.get(0).getLongitude()));
-            markerList.add(mGoogleMap.addMarker(new MarkerOptions().position(ll)));
+            mGoogleMap.addMarker(new MarkerOptions().position(ll).icon(BitmapDescriptorFactory.fromBitmap(Bitmap.createScaledBitmap(bm, bm.getWidth() / 2, bm.getHeight() / 2, false))));
             mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(ll, 18));
 
         } else {
@@ -116,7 +122,7 @@ public class EmergencyTrackHistory extends AppCompatActivity {
             LatLngBounds.Builder builder = new LatLngBounds.Builder();
             for (int i = 0; i < emergencyTrackList.size(); i++) {
                 LatLng ll = new LatLng(Double.parseDouble(emergencyTrackList.get(i).getLatitude()), Double.parseDouble(emergencyTrackList.get(i).getLongitude()));
-                markerList.add(mGoogleMap.addMarker(new MarkerOptions().position(ll)));
+                mGoogleMap.addMarker(new MarkerOptions().position(ll).icon(BitmapDescriptorFactory.fromBitmap(Bitmap.createScaledBitmap(bm, bm.getWidth() / 2, bm.getHeight() / 2, false))));
                 builder.include(ll);
             }
 
@@ -237,5 +243,28 @@ public class EmergencyTrackHistory extends AppCompatActivity {
                 dialog.cancel();
             }
         });
+    }
+
+    //Supporting methods
+    public static Bitmap drawableToBitmap(Drawable drawable) {
+        Bitmap bitmap = null;
+
+        if (drawable instanceof BitmapDrawable) {
+            BitmapDrawable bitmapDrawable = (BitmapDrawable) drawable;
+            if (bitmapDrawable.getBitmap() != null) {
+                return bitmapDrawable.getBitmap();
+            }
+        }
+
+        if (drawable.getIntrinsicWidth() <= 0 || drawable.getIntrinsicHeight() <= 0) {
+            bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888);
+        } else {
+            bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+        }
+
+        Canvas canvas = new Canvas(bitmap);
+        drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+        drawable.draw(canvas);
+        return bitmap;
     }
 }

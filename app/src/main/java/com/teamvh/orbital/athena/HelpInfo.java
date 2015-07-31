@@ -5,6 +5,7 @@ import android.content.ActivityNotFoundException;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -96,11 +97,14 @@ public class HelpInfo extends AppCompatActivity {
             CameraUpdate update = CameraUpdateFactory.newLatLngZoom(ll, 14);
             mGoogleMap.animateCamera(update);
 
+            Bitmap bm;
+            bm = drawableToBitmap(getResources().getDrawable(R.drawable.location_icon));
+
             //Add a marker to the current location
             mGoogleMap.addMarker(new MarkerOptions().
                     position(new LatLng(Double.parseDouble(latitude), Double.parseDouble(longitude))).
                     title("You are here").
-                    icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
+                    icon(BitmapDescriptorFactory.fromBitmap(Bitmap.createScaledBitmap(bm, bm.getWidth() / 2, bm.getHeight() / 2, false))));
         }
     }
 
@@ -259,13 +263,13 @@ public class HelpInfo extends AppCompatActivity {
             // Clears all the existing markers
             mGoogleMap.clear();
 
+            Bitmap bm;
+            bm = drawableToBitmap(getResources().getDrawable(R.drawable.location_icon));
             // Place the current back after clearing
             mGoogleMap.addMarker(new MarkerOptions().
                     position(new LatLng(Double.parseDouble(latitude), Double.parseDouble(longitude))).
                     title("You are here").
-                    icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
-
-            Bitmap bm;
+                    icon(BitmapDescriptorFactory.fromBitmap(Bitmap.createScaledBitmap(bm, bm.getWidth() / 2, bm.getHeight() / 2, false))));
 
             if (displayChoice.equals("police")) {
                 bm = drawableToBitmap(getResources().getDrawable(R.drawable.police_icon));
@@ -301,7 +305,7 @@ public class HelpInfo extends AppCompatActivity {
                 markerOptions.title(name);
                 markerOptions.snippet(vicinity);
 
-                markerOptions.icon(BitmapDescriptorFactory.fromBitmap(Bitmap.createScaledBitmap(bm, 85, 135, false)));
+                markerOptions.icon(BitmapDescriptorFactory.fromBitmap(Bitmap.createScaledBitmap(bm, bm.getWidth() / 2, bm.getHeight() / 2, false)));
 
                 // Placing a marker on the touched position
                 Marker marker = mGoogleMap.addMarker(markerOptions);
