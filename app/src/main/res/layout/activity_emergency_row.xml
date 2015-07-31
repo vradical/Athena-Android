@@ -116,7 +116,7 @@
             android:id="@+id/btnChangeStat"
             android:layout_width="35dp"
             android:layout_height="35dp"
-            android:background="@drawable/call_button_x" />
+            android:background="@drawable/edit_button_x" />
     </LinearLayout>
 
     <View
