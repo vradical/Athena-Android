@@ -1,5 +1,7 @@
 package com.teamvh.orbital.athena;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -7,10 +9,12 @@ import android.content.SharedPreferences;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
@@ -65,6 +69,11 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
     private SharedPreferences preferences;
     private SharedPreferences.Editor editor;
     private ArrayList<EmergencyTrackData> trackData;
+    private Location curBest;
+
+    //
+    AlarmManager nextPointAlarmManager;
+    private Intent alarmIntent;
 
     private Geocoder geocoder;
 
@@ -89,12 +98,99 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
         Log.e(TAG, "onCreate");
         mContext = this;
         preferences = MainActivity.preferences;
+        nextPointAlarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+    }
+
+    private void CancelAlarm() {
+        if (alarmIntent != null) {
+            AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
+            PendingIntent sender = PendingIntent.getBroadcast(this, 0, alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            am.cancel(sender);
+        }
+    }
+
+    private void StopAlarm() {
+        Intent i = new Intent(this, LocationService.class);
+        PendingIntent pi = PendingIntent.getService(this, 0, i, 0);
+        nextPointAlarmManager.cancel(pi);
+    }
+
+    private void SetAlarmForNextPoint() {
+        Intent i = new Intent(this, LocationService.class);
+        PendingIntent pi = PendingIntent.getService(this, 0, i, 0);
+        nextPointAlarmManager.cancel(pi);
+
+        if(preferences.getString("Start Mode", "").equals("Standard")) {
+            nextPointAlarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                    SystemClock.elapsedRealtime() + preferences.getInt("CHECK_INTERVAL", 0) * 1000, pi);
+        }else if(preferences.getString("Start Mode", "").equals("High Alert")){
+            nextPointAlarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                    SystemClock.elapsedRealtime() + preferences.getInt("HA_CHECK_INTERVAL", 0) * 1000, pi);
+        }else if(preferences.getString("Start Mode", "").equals("Emergency")){
+            nextPointAlarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                    SystemClock.elapsedRealtime() + preferences.getInt("EM_CHECK_INTERVAL", 0) * 1000, pi);
+        }
+    }
+
+    private static final int TWO_MINUTES = 1000 * 60 * 2;
+
+    protected boolean isBetterLocation(Location location, Location currentBestLocation) {
+        if (currentBestLocation == null) {
+            // A new location is always better than no location
+            return true;
+        }
+
+        // Check whether the new location fix is newer or older
+        long timeDelta = location.getTime() - currentBestLocation.getTime();
+        boolean isSignificantlyNewer = timeDelta > TWO_MINUTES;
+        boolean isSignificantlyOlder = timeDelta < -TWO_MINUTES;
+        boolean isNewer = timeDelta > 0;
+
+        // If it's been more than two minutes since the current location, use the new location
+        // because the user has likely moved
+        if (isSignificantlyNewer) {
+            return true;
+            // If the new location is more than two minutes older, it must be worse
+        } else if (isSignificantlyOlder) {
+            return false;
+        }
+
+        // Check whether the new location fix is more or less accurate
+        int accuracyDelta = (int) (location.getAccuracy() - currentBestLocation.getAccuracy());
+        boolean isLessAccurate = accuracyDelta > 0;
+        boolean isMoreAccurate = accuracyDelta < 0;
+        boolean isSignificantlyLessAccurate = accuracyDelta > 200;
+
+        // Check if the old and new location are from the same provider
+        boolean isFromSameProvider = isSameProvider(location.getProvider(),
+                currentBestLocation.getProvider());
+
+        // Determine location quality using a combination of timeliness and accuracy
+        if (isMoreAccurate) {
+            return true;
+        } else if (isNewer && !isLessAccurate) {
+            return true;
+        } else if (isNewer && !isSignificantlyLessAccurate && isFromSameProvider) {
+            return true;
+        }
+        return false;
+    }
+
+    /** Checks whether two providers are the same */
+    private boolean isSameProvider(String provider1, String provider2) {
+        if (provider1 == null) {
+            return provider2 == null;
+        }
+        return provider1.equals(provider2);
     }
 
     @Override
     public void onDestroy() {
-        Log.e(TAG, "onDestroy");
+        stopLocation();
         super.onDestroy();
+    }
+
+    private void stopLocation(){
         try {
             if (googleApiClient != null) {
                 googleApiClient.disconnect();
@@ -220,7 +316,7 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
             editor.putString("Longitude", String.valueOf(longitude));
             editor.putString("Latitude", String.valueOf(latitude));
 
-            trackData.add(new EmergencyTrackData(addressWOcountry, parseDateToddMMyyyy(String.valueOf(new Timestamp(date.getTime()))), String.valueOf(longitude), String.valueOf(latitude), country, locality));
+            trackData.add(new EmergencyTrackData(addressWOcountry, parseDateToddMMyyyy(String.valueOf(new Timestamp(date.getTime()))), String.valueOf(latitude), String.valueOf(longitude), country, locality));
 
             editor.putString("TrackData", gson.toJson(trackData, listOfTrack));
 
@@ -295,6 +391,7 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
                     JSONObject obj = new JSONObject(response);
                     // When the JSON response has status boolean value assigned with true
                     if (obj.getBoolean("status")) {
+                        Toast.makeText(getApplicationContext(), "Location Tracked and Stored.", Toast.LENGTH_LONG).show();
                     }
                     else {
                         // errorMsg.setText(obj.getString("error_msg"));

@@ -48,7 +48,7 @@ public class DangerZoneList extends AppCompatActivity {
         getSupportActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#1e253f")));
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         mTitleText = (TextView) findViewById(R.id.mytitle);
-        mTitleText.setText("Emergency History");
+        mTitleText.setText("Danger Zone");
 
         preferences = MainActivity.preferences;
         dangerzoneList = new ArrayList<DangerZoneData>();

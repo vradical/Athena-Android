@@ -123,7 +123,7 @@ public class AddDangerZone extends AppCompatActivity {
 
         //CHECK FOR DEFAULT TYPE
         if (!isEmpty(titleField) && !isEmpty(addField)) {
-            addDanger(title, info, latitude, longitude);
+            addDanger(title.trim(), info.trim(), latitude, longitude);
         }
     }
 

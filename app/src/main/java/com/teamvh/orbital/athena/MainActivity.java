@@ -68,6 +68,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.TimeZone;
 
 
 public class MainActivity extends ActionBarActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
@@ -97,6 +98,8 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
     protected ProfileTracker mProfileTracker;
     protected Profile profile;
+
+    protected TimeZone timezone;
 
     //--------------------------------------------Nearby----------------------------------------
 
@@ -207,6 +210,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
         //High alert button
         v = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
+        timezone = TimeZone.getDefault();
 
         createMap();
         prepareMenu();
@@ -526,32 +530,11 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                 mCountryTextView.setText(sharedPreferences.getString("Locality", "") + ", " + sharedPreferences.getString("Country", ""));
             }
 
-            //If country is country is different from existing country, repopulate emergency and dangerzone.
+            //If country is different from existing country, repopulate emergency and dangerzone.
             if (!country.equals(sharedPreferences.getString("Country", ""))) {
                 country = sharedPreferences.getString("Country", "");
                 getSpecialZone();
             }
-
-            //Get this session track data.
-            Gson gson = new Gson();
-            Type listOfTrack = new TypeToken<ArrayList<EmergencyTrackData>>() {
-            }.getType();
-            ArrayList<EmergencyTrackData> trackData = gson.fromJson(preferences.getString("TrackData", ""), listOfTrack);
-
-            //Clear path
-            if (route != null) {
-                route.remove();
-            }
-
-            //Add Path
-            ArrayList<LatLng> latlngList = new ArrayList<LatLng>();
-            for (int i = 0; i < trackData.size(); i++) {
-                LatLng ll = new LatLng(Double.parseDouble(trackData.get(i).getLatitude()), Double.parseDouble(trackData.get(i).getLongitude()));
-                latlngList.add(ll);
-            }
-            route = mGoogleMap.addPolyline(new PolylineOptions().width(5).color(Color.parseColor("#5E65B5")).geodesic(true));
-            route.setPoints(latlngList);
-
 
             /*
             //Clear all previous marker on map
@@ -568,6 +551,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                 markerList.add(mGoogleMap.addMarker(new MarkerOptions().position(ll)));
             }*/
 
+
             //Go to current location in Google Map
             LatLng ll = new LatLng(latitude, longitude);
             CameraUpdate update = CameraUpdateFactory.newLatLngZoom(ll, 18);
@@ -578,6 +562,28 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                 lastLocationMark.remove();
             }
             lastLocationMark = mGoogleMap.addMarker(new MarkerOptions().position(ll));
+
+
+            //Get this session track data.
+            Gson gson = new Gson();
+            Type listOfTrack = new TypeToken<ArrayList<EmergencyTrackData>>() {
+            }.getType();
+            ArrayList<EmergencyTrackData> trackData = gson.fromJson(preferences.getString("TrackData", ""), listOfTrack);
+
+            //Clear path
+            if (route != null) {
+                route.remove();
+            }
+
+            //Add Path
+            ArrayList<LatLng> latlngList = new ArrayList<LatLng>();
+            for (int i = 0; i < trackData.size(); i++) {
+                LatLng ll1 = new LatLng(Double.parseDouble(trackData.get(i).getLatitude()), Double.parseDouble(trackData.get(i).getLongitude()));
+                latlngList.add(ll1);
+            }
+            route = mGoogleMap.addPolyline(new PolylineOptions().width(5).color(Color.parseColor("#5E65B5")).geodesic(true));
+            route.setPoints(latlngList);
+            route.setVisible(true);
 
             calculateDangerZone();
         }
@@ -701,6 +707,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     //QUERY TO GET CONTACT LIST
     public void createEMID() {
         String uname = preferences.getString("fbsession", "");
+        String rawOffset = String.valueOf(timezone.getRawOffset());
         RequestParams params = new RequestParams();
         params.put("username", uname);
         params.put("em_times", String.valueOf(emID));
@@ -709,6 +716,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         params.put("latitude", preferences.getString("Latitude", ""));
         params.put("longitude", preferences.getString("Longitude", ""));
         params.put("locality", preferences.getString("Locality", ""));
+        params.put("timezone", rawOffset);
 
         // Make RESTful webservice call using AsyncHttpClient object
         AsyncHttpClient client = new AsyncHttpClient();
@@ -882,11 +890,13 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
             if (specialZoneList.get(i).getZone_type().equals("Danger")) {
                 circleList.add(mGoogleMap.addCircle(co.center(sz.getCoordinate()).fillColor(0x20ffff00)));
-                Marker mz = mGoogleMap.addMarker(mo.position(sz.getCoordinate()).title(sz.getDz_title()).snippet(sz.getDz_info()));
+                Marker mz = mGoogleMap.addMarker(mo.position(sz.getCoordinate()));
                 dzMarkerList.add(mz);
 
                 HashMap<String, String> data = new HashMap<String, String>();
                 data.put("dz_id", sz.getDz_id());
+                data.put("title", sz.getDz_title());
+                data.put("info", sz.getDz_info());
                 extraMarkerInfo.put(mz.getId(), data);
             } else {
                 circleList.add(mGoogleMap.addCircle(co.center(sz.getCoordinate()).fillColor(0x20ff0000)));
@@ -905,8 +915,8 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
                     Dialog.Builder builder = null;
                     builder = new SimpleDialog.Builder(R.style.SimpleDialogLight);
-                    ((SimpleDialog.Builder) builder).message(marker.getSnippet())
-                            .title(marker.getTitle())
+                    ((SimpleDialog.Builder) builder).message(marker_data.get("info"))
+                            .title(marker_data.get("title"))
                             .positiveAction("REPORT")
                             .negativeAction("CANCEL");
                     final Dialog dialog = builder.build(MainActivity.this);
@@ -966,7 +976,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                 } else if (isEmpty(mDetailText) && !isEmpty(mTypeText)) {
                     mDetailText.setError("Detail is required.");
                 } else {
-                    reportZone(dz_id, type, detail);
+                    reportZone(dz_id, type.trim(), detail.trim());
                     dialog.cancel();
                 }
             }
@@ -1012,8 +1022,24 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                     JSONObject obj = new JSONObject(response);
                     // When the JSON response has status boolean value assigned with true
                     if (obj.getBoolean("status")) {
-                        displayDialog("Report submit successfully.", 0);
+
+                            Dialog.Builder builder = null;
+                            builder = new SimpleDialog.Builder(R.style.SimpleDialogLight);
+                            ((SimpleDialog.Builder) builder).message("Report submit successfully.")
+                                    .positiveAction("OK")
+                                    .title("Report");
+                            final Dialog dialog = builder.build(MainActivity.this);
+                            dialog.show();
+                            dialog.setCanceledOnTouchOutside(false);
+                            dialog.positiveActionClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View view) {
+                                    dialog.cancel();
+                                }
+                            });
+
                     } else {
+
                         displayDialog("You have already reported before.", 0);
                     }
                 } catch (JSONException e) {
