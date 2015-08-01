@@ -4,12 +4,9 @@ package com.teamvh.orbital.athena;
  * Created by Ron on 20-May-15.
  */
 public final class Constants {
-    public static int CHECK_INTERVAL = 5000;
-    public static float SMALLEST_DISPLACEMENT = 0;
-    public static int HA_CHECK_INTERVAL = 60000;
-    public static float HA_SMALLEST_DISPLACEMENT = 0;
+    public static int CHECK_INTERVAL = 60000;
+    public static int HA_CHECK_INTERVAL = 30000;
     public static int EM_CHECK_INTERVAL = 5000;
-    public static float EM_SMALLEST_DISPLACEMENT = 0;
 
     public static String PATH_TYPE = "walking";
     //public static String PATH_TYPE = "driving";

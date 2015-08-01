@@ -70,10 +70,7 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
     private SharedPreferences.Editor editor;
     private ArrayList<EmergencyTrackData> trackData;
     private Location curBest;
-
-    //
-    AlarmManager nextPointAlarmManager;
-    private Intent alarmIntent;
+    private boolean isStored;
 
     private Geocoder geocoder;
 
@@ -89,6 +86,7 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
         geocoder = new Geocoder(this, Locale.getDefault());
         trackType = preferences.getString("Start Mode", "");
         emID = preferences.getString("emID", "");
+        isStored = false;
         getLocation();
         return START_STICKY;
     }
@@ -98,99 +96,16 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
         Log.e(TAG, "onCreate");
         mContext = this;
         preferences = MainActivity.preferences;
-        nextPointAlarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
-    }
-
-    private void CancelAlarm() {
-        if (alarmIntent != null) {
-            AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
-            PendingIntent sender = PendingIntent.getBroadcast(this, 0, alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-            am.cancel(sender);
-        }
-    }
-
-    private void StopAlarm() {
-        Intent i = new Intent(this, LocationService.class);
-        PendingIntent pi = PendingIntent.getService(this, 0, i, 0);
-        nextPointAlarmManager.cancel(pi);
-    }
-
-    private void SetAlarmForNextPoint() {
-        Intent i = new Intent(this, LocationService.class);
-        PendingIntent pi = PendingIntent.getService(this, 0, i, 0);
-        nextPointAlarmManager.cancel(pi);
-
-        if(preferences.getString("Start Mode", "").equals("Standard")) {
-            nextPointAlarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                    SystemClock.elapsedRealtime() + preferences.getInt("CHECK_INTERVAL", 0) * 1000, pi);
-        }else if(preferences.getString("Start Mode", "").equals("High Alert")){
-            nextPointAlarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                    SystemClock.elapsedRealtime() + preferences.getInt("HA_CHECK_INTERVAL", 0) * 1000, pi);
-        }else if(preferences.getString("Start Mode", "").equals("Emergency")){
-            nextPointAlarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                    SystemClock.elapsedRealtime() + preferences.getInt("EM_CHECK_INTERVAL", 0) * 1000, pi);
-        }
-    }
-
-    private static final int TWO_MINUTES = 1000 * 60 * 2;
-
-    protected boolean isBetterLocation(Location location, Location currentBestLocation) {
-        if (currentBestLocation == null) {
-            // A new location is always better than no location
-            return true;
-        }
-
-        // Check whether the new location fix is newer or older
-        long timeDelta = location.getTime() - currentBestLocation.getTime();
-        boolean isSignificantlyNewer = timeDelta > TWO_MINUTES;
-        boolean isSignificantlyOlder = timeDelta < -TWO_MINUTES;
-        boolean isNewer = timeDelta > 0;
-
-        // If it's been more than two minutes since the current location, use the new location
-        // because the user has likely moved
-        if (isSignificantlyNewer) {
-            return true;
-            // If the new location is more than two minutes older, it must be worse
-        } else if (isSignificantlyOlder) {
-            return false;
-        }
-
-        // Check whether the new location fix is more or less accurate
-        int accuracyDelta = (int) (location.getAccuracy() - currentBestLocation.getAccuracy());
-        boolean isLessAccurate = accuracyDelta > 0;
-        boolean isMoreAccurate = accuracyDelta < 0;
-        boolean isSignificantlyLessAccurate = accuracyDelta > 200;
-
-        // Check if the old and new location are from the same provider
-        boolean isFromSameProvider = isSameProvider(location.getProvider(),
-                currentBestLocation.getProvider());
-
-        // Determine location quality using a combination of timeliness and accuracy
-        if (isMoreAccurate) {
-            return true;
-        } else if (isNewer && !isLessAccurate) {
-            return true;
-        } else if (isNewer && !isSignificantlyLessAccurate && isFromSameProvider) {
-            return true;
-        }
-        return false;
-    }
-
-    /** Checks whether two providers are the same */
-    private boolean isSameProvider(String provider1, String provider2) {
-        if (provider1 == null) {
-            return provider2 == null;
-        }
-        return provider1.equals(provider2);
     }
 
     @Override
     public void onDestroy() {
+        Log.d(TAG, "Location Service stop");
         stopLocation();
         super.onDestroy();
     }
 
-    private void stopLocation(){
+    private void stopLocation() {
         try {
             if (googleApiClient != null) {
                 googleApiClient.disconnect();
@@ -205,19 +120,9 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
         locationRequest = LocationRequest.create();
 
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        if (trackType.equals("Standard")) {
-            locationRequest.setInterval(Constants.CHECK_INTERVAL);
-            locationRequest.setFastestInterval(Constants.CHECK_INTERVAL);
-            locationRequest.setSmallestDisplacement(Constants.SMALLEST_DISPLACEMENT);
-        } else if (trackType.equals("High Alert")) {
-            locationRequest.setInterval(Constants.HA_CHECK_INTERVAL);
-            locationRequest.setFastestInterval(Constants.HA_CHECK_INTERVAL);
-            locationRequest.setSmallestDisplacement(Constants.HA_SMALLEST_DISPLACEMENT);
-        } else if (trackType.equals("Emergency")) {
-            locationRequest.setInterval(Constants.EM_CHECK_INTERVAL);
-            locationRequest.setFastestInterval(Constants.EM_CHECK_INTERVAL);
-            locationRequest.setSmallestDisplacement(Constants.EM_SMALLEST_DISPLACEMENT);
-        }
+        locationRequest.setInterval(1000);
+        locationRequest.setFastestInterval(1000);
+        locationRequest.setSmallestDisplacement(0);
         fusedLocationProviderApi = LocationServices.FusedLocationApi;
         googleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(LocationServices.API)
@@ -231,7 +136,6 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
 
     @Override
     public void onConnected(Bundle arg0) {
-//  Location location = fusedLocationProviderApi.getLastLocation(googleApiClient);
         fusedLocationProviderApi.requestLocationUpdates(googleApiClient, locationRequest, this);
     }
 
@@ -240,13 +144,16 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
 
     }
 
-
     @Override
     public void onLocationChanged(Location location) {
-        latitude = location.getLatitude();
-        longitude = location.getLongitude();
-        location.getTime();
-        recordLocation();
+
+        if (location.getAccuracy() < 50f) {
+            stopServiceNow();
+            latitude = location.getLatitude();
+            longitude = location.getLongitude();
+            location.getTime();
+            recordLocation();
+        }
     }
 
     @Override
@@ -257,12 +164,13 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
     //PREPARE QUERY TO LOGIN USER
     public void recordLocation() {
         Gson gson = new Gson();
-        Type listOfTrack = new TypeToken<ArrayList<EmergencyTrackData>>() {}.getType();
+        Type listOfTrack = new TypeToken<ArrayList<EmergencyTrackData>>() {
+        }.getType();
 
         if (null == trackData) {
             trackData = new ArrayList<EmergencyTrackData>();
-        }else{
-            trackData = gson.fromJson(preferences.getString("TrackData",""), ArrayList.class);
+        } else {
+            trackData = gson.fromJson(preferences.getString("TrackData", ""), ArrayList.class);
         }
 
         address = null;
@@ -275,22 +183,22 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
                 for (int i = 0; i < address.getMaxAddressLineIndex(); i++) {
                     sb.append(address.getAddressLine(i)).append(" ");
                 }
-                if(address.getLocality() != null) {
+                if (address.getLocality() != null) {
                     sb.append(address.getLocality()).append(" ");
                     locality = address.getLocality();
-                }else{
+                } else {
                     locality = "Not Available";
                 }
                 this.addressWOcountry = sb.toString();
-                if(address.getPostalCode() != (null)){
+                if (address.getPostalCode() != (null)) {
                     sb.append(address.getPostalCode()).append(" ");
                 }
                 this.address = sb.toString();
                 country = address.getCountryName().toString();
 
-                if(address.getCountryCode() != null) {
+                if (address.getCountryCode() != null) {
                     countryCode = address.getCountryCode().toString();
-                }else{
+                } else {
                     countryCode = "Not Available";
                 }
             }
@@ -300,7 +208,7 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
             if (address == null) {
                 address = "Not Available";
             }
-            if(addressWOcountry == null){
+            if (addressWOcountry == null) {
                 addressWOcountry = "Not Available";
             }
 
@@ -340,7 +248,7 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
             }
             // when any of the field is empty from token
             else {
-                Toast.makeText(getApplicationContext(), "Failed to record current coordinates", Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), "Failed to record current coordinates", Toast.LENGTH_SHORT).show();
             }
 
         }
@@ -391,15 +299,15 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
                     JSONObject obj = new JSONObject(response);
                     // When the JSON response has status boolean value assigned with true
                     if (obj.getBoolean("status")) {
-                        Toast.makeText(getApplicationContext(), "Location Tracked and Stored.", Toast.LENGTH_LONG).show();
-                    }
-                    else {
+                        Toast.makeText(getApplicationContext(), "Location Tracked and Stored.", Toast.LENGTH_SHORT).show();
+                        //stopServiceNow();
+                    } else {
                         // errorMsg.setText(obj.getString("error_msg"));
-                        Toast.makeText(getApplicationContext(), obj.getString("error_msg"), Toast.LENGTH_LONG).show();
+                        Toast.makeText(getApplicationContext(), obj.getString("error_msg"), Toast.LENGTH_SHORT).show();
                     }
                 } catch (JSONException e) {
                     // TODO Auto-generated catch block
-                    Toast.makeText(getApplicationContext(), "Location Service -  Error Occured!", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "Location Service -  Error Occured!", Toast.LENGTH_SHORT).show();
                     e.printStackTrace();
 
                 }
@@ -411,19 +319,26 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
                                   String content) {
                 // When Http response code is '404'
                 if (statusCode == 404) {
-                    Toast.makeText(getApplicationContext(), "Location Service - Requested resource not found", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "Location Service - Requested resource not found", Toast.LENGTH_SHORT).show();
                 }
                 // When Http response code is '500'
                 else if (statusCode == 500) {
-                    Toast.makeText(getApplicationContext(), "Location Service - Something went wrong at server end", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "Location Service - Something went wrong at server end", Toast.LENGTH_SHORT).show();
                 }
                 // When Http response code other than 404, 500
                 else {
-                    Toast.makeText(getApplicationContext(), "Location Service - Unexpected Error occcured!", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "Location Service - Unexpected Error occcured!", Toast.LENGTH_SHORT).show();
                 }
             }
+
         });
 
+
+    }
+
+    public void stopServiceNow() {
+        stopLocation();
+        stopSelf();
     }
 
 }

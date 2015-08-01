@@ -1,9 +1,9 @@
 package com.teamvh.orbital.athena;
 
 import android.app.ActivityManager;
-import android.app.AlertDialog;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
@@ -17,27 +17,25 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.SystemClock;
 import android.os.Vibrator;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
 
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.rey.material.widget.EditText;
 
 import android.widget.ImageButton;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
 import com.facebook.FacebookSdk;
 import com.facebook.Profile;
 import com.facebook.ProfileTracker;
-import com.facebook.login.LoginManager;
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
 import com.google.android.gms.maps.CameraUpdate;
@@ -58,9 +56,7 @@ import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 import com.rey.material.app.Dialog;
-import com.rey.material.app.DialogFragment;
 import com.rey.material.app.SimpleDialog;
-import com.rey.material.widget.Spinner;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -82,6 +78,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     public static SharedPreferences preferences;
     public static SharedPreferences.Editor editor;
     protected LocationManager manager;
+    protected String TAG = "MainActivity";
 
     //menu
     protected FloatingActionMenu actionMenu;
@@ -107,6 +104,11 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     protected TimeZone timezone;
 
     //--------------------------------------------Nearby----------------------------------------
+
+    private boolean currentlyTracking;
+    private AlarmManager alarmManager;
+    private Intent gpsTrackerIntent;
+    private PendingIntent pendingIntent;
 
     //high alert function
     protected CountDownTimer highAlertCD;
@@ -156,7 +158,8 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
         bounds = new LatLngBounds.Builder();
         manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        preferences.getString("NoGPS", "").equals("No");
+        editor.putString("NoGPS", "No").commit();
+        currentlyTracking = false;
 
         displayMain();
 
@@ -211,13 +214,30 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         mStartUpdatesButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
+                if(currentlyTracking){
+                    currentlyTracking = false;
+                    editor.putBoolean("currentlyTracking", false);
+                    stopTracking();
+                    mStartUpdatesButton.setBackgroundResource(R.drawable.track_button);
+                }else{
+                    currentlyTracking = true;
+                    editor.putBoolean("currentlyTracking", true);
+                    startTracking("Standard");
+                    mStartUpdatesButton.setBackgroundResource(R.drawable.track_stop);
+                }
+
+                editor.apply();
+                editor.commit();
+
+                /*
                 if (isMyServiceRunning(LocationService.class)) {
                     stopTracking();
                     mStartUpdatesButton.setBackgroundResource(R.drawable.track_button);
                 } else {
                     startTracking("Standard");
                     mStartUpdatesButton.setBackgroundResource(R.drawable.track_stop);
-                }
+                }*/
             }
         });
 
@@ -256,25 +276,14 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
             editor.putInt("CHECK_INTERVAL", Constants.CHECK_INTERVAL);
         }
 
-        if(!preferences.contains("SMALLEST_DISPLACEMENT")){
-            editor.putFloat("SMALLEST_DISPLACEMENT", Constants.SMALLEST_DISPLACEMENT);
-        }
-
         if(!preferences.contains("HA_CHECK_INTERVAL")){
             editor.putInt("HA_CHECK_INTERVAL", Constants.HA_CHECK_INTERVAL);
-        }
-
-        if(!preferences.contains("HA_SMALLEST_DISPLACEMENT")){
-            editor.putFloat("HA_SMALLEST_DISPLACEMENT", Constants.HA_SMALLEST_DISPLACEMENT);
         }
 
         if(!preferences.contains("EM_CHECK_INTERVAL")){
             editor.putInt("EM_CHECK_INTERVAL", Constants.EM_CHECK_INTERVAL);
         }
 
-        if(!preferences.contains("EM_SMALLEST_DISPLACEMENT")){
-            editor.putFloat("EM_SMALLEST_DISPLACEMENT", Constants.EM_SMALLEST_DISPLACEMENT);
-        }
 
         if(!preferences.contains("ALERT_TIMER")){
             editor.putInt("ALERT_TIMER", Constants.ALERT_TIMER);
@@ -467,10 +476,8 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         }
 
         //CHECK AND SHOW CORRECT STATUS
-        if (isMyServiceRunning(LocationService.class) && preferences.getString("Main Status", "").equals("TRACKING")) {
+        if (preferences.getBoolean("currentlyTracking", false) && preferences.getString("Main Status", "").equals("TRACKING")) {
             mStartUpdatesButton.setBackgroundResource(R.drawable.track_stop);
-        } else if (isMyServiceRunning(LocationService.class) && preferences.getString("Main Status", "").equals("TRACKING (ALERT MODE)")) {
-            mStartUpdatesButton.setBackgroundResource(R.drawable.alert_stop);
         }
         mPanelLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
 
@@ -492,7 +499,9 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         //CLEAR TRACKDATA FOR NEW UPDATES
         super.onDestroy();
         accessTokenTracker.stopTracking();
-        stopTracking();
+        if(preferences.getBoolean("currentlyTracking", false)) {
+            stopTracking();
+        }
         preferences.edit().remove("TrackData").commit();
     }
 
@@ -609,11 +618,11 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     public void startTracking(String trackType) {
         editor = preferences.edit();
         if (trackType.equals("Standard")) {
-            editor.putString("Main Status", "TRACKING");
+            editor.putString("Main Status", "TRACKING...");
             editor.putString("Start Mode", "Standard");
             editor.putString("emID", "0");
         } else if (trackType.equals("High Alert")) {
-            editor.putString("Main Status", "TRACKING (ALERT MODE)");
+            editor.putString("Main Status", "(ALERT MODE) TRACKING...");
             editor.putString("Start Mode", "High Alert");
             editor.putString("emID", "0");
         } else {
@@ -624,8 +633,9 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         editor.commit();
         editor.apply();
 
-        Intent intent = new Intent(this, LocationService.class);
-        startService(intent);
+        startAlarmManager();
+        //Intent intent = new Intent(this, LocationService.class);
+       // startService(intent);
     }
 
     public void stopTracking() {
@@ -633,8 +643,41 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         editor.putString("Main Status", "IDLE");
         editor.commit();
         editor.apply();
-        Intent intent = new Intent(this, LocationService.class);
-        stopService(intent);
+
+        cancelAlarmManager();
+        //Intent intent = new Intent(this, LocationService.class);
+        //stopService(intent);
+    }
+
+    private void startAlarmManager()
+    {
+        Log.d(TAG, "startAlarmManager");
+
+        int alarmInterval = 30000;
+
+        if (preferences.getString("Start Mode", "").equals("Standard")) {
+            alarmInterval = preferences.getInt("CHECK_INTERVAL", 0);
+        } else if (preferences.getString("Start Mode", "").equals("High Alert")) {
+            alarmInterval = preferences.getInt("HA_CHECK_INTERVAL", 0);
+        } else if (preferences.getString("Start Mode", "").equals("Emergency")) {
+            alarmInterval = preferences.getInt("EM_CHECK_INTERVAL", 0);
+        }
+
+        Context context = getBaseContext();
+        alarmManager = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
+        gpsTrackerIntent = new Intent(context, TrackServiceAlarmReceiver.class);
+        pendingIntent = PendingIntent.getBroadcast(context, 0, gpsTrackerIntent, 0);
+        alarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                SystemClock.elapsedRealtime(),
+                alarmInterval, pendingIntent);
+    }
+    private void cancelAlarmManager() {
+        Log.d(TAG, "cancelAlarmManager");
+        Context context = getBaseContext();
+        Intent gpsTrackerIntent = new Intent(context, TrackServiceAlarmReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, gpsTrackerIntent, 0);
+        AlarmManager alarmManager = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
+        alarmManager.cancel(pendingIntent);
     }
 
     //-------------------------------------------HIGH ALERT-------------------------------------------------------------//

@@ -1,6 +1,7 @@
 package com.teamvh.orbital.athena;
 
 import android.app.Activity;
+import android.app.AlarmManager;
 import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -10,6 +11,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
 import android.telephony.SmsManager;
 import android.util.Log;
@@ -46,6 +48,9 @@ public class EmergencyActivity extends AppCompatActivity {
     protected int[][] mSuccessCheck;
     protected Boolean isFinishByMethod;
     protected String emID;
+    private AlarmManager alarmManager;
+    private Intent gpsTrackerIntent;
+    private PendingIntent pendingIntent;
 
     protected BroadcastReceiver sendBroadcastReceiver;
     protected BroadcastReceiver deliveryBroadcastReceiver;
@@ -185,22 +190,24 @@ public class EmergencyActivity extends AppCompatActivity {
     public void startTracking(String trackType) {
         editor = preferences.edit();
         if (trackType.equals("Standard")) {
-            editor.putString("Main Status", "TRACKING");
+            editor.putString("Main Status", "TRACKING...");
             editor.putString("Start Mode", "Standard");
             editor.putString("emID", "0");
         } else if (trackType.equals("High Alert")) {
-            editor.putString("Main Status", "TRACKING (ALERT MODE)");
+            editor.putString("Main Status", "(ALERT MODE) TRACKING...");
             editor.putString("Start Mode", "High Alert");
             editor.putString("emID", "0");
         } else {
             editor.putString("Main Status", "EMERGENCY MODE ON");
             editor.putString("Start Mode", "Emergency");
+            editor.putString("emID", String.valueOf(emID));
         }
         editor.commit();
         editor.apply();
 
-        Intent intent = new Intent(this, LocationService.class);
-        startService(intent);
+        startAlarmManager();
+        //Intent intent = new Intent(this, LocationService.class);
+        // startService(intent);
     }
 
     public void stopTracking() {
@@ -208,8 +215,42 @@ public class EmergencyActivity extends AppCompatActivity {
         editor.putString("Main Status", "IDLE");
         editor.commit();
         editor.apply();
-        Intent intent = new Intent(this, LocationService.class);
-        stopService(intent);
+
+        cancelAlarmManager();
+        //Intent intent = new Intent(this, LocationService.class);
+        //stopService(intent);
+    }
+
+    private void startAlarmManager()
+    {
+        Log.d(TAG, "startAlarmManager");
+
+        int alarmInterval = 30000;
+
+        if (preferences.getString("Start Mode", "").equals("Standard")) {
+            alarmInterval = preferences.getInt("CHECK_INTERVAL", 0);
+        } else if (preferences.getString("Start Mode", "").equals("High Alert")) {
+            alarmInterval = preferences.getInt("HA_CHECK_INTERVAL", 0);
+        } else if (preferences.getString("Start Mode", "").equals("Emergency")) {
+            alarmInterval = preferences.getInt("EM_CHECK_INTERVAL", 0);
+        }
+
+        Context context = getBaseContext();
+        alarmManager = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
+        gpsTrackerIntent = new Intent(context, TrackServiceAlarmReceiver.class);
+        pendingIntent = PendingIntent.getBroadcast(context, 0, gpsTrackerIntent, 0);
+        alarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                SystemClock.elapsedRealtime(),
+                alarmInterval, pendingIntent);
+    }
+
+    private void cancelAlarmManager() {
+        Log.d(TAG, "cancelAlarmManager");
+        Context context = getBaseContext();
+        Intent gpsTrackerIntent = new Intent(context, TrackServiceAlarmReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, gpsTrackerIntent, 0);
+        AlarmManager alarmManager = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
+        alarmManager.cancel(pendingIntent);
     }
 
     //-------------------------END EMERGENCY------------------------------------------------//

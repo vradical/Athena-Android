@@ -60,43 +60,27 @@ public class SettingActivity extends AppCompatActivity {
 
 
     //Adv Standard
-    protected LinearLayout mShowStandard;
-    protected TextView mStandardStatus;
-    protected LinearLayout mStandardLayout;
+
     protected com.rey.material.widget.Slider mTrackingSB;
     protected TextView mTrackingSBTV;
-    protected com.rey.material.widget.Slider mTrackingDisSB;
-    protected TextView mTrackingDisSBTV;
     protected int curTrack;
-    protected int curTrackDis;
 
     //Adv Alert
-    protected LinearLayout mShowAlert;
-    protected LinearLayout mAlertLayout;
+
     protected com.rey.material.widget.Slider mAlertSB;
     protected TextView mAlertSBTV;
-    protected com.rey.material.widget.Slider mAlertDisSB;
-    protected TextView mAlertDisSBTV;
     protected com.rey.material.widget.Slider mAlertTMSB;
     protected TextView mAlertTMSBTV;
     protected com.rey.material.widget.Slider mAlertCDSB;
     protected TextView mAlertCDSBTV;
-    protected TextView mAlertStatus;
     protected int curAlert;
-    protected int curAlertDis;
     protected int curAlertTM;
     protected int curAlertCD;
 
     //Adv Emergency
-    protected LinearLayout mShowEmergency;
-    protected LinearLayout mEmergencyLayout;
-    protected TextView mEmergencyStatus;
     protected com.rey.material.widget.Slider mEmergencySB;
     protected TextView mEmergencySBTV;
-    protected com.rey.material.widget.Slider mEmergencyDisSB;
-    protected TextView mEmergencyDisSBTV;
     protected int curEM;
-    protected int curEMDis;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -425,53 +409,11 @@ public class SettingActivity extends AppCompatActivity {
             }
         });
 
-        //Standard Function
-        mShowStandard = (LinearLayout) findViewById(R.id.setting_RL2_header);
-        mStandardStatus = (TextView) findViewById(R.id.setting_StandardStatus);
-        mStandardLayout = (LinearLayout) findViewById(R.id.setting_standardLayout);
-
-        mShowStandard.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (mStandardLayout.isShown()) {
-                    mStandardLayout.setVisibility(View.GONE);
-                    mStandardStatus.setText("+");
-                } else {
-                    mStandardLayout.setVisibility(View.VISIBLE);
-                    mStandardStatus.setText("-");
-                }
-            }
-        });
-
         mTrackingSB = (com.rey.material.widget.Slider) findViewById(R.id.setting_trackSB);
         mTrackingSBTV = (TextView) findViewById(R.id.setting_trackSBTV);
 
-        mTrackingDisSB = (com.rey.material.widget.Slider) findViewById(R.id.setting_trackDisSB);
-        mTrackingDisSBTV = (TextView) findViewById(R.id.setting_trackDisSBTV);
-
-        //Alert Functions
-        mShowAlert = (LinearLayout) findViewById(R.id.setting_RL3_header);
-        mAlertLayout = (LinearLayout) findViewById(R.id.setting_alert);
-        mAlertStatus = (TextView) findViewById(R.id.setting_alertStatus);
-
-        mShowAlert.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (mAlertLayout.isShown()) {
-                    mAlertLayout.setVisibility(View.GONE);
-                    mAlertStatus.setText("+");
-                } else {
-                    mAlertLayout.setVisibility(View.VISIBLE);
-                    mAlertStatus.setText("-");
-                }
-            }
-        });
-
         mAlertSB = (com.rey.material.widget.Slider) findViewById(R.id.setting_alertSB);
         mAlertSBTV = (TextView) findViewById(R.id.setting_alertSBTV);
-
-        mAlertDisSB = (com.rey.material.widget.Slider) findViewById(R.id.setting_alertDisSB);
-        mAlertDisSBTV = (TextView) findViewById(R.id.setting_alertDisSBTV);
 
         mAlertTMSB = (com.rey.material.widget.Slider) findViewById(R.id.setting_alertTMSB);
         mAlertTMSBTV = (TextView) findViewById(R.id.setting_alertTMSBTV);
@@ -479,29 +421,8 @@ public class SettingActivity extends AppCompatActivity {
         mAlertCDSB = (com.rey.material.widget.Slider) findViewById(R.id.setting_alertCDSB);
         mAlertCDSBTV = (TextView) findViewById(R.id.setting_alertCDSBTV);
 
-        //Emergency Functions
-        mShowEmergency = (LinearLayout) findViewById(R.id.setting_RL4_header);
-        mEmergencyLayout = (LinearLayout) findViewById(R.id.setting_emergency);
-        mEmergencyStatus = (TextView) findViewById(R.id.setting_emergencyStatus);
-
-        mShowEmergency.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (mEmergencyLayout.isShown()) {
-                    mEmergencyLayout.setVisibility(View.GONE);
-                    mEmergencyStatus.setText("+");
-                } else {
-                    mEmergencyLayout.setVisibility(View.VISIBLE);
-                    mEmergencyStatus.setText("-");
-                }
-            }
-        });
-
         mEmergencySB = (com.rey.material.widget.Slider) findViewById(R.id.setting_emSB);
         mEmergencySBTV = (TextView) findViewById(R.id.setting_emSBTV);
-
-        mEmergencyDisSB = (com.rey.material.widget.Slider) findViewById(R.id.setting_emDisSB);
-        mEmergencyDisSBTV = (TextView) findViewById(R.id.setting_emDisSBTV);
 
         //update settings;
         updateSetting();
@@ -514,12 +435,9 @@ public class SettingActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                editor.putInt("CHECK_INTERVAL", curTrack*60000);
-                editor.putFloat("SMALLEST_DISPLACEMENT", curTrackDis);
-                editor.putInt("HA_CHECK_INTERVAL", curAlert*60000);
-                editor.putFloat("HA_SMALLEST_DISPLACEMENT", curAlertDis);
-                editor.putInt("EM_CHECK_INTERVAL", curEM*1000);
-                editor.putFloat("EM_SMALLEST_DISPLACEMENT", curEMDis);
+                editor.putInt("CHECK_INTERVAL", curTrack * 60000);
+                editor.putInt("HA_CHECK_INTERVAL", curAlert*1000);
+                editor.putInt("EM_CHECK_INTERVAL", curEM * 1000);
                 editor.putInt("ALERT_TIMER", curAlertTM*60000);
                 editor.putInt("ALERT_COUNTDOWN", curAlertCD* 1000);
                 editor.apply();
@@ -558,11 +476,8 @@ public class SettingActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View view) {
                         editor.putInt("CHECK_INTERVAL", Constants.CHECK_INTERVAL);
-                        editor.putFloat("SMALLEST_DISPLACEMENT", Constants.SMALLEST_DISPLACEMENT);
                         editor.putInt("HA_CHECK_INTERVAL", Constants.HA_CHECK_INTERVAL);
-                        editor.putFloat("HA_SMALLEST_DISPLACEMENT", Constants.HA_SMALLEST_DISPLACEMENT);
                         editor.putInt("EM_CHECK_INTERVAL", Constants.EM_CHECK_INTERVAL);
-                        editor.putFloat("EM_SMALLEST_DISPLACEMENT", Constants.EM_SMALLEST_DISPLACEMENT);
                         editor.putInt("ALERT_TIMER", Constants.ALERT_TIMER);
                         editor.putInt("ALERT_COUNTDOWN", Constants.ALERT_COUNTDOWN);
                         editor.apply();
@@ -602,7 +517,6 @@ public class SettingActivity extends AppCompatActivity {
     private void updateSetting(){
         int trackingSB = preferences.getInt("CHECK_INTERVAL", 0)/60000;
         curTrack = trackingSB;
-        mTrackingSBTV.setText(String.valueOf(trackingSB));
         mTrackingSB.setValue(trackingSB, false);
         mTrackingSB.setOnPositionChangeListener(new Slider.OnPositionChangeListener() {
             @Override
@@ -611,22 +525,11 @@ public class SettingActivity extends AppCompatActivity {
                 curTrack = i;
             }
         });
+        mTrackingSBTV.setText(String.valueOf(trackingSB));
 
-        float trackingDisSB = preferences.getFloat("SMALLEST_DISPLACEMENT", 0);
-        curTrackDis = (int) trackingDisSB;
-        mTrackingDisSBTV.setText(String.valueOf(trackingDisSB));
-        mTrackingDisSB.setValue(trackingDisSB, false);
-        mTrackingDisSB.setOnPositionChangeListener(new Slider.OnPositionChangeListener() {
-            @Override
-            public void onPositionChanged(Slider slider, boolean b, float v, float v1, int i, int i1) {
-                mTrackingDisSBTV.setText(String.valueOf(i));
-                curTrackDis = i;
-            }
-        });
-
-        int alertSB = (preferences.getInt("HA_CHECK_INTERVAL", 0)/60000);
+        int alertSB = (preferences.getInt("HA_CHECK_INTERVAL", 0)/1000);
         curAlert = alertSB;
-        mAlertSBTV.setText(String.valueOf(alertSB));
+
         mAlertSB.setValue(alertSB, false);
         mAlertSB.setOnPositionChangeListener(new Slider.OnPositionChangeListener() {
             @Override
@@ -635,22 +538,11 @@ public class SettingActivity extends AppCompatActivity {
                 curAlert = i;
             }
         });
+        mAlertSBTV.setText(String.valueOf(alertSB));
 
-        float alertDisSB = preferences.getFloat("HA_SMALLEST_DISPLACEMENT", 0);
-        curAlertDis = (int) alertDisSB;
-        mAlertDisSBTV.setText(String.valueOf(alertDisSB));
-        mAlertDisSB.setValue(alertDisSB, false);
-        mAlertDisSB.setOnPositionChangeListener(new Slider.OnPositionChangeListener() {
-            @Override
-            public void onPositionChanged(Slider slider, boolean b, float v, float v1, int i, int i1) {
-                mAlertDisSBTV.setText(String.valueOf(i));
-                curAlertDis = i;
-            }
-        });
 
         int alertTMSB = (preferences.getInt("ALERT_TIMER", 0) / 60000);
         curAlertTM = alertTMSB;
-        mAlertTMSBTV.setText(String.valueOf(alertTMSB));
         mAlertTMSB.setValue(alertTMSB, false);
         mAlertTMSB.setOnPositionChangeListener(new Slider.OnPositionChangeListener() {
             @Override
@@ -659,10 +551,12 @@ public class SettingActivity extends AppCompatActivity {
                 curAlertTM = i;
             }
         });
+        mAlertTMSBTV.setText(String.valueOf(alertTMSB));
+
+
 
         int alertCDSB = preferences.getInt("ALERT_COUNTDOWN", 0) / 1000;
         curAlertCD = alertCDSB;
-        mAlertCDSBTV.setText(String.valueOf(alertCDSB));
         mAlertCDSB.setValue(alertCDSB, false);
         mAlertCDSB.setOnPositionChangeListener(new Slider.OnPositionChangeListener() {
             @Override
@@ -671,10 +565,12 @@ public class SettingActivity extends AppCompatActivity {
                 curAlertCD = i;
             }
         });
+        mAlertCDSBTV.setText(String.valueOf(alertCDSB));
+
+
 
         int emergencySB = preferences.getInt("EM_CHECK_INTERVAL", 0) / 1000;
         curEM = emergencySB;
-        mEmergencySBTV.setText(String.valueOf(emergencySB));
         mEmergencySB.setValue(emergencySB, false);
         mEmergencySB.setOnPositionChangeListener(new Slider.OnPositionChangeListener() {
             @Override
@@ -683,18 +579,9 @@ public class SettingActivity extends AppCompatActivity {
                 curEM = i;
             }
         });
+        mEmergencySBTV.setText(String.valueOf(emergencySB));
 
-        float emergencyDisSB = preferences.getFloat("EM_SMALLEST_DISPLACEMENT", 0);
-        curEMDis = (int) emergencyDisSB;
-        mEmergencyDisSBTV.setText(String.valueOf(emergencyDisSB));
-        mEmergencyDisSB.setValue(emergencyDisSB, false);
-        mEmergencyDisSB.setOnPositionChangeListener(new Slider.OnPositionChangeListener() {
-            @Override
-            public void onPositionChanged(Slider slider, boolean b, float v, float v1, int i, int i1) {
-                mEmergencyDisSBTV.setText(String.valueOf(i));
-                curEMDis = i;
-            }
-        });
+
     }
 
     public void displayDialog(String message, int i) {

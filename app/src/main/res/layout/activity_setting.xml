@@ -269,49 +269,6 @@
                     android:orientation="vertical"
                     android:visibility="gone">
 
-                    <LinearLayout
-                        android:id="@+id/setting_RL2_header"
-                        android:layout_width="fill_parent"
-                        android:layout_height="wrap_content"
-                        android:clickable="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:weightSum="1.0">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="0.9"
-                            android:clickable="true"
-                            android:text="STANDARD FUNCTIONS"
-                            android:textColor="#000000" />
-
-                        <TextView
-                            android:id="@+id/setting_StandardStatus"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="0.1"
-                            android:gravity="center"
-                            android:text="+"
-                            android:textColor="#000000"
-                            android:textSize="22sp" />
-                    </LinearLayout>
-
-                    <View
-                        android:id="@+id/setting_seperator2"
-                        android:layout_width="fill_parent"
-                        android:layout_height="2dp"
-                        android:layout_marginBottom="15dp"
-                        android:layout_marginTop="2dp"
-                        android:background="#C8C8C8" />
-
-                    <LinearLayout
-                        android:id="@+id/setting_standardLayout"
-                        android:layout_width="fill_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:visibility="gone">
-
                         <LinearLayout
                             android:id="@+id/setting_standard_track"
                             android:layout_width="fill_parent"
@@ -324,7 +281,7 @@
                                 style="@style/StandardTextBlack"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Standard: Track Interval" />
+                                android:text="Standard: Tracking Interval" />
 
                             <LinearLayout
                                 android:layout_width="wrap_content"
@@ -353,100 +310,17 @@
                                 android:gravity="center"
                                 android:paddingTop="10dp"
                                 app:sl_maxValue="60"
-                                app:sl_minValue="5"
+                                app:sl_minValue="1"
                                 app:sl_primaryColor="#5E65B5" />
 
                         </LinearLayout>
-
-                        <LinearLayout
-                            android:id="@+id/setting_standard_dis"
-                            android:layout_width="fill_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginBottom="15dp"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:id="@+id/setting_trackDisTV"
-                                style="@style/StandardTextBlack"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Standard: Distance Between Track" />
-
-                            <LinearLayout
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:orientation="horizontal">
-
-                                <TextView
-                                    android:id="@+id/setting_trackDisSBTV"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="0" />
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:background="@android:color/transparent"
-                                    android:text=" meters before next location track." />
-
-                            </LinearLayout>
-
-                            <com.rey.material.widget.Slider
-                                android:id="@+id/setting_trackDisSB"
-                                style="@style/Material.Widget.Slider"
-                                android:layout_width="fill_parent"
-                                android:layout_height="wrap_content"
-                                android:gravity="center"
-                                android:paddingTop="10dp"
-                                app:sl_maxValue="1000"
-                                app:sl_minValue="50"
-                                app:sl_primaryColor="#5E65B5" />
-                        </LinearLayout>
-
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:id="@+id/setting_RL3_header"
-                        android:layout_width="fill_parent"
-                        android:layout_height="wrap_content"
-                        android:clickable="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:weightSum="1.0">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="0.9"
-                            android:clickable="true"
-                            android:text="ALERT FUNCTIONS"
-                            android:textColor="#000000" />
-
-                        <TextView
-                            android:id="@+id/setting_alertStatus"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="0.1"
-                            android:gravity="center"
-                            android:text="+"
-                            android:textColor="#000000"
-                            android:textSize="22sp" />
-                    </LinearLayout>
-
-                    <View
-                        android:id="@+id/setting_seperator3"
-                        android:layout_width="fill_parent"
-                        android:layout_height="2dp"
-                        android:layout_marginBottom="15dp"
-                        android:layout_marginTop="2dp"
-                        android:background="#C8C8C8" />
 
                     <LinearLayout
                         android:id="@+id/setting_alert"
                         android:layout_width="fill_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:visibility="gone">
+                        android:visibility="visible">
 
                         <LinearLayout
                             android:id="@+id/setting_alert_track"
@@ -460,7 +334,7 @@
                                 style="@style/StandardTextBlack"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Alert: Track Interval" />
+                                android:text="Alert: Tracking Interval" />
 
                             <LinearLayout
                                 android:layout_width="wrap_content"
@@ -477,7 +351,7 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:background="@android:color/transparent"
-                                    android:text=" minutes before next location track." />
+                                    android:text=" seconds before next location track." />
 
                             </LinearLayout>
 
@@ -488,54 +362,8 @@
                                 android:layout_height="wrap_content"
                                 android:gravity="center"
                                 android:paddingTop="10dp"
-                                app:sl_maxValue="5"
-                                app:sl_minValue="1"
-                                app:sl_primaryColor="#5E65B5" />
-
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:id="@+id/setting_alert_dis"
-                            android:layout_width="fill_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginBottom="15dp"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:id="@+id/setting_alertDisTV"
-                                style="@style/StandardTextBlack"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Alert: Distance Between Track" />
-
-                            <LinearLayout
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:orientation="horizontal">
-
-                                <TextView
-                                    android:id="@+id/setting_alertDisSBTV"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="0" />
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:background="@android:color/transparent"
-                                    android:text=" meters before next location track." />
-
-                            </LinearLayout>
-
-                            <com.rey.material.widget.Slider
-                                android:id="@+id/setting_alertDisSB"
-                                style="@style/Material.Widget.Slider"
-                                android:layout_width="fill_parent"
-                                android:layout_height="wrap_content"
-                                android:gravity="center"
-                                android:paddingTop="10dp"
-                                app:sl_maxValue="100"
-                                app:sl_minValue="0"
+                                app:sl_maxValue="120"
+                                app:sl_minValue="5"
                                 app:sl_primaryColor="#5E65B5" />
 
                         </LinearLayout>
@@ -581,7 +409,7 @@
                                 android:gravity="center"
                                 android:paddingTop="10dp"
                                 app:sl_maxValue="60"
-                                app:sl_minValue="5"
+                                app:sl_minValue="1"
                                 app:sl_primaryColor="#5E65B5" />
 
                         </LinearLayout>
@@ -635,47 +463,11 @@
                     </LinearLayout>
 
                     <LinearLayout
-                        android:id="@+id/setting_RL4_header"
-                        android:layout_width="fill_parent"
-                        android:layout_height="wrap_content"
-                        android:clickable="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:weightSum="1.0">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="0.9"
-                            android:clickable="true"
-                            android:text="EMERGENCY FUNCTIONS"
-                            android:textColor="#000000" />
-
-                        <TextView
-                            android:id="@+id/setting_emergencyStatus"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="0.1"
-                            android:gravity="center"
-                            android:text="+"
-                            android:textColor="#000000"
-                            android:textSize="22sp" />
-                    </LinearLayout>
-
-                    <View
-                        android:id="@+id/setting_seperator4"
-                        android:layout_width="fill_parent"
-                        android:layout_height="2dp"
-                        android:layout_marginBottom="15dp"
-                        android:layout_marginTop="2dp"
-                        android:background="#C8C8C8" />
-
-                    <LinearLayout
                         android:id="@+id/setting_emergency"
                         android:layout_width="fill_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:visibility="gone">
+                        android:visibility="visible">
 
                         <LinearLayout
                             android:id="@+id/setting_emergency_track"
@@ -689,7 +481,7 @@
                                 style="@style/StandardTextBlack"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Emergency: Track Interval" />
+                                android:text="Emergency: Tracking Interval" />
 
                             <LinearLayout
                                 android:layout_width="wrap_content"
@@ -718,55 +510,8 @@
                                 android:layout_height="wrap_content"
                                 android:gravity="center"
                                 android:paddingTop="10dp"
-                                app:sl_maxValue="60"
+                                app:sl_maxValue="30"
                                 app:sl_minValue="5"
-                                app:sl_primaryColor="#5E65B5" />
-
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:id="@+id/setting_emergency_dis"
-                            android:layout_width="fill_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginBottom="15dp"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:id="@+id/setting_emDisTV"
-                                style="@style/StandardTextBlack"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Emergency: Distance Between Track" />
-
-                            <LinearLayout
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:orientation="horizontal">
-
-                                <TextView
-                                    android:id="@+id/setting_emDisSBTV"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="1"
-                                    android:text="0" />
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:background="@android:color/transparent"
-                                    android:text=" meters before next location track." />
-
-                            </LinearLayout>
-
-                            <com.rey.material.widget.Slider
-                                android:id="@+id/setting_emDisSB"
-                                style="@style/Material.Widget.Slider"
-                                android:layout_width="fill_parent"
-                                android:layout_height="wrap_content"
-                                android:gravity="center"
-                                android:paddingTop="10dp"
-                                app:sl_maxValue="50"
-                                app:sl_minValue="0"
                                 app:sl_primaryColor="#5E65B5" />
 
                         </LinearLayout>
