@@ -505,8 +505,12 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         }
 
         //CHECK AND SHOW CORRECT STATUS
-        if (preferences.getBoolean("currentlyTracking", false) && preferences.getString("Main Status", "").equals("TRACKING")) {
+        if (currentlyTracking && preferences.getString("Start Mode", "").equals("High Alert")) {
+            mStartUpdatesButton.setBackgroundResource(R.drawable.alert_stop);
+        }else if(currentlyTracking){
             mStartUpdatesButton.setBackgroundResource(R.drawable.track_stop);
+        }else{
+            mStartUpdatesButton.setBackgroundResource(R.drawable.track_button);
         }
         mPanelLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
 

@@ -10,7 +10,10 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.media.AudioManager;
+import android.media.SoundPool;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
 import android.telephony.SmsManager;
@@ -55,6 +58,12 @@ public class EmergencyActivity extends AppCompatActivity {
     protected BroadcastReceiver sendBroadcastReceiver;
     protected BroadcastReceiver deliveryBroadcastReceiver;
 
+    protected AudioManager am;
+    protected SoundPool sp;
+    protected int originalVolume;
+    protected int maxVolume;
+    protected int soundID;
+
     final String TAG = "De-activate Emergency";
 
     @Override
@@ -88,6 +97,8 @@ public class EmergencyActivity extends AppCompatActivity {
             public void onReceive(Context context, Intent intent) {
             }
         };
+
+        //startSiren();
     }
 
     @Override
@@ -135,6 +146,7 @@ public class EmergencyActivity extends AppCompatActivity {
                     mUserText.setError("Wrong Passcode");
                 } else {
                     isFinishByMethod = true;
+                    //stopSiren();
                     checkTrigger();
                     stopTracking();
                     startTracking("Standard");
@@ -312,7 +324,7 @@ public class EmergencyActivity extends AppCompatActivity {
         RequestParams params = new RequestParams();
 
         params.put("username", preferences.getString("fbsession", ""));
-        params.put("name", preferences.getString("name", ""));
+        params.put("name", preferences.getString("Name", ""));
         params.put("country", preferences.getString("Country", ""));
         params.put("address", preferences.getString("Address", ""));
         params.put("latitude", preferences.getString("Latitude", ""));
@@ -354,7 +366,7 @@ public class EmergencyActivity extends AppCompatActivity {
                     }
                 } catch (JSONException e) {
                     // TODO Auto-generated catch block
-                    Toast.makeText(getApplicationContext(), "Error Occured [Server's JSON response might be invalid]!", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "Error Occured!", Toast.LENGTH_LONG).show();
                     e.printStackTrace();
                 }
             }
@@ -379,27 +391,32 @@ public class EmergencyActivity extends AppCompatActivity {
 
             @Override
             public void onFinish() {
-                for (int i = 0; i < contactList.size(); i++) {
 
-                    if (mSuccessCheck[i][0] == 1 && mSuccessCheck[i][1] == 1) {
-                        adapter.getItem(i).setEmStatus("SMS and Email Sent");
-                    } else if (mSuccessCheck[i][0] == 0 && mSuccessCheck[i][1] == 1) {
-                        adapter.getItem(i).setEmStatus("SMS Error, Email Sent");
-                    } else if (mSuccessCheck[i][0] == 1 && mSuccessCheck[i][1] == 0) {
-                        adapter.getItem(i).setEmStatus("SMS Sent, Email Error");
-                    } else {
-                        adapter.getItem(i).setEmStatus("Error sending Email and SMS");
+                final Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        for (int i = 0; i < contactList.size(); i++) {
+
+                            if (mSuccessCheck[i][0] == 1 && mSuccessCheck[i][1] == 1) {
+                                adapter.getItem(i).setEmStatus("SMS and Email Sent");
+                            } else if (mSuccessCheck[i][0] == 0 && mSuccessCheck[i][1] == 1) {
+                                adapter.getItem(i).setEmStatus("SMS Error, Email Sent");
+                            } else if (mSuccessCheck[i][0] == 1 && mSuccessCheck[i][1] == 0) {
+                                adapter.getItem(i).setEmStatus("SMS Sent, Email Error");
+                            } else {
+                                adapter.getItem(i).setEmStatus("Error sending Email and SMS");
+                            }
+                            adapter.notifyDataSetChanged();
+                        }
                     }
-                    adapter.notifyDataSetChanged();
-                }
-            }
+                }, 3000);
 
+            }
         });
     }
 
-
     //-----------------------------SEND SMS -----------------------------------------------------------//
-
 
     protected void sendSMSMessage() {
         for (int i = 0; i < contactList.size(); i++) {
@@ -412,7 +429,20 @@ public class EmergencyActivity extends AppCompatActivity {
                         + preferences.getString("Country","") +" "+preferences.getString("Address", "")+" ("+preferences.getString("Latitude", "")
                         +", "+preferences.getString("Longitude", "")+"). Please do not reply to this SMS.";*/
 
-                String sendMessage = "HELP";
+                String sendMessage = "HELP! I might be in danger at ";
+
+                if(!preferences.getString("Country","").equals("Not Available")){
+                    sendMessage = sendMessage + preferences.getString("Country","") + ", ";
+                }
+
+                if(!preferences.getString("Address","").equals("Not Available")){
+                    sendMessage = sendMessage + preferences.getString("Address", "") + ". ";
+                }else{
+                    sendMessage = sendMessage + ""+preferences.getString("Latitude", "") +", "+preferences.getString("Longitude", "")+". ";
+                }
+
+                sendMessage = sendMessage + " Contact me ASAP!";
+
                 String phone = contactList.get(i).getPhone();
                 sendSMS(phone, sendMessage);
                 //sendSMSWS();
@@ -634,5 +664,30 @@ public class EmergencyActivity extends AppCompatActivity {
                 dialog.cancel();
             }
         });
+    }
+
+
+    //---------------------------START SIREN ----------------------------------------------------//
+
+    public void startSiren(){
+        am = (AudioManager) getSystemService(AUDIO_SERVICE);
+
+        //get both volume
+        originalVolume = am.getStreamVolume(AudioManager.STREAM_MUSIC);
+        maxVolume = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+
+        //am.setStreamVolume(AudioManager.STREAM_MUSIC, maxVolume, 0);
+        am.setSpeakerphoneOn(true);
+
+        sp = new SoundPool(1, AudioManager.STREAM_MUSIC, 0);
+        soundID = sp.load(this, R.raw.siren, 1);
+
+        sp.play(soundID, 1, maxVolume, maxVolume, -1, 0.9f);
+    }
+
+    public void stopSiren(){
+        sp.stop(soundID);
+        am.setStreamVolume(AudioManager.STREAM_MUSIC, originalVolume, 0);
+        am.setSpeakerphoneOn(false);
     }
 }
