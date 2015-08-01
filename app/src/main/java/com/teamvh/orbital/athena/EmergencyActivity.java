@@ -88,7 +88,6 @@ public class EmergencyActivity extends AppCompatActivity {
             public void onReceive(Context context, Intent intent) {
             }
         };
-
     }
 
     @Override

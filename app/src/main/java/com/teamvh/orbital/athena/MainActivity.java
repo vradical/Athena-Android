@@ -4,6 +4,7 @@ import android.app.ActivityManager;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
@@ -79,6 +80,8 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     public static SharedPreferences.Editor editor;
     protected LocationManager manager;
     protected String TAG = "MainActivity";
+    protected long mLastClickTime;
+    protected Dialog safeAlert;
 
     //menu
     protected FloatingActionMenu actionMenu;
@@ -112,9 +115,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
     //high alert function
     protected CountDownTimer highAlertCD;
-    protected Dialog safeAlert;
     protected int safetyCount = 1;
-    protected TextView alertMessage;
     protected Vibrator v;
 
     //emergency function
@@ -215,7 +216,17 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
             @Override
             public void onClick(View view) {
 
-                if(currentlyTracking){
+                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000){
+                    return;
+                }
+                mLastClickTime = SystemClock.elapsedRealtime();
+
+                if(currentlyTracking && preferences.getString("Start Mode", "").equals("High Alert")){
+                    currentlyTracking = false;
+                    editor.putBoolean("currentlyTracking", false);
+                    stopHighAlert();
+                    mStartUpdatesButton.setBackgroundResource(R.drawable.track_button);
+                }else if(currentlyTracking){
                     currentlyTracking = false;
                     editor.putBoolean("currentlyTracking", false);
                     stopTracking();
@@ -238,6 +249,24 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                     startTracking("Standard");
                     mStartUpdatesButton.setBackgroundResource(R.drawable.track_stop);
                 }*/
+            }
+
+        });
+
+        mStartUpdatesButton.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+
+                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000){
+                    return false;
+                }
+                mLastClickTime = SystemClock.elapsedRealtime();
+
+                currentlyTracking = true;
+                editor.putBoolean("currentlyTracking", true);
+                startHighAlert();
+                mStartUpdatesButton.setBackgroundResource(R.drawable.alert_stop);
+                return false;
             }
         });
 
@@ -497,12 +526,12 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     @Override
     public void onDestroy() {
         //CLEAR TRACKDATA FOR NEW UPDATES
-        super.onDestroy();
         accessTokenTracker.stopTracking();
         if(preferences.getBoolean("currentlyTracking", false)) {
             stopTracking();
         }
         preferences.edit().remove("TrackData").commit();
+        super.onDestroy();
     }
 
     @Override
@@ -573,7 +602,6 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
             Bitmap bm = drawableToBitmap(getResources().getDrawable(R.drawable.location_icon));
             lastLocationMark = mGoogleMap.addMarker(new MarkerOptions().position(ll).icon(BitmapDescriptorFactory.fromBitmap(Bitmap.createScaledBitmap(bm, bm.getWidth()/2, bm.getHeight()/2, false))));
 
-
             //Get this session track data.
             Gson gson = new Gson();
             Type listOfTrack = new TypeToken<ArrayList<EmergencyTrackData>>() {
@@ -591,7 +619,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                 LatLng ll1 = new LatLng(Double.parseDouble(trackData.get(i).getLatitude()), Double.parseDouble(trackData.get(i).getLongitude()));
                 latlngList.add(ll1);
             }
-            route = mGoogleMap.addPolyline(new PolylineOptions().width(5).color(Color.parseColor("#5E65B5")).geodesic(true));
+            route = mGoogleMap.addPolyline(new PolylineOptions().width(8).color(Color.parseColor("#5E65B5")).geodesic(true));
             route.setPoints(latlngList);
             route.setVisible(true);
 
@@ -682,24 +710,15 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
     //-------------------------------------------HIGH ALERT-------------------------------------------------------------//
 
-    public void startHighAlertMode(View view) {
-        startHighAlert();
-    }
-
-    public void stopHighAlertMode(View view) {
-        stopHighAlert();
-    }
-
     protected void startHighAlert() {
         stopTracking();
         startTracking("High Alert");
-        highAlertCD = new SafetyCountDown(Constants.ALERT_COUNTDOWN, 1000, 1);
+        highAlertCD = new SafetyCountDown(preferences.getInt("ALERT_TIMER", Constants.ALERT_TIMER), 1000, 1);
         highAlertCD.start();
     }
 
     protected void stopHighAlert() {
         stopTracking();
-        startTracking("Standard");
         highAlertCD.cancel();
     }
 
@@ -1189,16 +1208,16 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
         @Override
         public void onFinish() {
-            if (cdType == 1) {
+            if(cdType == 1) {
 
                 safetyCheck = new SimpleDialog.Builder(R.style.SimpleDialogLight);
-                ((SimpleDialog.Builder) safetyCheck).message("Counting down...")
-                        .positiveAction("YES")
-                        .title("Are you safe?");
-                final Dialog safeAlert = safetyCheck.build(MainActivity.this);
+                ((SimpleDialog.Builder) safetyCheck).message("Are you safe? \nTwo consecutive no-response will activate the emergency.")
+                        .positiveAction("Yes")
+                        .title("Safety Check");
+                safeAlert = safetyCheck.build(MainActivity.this);
                 safeAlert.show();
+                safeAlert.setCancelable(false);
                 safeAlert.setCanceledOnTouchOutside(false);
-                safeAlert.setCancelable(true);
                 safeAlert.positiveActionClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
@@ -1209,18 +1228,18 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                         stillSafe();
                     }
                 });
-                alertMessage = (TextView) safeAlert.findViewById(android.R.id.message);
-                TriggerCountDown = new SafetyCountDown(Constants.ALERT_COUNTDOWN, 1000, 2);
+                TriggerCountDown = new SafetyCountDown(preferences.getInt("ALERT_TIMER", Constants.ALERT_COUNTDOWN), 1000, 2);
                 TriggerCountDown.start();
-                v.vibrate(Constants.ALERT_COUNTDOWN);
-            } else {
-                if (safetyCount > 1) {
-                    alertMessage.setText("No response from user - Triggering Emergency mode");
-                    safeAlert.cancel();
+                v.vibrate(preferences.getInt("ALERT_COUNTDOWN", Constants.ALERT_COUNTDOWN));
+            }else{
+                if(safetyCount > 1){
+                    //trigger emergency
+                    safetyCount = 1;
+                    safeAlert.setTitle("No response. Triggering Emergency mode.");
+                    startEmergency();
                     highAlertCD.cancel();
-                    stopTracking();
-                    getEMID();
-                } else {
+                    safeAlert.cancel();
+                }else{
                     safetyCount++;
                     stillSafe();
                     safeAlert.cancel();
@@ -1230,10 +1249,12 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
         @Override
         public void onTick(long millisUntilFinished) {
-            if (cdType == 2) {
-                alertMessage.setText("Remaining time = " + millisUntilFinished / 1000 + "\n[Safety count is at " + safetyCount + "]");
+            if(cdType == 2) {
+                safeAlert.setTitle("Safety Check ." + safetyCount + " [" + millisUntilFinished / 1000+"]");
+                //alertMessage.setText("Remaining time = " + millisUntilFinished / 1000 +"\n[Safety count is at " + safetyCount + "]");
             }
         }
+
 
     }
 

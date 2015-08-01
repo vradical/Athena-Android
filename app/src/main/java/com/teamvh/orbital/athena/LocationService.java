@@ -167,7 +167,7 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
         Type listOfTrack = new TypeToken<ArrayList<EmergencyTrackData>>() {
         }.getType();
 
-        if (null == trackData) {
+        if (!preferences.contains("TrackData")) {
             trackData = new ArrayList<EmergencyTrackData>();
         } else {
             trackData = gson.fromJson(preferences.getString("TrackData", ""), ArrayList.class);
