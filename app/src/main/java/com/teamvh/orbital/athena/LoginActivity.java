@@ -4,6 +4,7 @@ package com.teamvh.orbital.athena;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -46,6 +47,20 @@ public class LoginActivity extends Activity {
         setContentView(R.layout.activity_login);
 
         loginButton = (LoginButton) findViewById(R.id.login_button);
+        loginButton.setBackgroundResource(R.drawable.fb_button);
+
+        float fbIconScale = 1.45F;
+        Drawable drawable = this.getResources().getDrawable(com.facebook.R.drawable.com_facebook_button_icon);
+        drawable.setBounds(0, 0, (int) (drawable.getIntrinsicWidth() * fbIconScale),
+                (int) (drawable.getIntrinsicHeight() * fbIconScale));
+        loginButton.setCompoundDrawables(drawable, null, null, null);
+        loginButton.setCompoundDrawablePadding(this.getResources().
+                getDimensionPixelSize(R.dimen.fb_margin_override_textpadding));
+        loginButton.setPadding(this.getResources().getDimensionPixelSize(R.dimen.fb_margin_override_lr),
+                this.getResources().getDimensionPixelSize(R.dimen.fb_margin_override_top),0,
+                this.getResources().getDimensionPixelSize(R.dimen.fb_margin_override_bottom));
+
+
         loginButton.setReadPermissions(Arrays.asList("public_profile, email, user_birthday, user_friends"));
 
         preferences = MainActivity.preferences;

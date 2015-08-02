@@ -30,5 +30,9 @@
     <string name="hello_world">Hello world!</string>
     <string name="title_activity_offline">Offline Mode</string>
 
+    <string name="com_facebook_loginview_log_out_button"></string>
+    <string name="com_facebook_loginview_log_in_button"></string>
+    <string name="com_facebook_loginview_log_in_button_long"></string>
+
 
 </resources>

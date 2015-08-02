@@ -6,7 +6,7 @@ package com.teamvh.orbital.athena;
 public final class Constants {
     public static int CHECK_INTERVAL = 60000;
     public static int HA_CHECK_INTERVAL = 30000;
-    public static int EM_CHECK_INTERVAL = 5000;
+    public static int EM_CHECK_INTERVAL = 15000;
 
     public static String PATH_TYPE = "walking";
     //public static String PATH_TYPE = "driving";

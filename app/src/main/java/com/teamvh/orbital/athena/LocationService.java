@@ -69,8 +69,7 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
     private SharedPreferences preferences;
     private SharedPreferences.Editor editor;
     private ArrayList<EmergencyTrackData> trackData;
-    private Location curBest;
-    private boolean isStored;
+    private boolean currentlyProcessingLocation = false;
 
     private Geocoder geocoder;
 
@@ -84,10 +83,12 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
         Log.e(TAG, "onStartCommand");
         super.onStartCommand(intent, flags, startId);
         geocoder = new Geocoder(this, Locale.getDefault());
-        trackType = preferences.getString("Start Mode", "");
-        emID = preferences.getString("emID", "");
-        isStored = false;
-        getLocation();
+        if(!currentlyProcessingLocation) {
+            currentlyProcessingLocation = true;
+            trackType = preferences.getString("Start Mode", "");
+            emID = preferences.getString("emID", "");
+            getLocation();
+        }
         return START_STICKY;
     }
 

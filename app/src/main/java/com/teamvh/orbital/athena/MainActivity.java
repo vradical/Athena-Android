@@ -167,6 +167,16 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         //CHECK FOR LOGIN
         isLoggedIn();
 
+        if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            if(!preferences.getString("NoGPS", "").equals("Yes")){
+                buildAlertMessageNoGps();
+            }
+        }
+
+        if (!preferences.contains("Passcode")) {
+            setPasscode();
+        }
+
         //CHECK FOR FACEBOOK PROFILE
         mProfileTracker = new ProfileTracker() {
             @Override
@@ -493,16 +503,6 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
             startActivity(intent);
-        }
-
-        if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            if(!preferences.getString("NoGPS", "").equals("Yes")){
-                buildAlertMessageNoGps();
-            }
-        }
-
-        if (!preferences.contains("Passcode")) {
-            setPasscode();
         }
 
         //CHECK AND SHOW CORRECT STATUS

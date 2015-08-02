@@ -363,7 +363,7 @@
                                 android:gravity="center"
                                 android:paddingTop="10dp"
                                 app:sl_maxValue="120"
-                                app:sl_minValue="5"
+                                app:sl_minValue="15"
                                 app:sl_primaryColor="#5E65B5" />
 
                         </LinearLayout>
@@ -510,8 +510,8 @@
                                 android:layout_height="wrap_content"
                                 android:gravity="center"
                                 android:paddingTop="10dp"
-                                app:sl_maxValue="30"
-                                app:sl_minValue="5"
+                                app:sl_maxValue="60"
+                                app:sl_minValue="15"
                                 app:sl_primaryColor="#5E65B5" />
 
                         </LinearLayout>

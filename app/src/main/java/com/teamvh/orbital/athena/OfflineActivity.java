@@ -58,9 +58,19 @@ public class OfflineActivity extends AppCompatActivity {
 
         if(!preferences.getString("CountryCode", "").equals("")){
             CountryData curCountry = country.findCountry(preferences.getString("CountryCode", ""));
-            countryName.setText(curCountry.getCountryName());
-            policeNum.setText(curCountry.getPoliceNum());
-            hosNum.setText(curCountry.getHospitalNum());
+
+            if(curCountry != null) {
+                countryName.setText(curCountry.getCountryName());
+                policeNum.setText(curCountry.getPoliceNum());
+                hosNum.setText(curCountry.getHospitalNum());
+
+                for (int i = 0; i < country.getList().size(); i++) {
+                    if (curCountry == country.getList().get(i)) {
+                        spn_label.setSelection(i);
+                        break;
+                    }
+                }
+            }
         }
     }
 
