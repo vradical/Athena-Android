@@ -28,6 +28,7 @@
     <string name="title_activity_danger_zone_list">DangerZoneList</string>
 
     <string name="hello_world">Hello world!</string>
+    <string name="title_activity_offline">Offline Mode</string>
 
 
 </resources>

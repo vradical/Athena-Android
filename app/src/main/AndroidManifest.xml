@@ -139,8 +139,17 @@
             android:name=".DangerZoneList"
             android:label="@string/title_activity_danger_zone_list" >
         </activity>
-        <receiver android:name=".TrackServiceAlarmReceiver">
+
+        <receiver android:name=".TrackServiceAlarmReceiver" >
         </receiver>
+        <activity
+            android:name=".OfflineActivity"
+            android:label="@string/title_activity_offline"
+            android:parentActivityName=".MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.teamvh.orbital.athena.MainActivity" />
+        </activity>
     </application>
 
 </manifest>

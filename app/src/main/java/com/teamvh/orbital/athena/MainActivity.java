@@ -489,8 +489,9 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
         //CHECKS
         if (!isOnline()) {
-            Intent intent = new Intent(this, LoginActivity.class);
+            Intent intent = new Intent(this, OfflineActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
             startActivity(intent);
         }
 

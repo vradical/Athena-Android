@@ -250,6 +250,10 @@ public class CountryList {
         countryList.add(new CountryData("Zimbabwe", "995", "994", "999", "ZW", "263"));
     }
 
+    public ArrayList<CountryData> getList(){
+        return countryList;
+    }
+
     public CountryData findCountry(String countryCode){
 
         CountryData country = null;

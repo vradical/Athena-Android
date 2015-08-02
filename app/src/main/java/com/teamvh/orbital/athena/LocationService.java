@@ -147,7 +147,7 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
     @Override
     public void onLocationChanged(Location location) {
 
-        if (location.getAccuracy() < 50f) {
+        if (location.getAccuracy() < 100) {
             stopServiceNow();
             latitude = location.getLatitude();
             longitude = location.getLongitude();
