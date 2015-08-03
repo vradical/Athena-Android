@@ -159,10 +159,10 @@ public class ContactInfo extends AppCompatActivity {
                         }
 
                     } else {
-                        displayDialog("", 1);
+                        //displayDialog("No contact found or unable to retrieve contact from server.", 0);
                     }
                 } catch (JSONException e) {
-                    displayDialog("", 1);
+                    //displayDialog("No contact found or unable to retrieve contact from server.", 0);
                     e.printStackTrace();
                 }
             }

@@ -177,28 +177,6 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
             setPasscode();
         }
 
-        //CHECK FOR FACEBOOK PROFILE
-        mProfileTracker = new ProfileTracker() {
-            @Override
-            protected void onCurrentProfileChanged(Profile oldProfile, Profile newProfile) {
-                if (newProfile != null) {
-                    profile = Profile.getCurrentProfile();
-                    String name = profile.getName();
-                    editor.putString("Name", name).commit();
-                }
-            }
-        };
-
-        //CHECK FOR FACEBOOK ACCESS TOKEN
-        accessTokenTracker = new AccessTokenTracker() {
-            @Override
-            protected void onCurrentAccessTokenChanged(AccessToken oldAccessToken, AccessToken newAccessToken) {
-                if (newAccessToken != null) {
-                    editor.putString("fbsession", newAccessToken.getUserId());
-                    editor.commit();
-                }
-            }
-        };
     }
 
     //Set up the activity page and initialize the content.
@@ -519,6 +497,29 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
             country = preferences.getString("Country", "");
             getSpecialZone();
         }
+
+        //CHECK FOR FACEBOOK PROFILE
+        mProfileTracker = new ProfileTracker() {
+            @Override
+            protected void onCurrentProfileChanged(Profile oldProfile, Profile newProfile) {
+                if (newProfile != null) {
+                    profile = Profile.getCurrentProfile();
+                    String name = profile.getName();
+                    editor.putString("Name", name).commit();
+                }
+            }
+        };
+
+        //CHECK FOR FACEBOOK ACCESS TOKEN
+        accessTokenTracker = new AccessTokenTracker() {
+            @Override
+            protected void onCurrentAccessTokenChanged(AccessToken oldAccessToken, AccessToken newAccessToken) {
+                if (newAccessToken != null) {
+                    editor.putString("fbsession", newAccessToken.getUserId());
+                    editor.commit();
+                }
+            }
+        };
 
         super.onResume();
     }
@@ -845,11 +846,12 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                 specialZoneList = new ArrayList<SpecialZoneData>();
 
                 try {
+
+                    if (response != null) {
                     // JSON Object
                     JSONObject obj = new JSONObject(response);
 
                     // When the JSON response has status boolean value assigned with true
-                    if (!response.equals(null)) {
                         try {
                             JSONObject object = obj.getJSONObject("specialZoneData");
 
@@ -884,10 +886,8 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                         }
 
                     } else {
-                        displayDialog("", 1);
                     }
                 } catch (JSONException e) {
-                    displayDialog("", 1);
                     e.printStackTrace();
                 }
             }
@@ -1233,7 +1233,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                         stillSafe();
                     }
                 });
-                TriggerCountDown = new SafetyCountDown(preferences.getInt("ALERT_TIMER", Constants.ALERT_COUNTDOWN), 1000, 2);
+                TriggerCountDown = new SafetyCountDown(preferences.getInt("ALERT_COUNTDOWN", Constants.ALERT_COUNTDOWN), 1000, 2);
                 TriggerCountDown.start();
                 v.vibrate(preferences.getInt("ALERT_COUNTDOWN", Constants.ALERT_COUNTDOWN));
             }else{

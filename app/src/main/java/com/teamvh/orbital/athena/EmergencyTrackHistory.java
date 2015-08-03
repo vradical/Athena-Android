@@ -177,10 +177,10 @@ public class EmergencyTrackHistory extends AppCompatActivity {
                         }
 
                     } else {
-                        displayDialog("", 1);
+                        displayDialog("No track found in this emergency.", 0);
                     }
                 } catch (JSONException e) {
-                    displayDialog("", 1);
+                    displayDialog("No track found in this emergency.", 0);
                     e.printStackTrace();
                 }
             }

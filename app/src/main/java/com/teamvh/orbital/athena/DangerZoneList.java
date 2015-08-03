@@ -144,10 +144,10 @@ public class DangerZoneList extends AppCompatActivity {
                         }
 
                     } else {
-                        displayDialog("", 1);
+                        //displayDialog("You have not c", 1);
                     }
                 } catch (JSONException e) {
-                    displayDialog("", 1);
+                    //displayDialog("", 1);
                     e.printStackTrace();
                 }
             }

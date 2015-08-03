@@ -362,11 +362,9 @@ public class EmergencyActivity extends AppCompatActivity {
 
                         }
 
-                        Toast.makeText(getApplicationContext(), obj.getString("error_msg"), Toast.LENGTH_LONG).show();
                     }
                 } catch (JSONException e) {
                     // TODO Auto-generated catch block
-                    Toast.makeText(getApplicationContext(), "Error Occured!", Toast.LENGTH_LONG).show();
                     e.printStackTrace();
                 }
             }
@@ -636,8 +634,8 @@ public class EmergencyActivity extends AppCompatActivity {
             public void onFinish() {
                 adapter.notifyDataSetChanged();
                 mSuccessCheck = new int[contactList.size()][2];
-                //sendSMSMessage();
-                //sendEmail();
+                sendSMSMessage();
+                sendEmail();
             }
         });
     }

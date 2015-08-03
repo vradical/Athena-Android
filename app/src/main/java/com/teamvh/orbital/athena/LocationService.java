@@ -70,6 +70,7 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
     private SharedPreferences.Editor editor;
     private ArrayList<EmergencyTrackData> trackData;
     private boolean currentlyProcessingLocation = false;
+    private int curCount;
 
     private Geocoder geocoder;
 
@@ -87,6 +88,7 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
             currentlyProcessingLocation = true;
             trackType = preferences.getString("Start Mode", "");
             emID = preferences.getString("emID", "");
+            curCount = 0;
             getLocation();
         }
         return START_STICKY;
@@ -148,7 +150,23 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
     @Override
     public void onLocationChanged(Location location) {
 
+        curCount++;
+
         if (location.getAccuracy() < 100) {
+            stopServiceNow();
+            latitude = location.getLatitude();
+            longitude = location.getLongitude();
+            location.getTime();
+            recordLocation();
+        }else if(location.getAccuracy() < 200 & curCount > 4){
+            curCount = 0;
+            stopServiceNow();
+            latitude = location.getLatitude();
+            longitude = location.getLongitude();
+            location.getTime();
+            recordLocation();
+        }else if(location.getAccuracy() < 300 & curCount > 9){
+            curCount = 0;
             stopServiceNow();
             latitude = location.getLatitude();
             longitude = location.getLongitude();

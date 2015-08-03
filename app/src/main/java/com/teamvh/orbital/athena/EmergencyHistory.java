@@ -167,10 +167,10 @@ public class EmergencyHistory extends AppCompatActivity {
                         }
 
                     } else {
-                        displayDialog("", 1);
+                        //displayDialog("", 1);
                     }
                 } catch (JSONException e) {
-                    displayDialog("", 1);
+                    //displayDialog("", 1);
                     e.printStackTrace();
                 }
             }
