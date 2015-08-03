@@ -29,7 +29,7 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/logo_athenea"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
@@ -121,14 +121,16 @@
         <activity
             android:name=".SettingActivity"
             android:label="@string/title_activity_setting"
-            android:parentActivityName=".MainActivity" >
+            android:parentActivityName=".MainActivity"
+            android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.teamvh.orbital.athena.MainActivity" />
         </activity>
         <activity
             android:name=".DangerZoneList"
-            android:label="@string/title_activity_danger_zone_list" >
+            android:label="@string/title_activity_danger_zone_list"
+            android:screenOrientation="portrait">
         </activity>
 
         <receiver android:name=".TrackServiceAlarmReceiver" >
@@ -136,7 +138,8 @@
         <activity
             android:name=".OfflineActivity"
             android:label="@string/title_activity_offline"
-            android:parentActivityName=".MainActivity" >
+            android:parentActivityName=".MainActivity"
+            android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.teamvh.orbital.athena.MainActivity" />

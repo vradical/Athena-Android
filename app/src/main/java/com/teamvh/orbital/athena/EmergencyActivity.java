@@ -581,11 +581,10 @@ public class EmergencyActivity extends AppCompatActivity {
             @Override
             public void onSuccess(String response) {
                 try {
+                    if (!response.equals(null)) {
                     // JSON Object
                     JSONObject obj = new JSONObject(response);
                     // When the JSON response has status boolean value assigned with true
-                    if (!response.equals(null)) {
-
                         try {
                             JSONObject object = obj.getJSONObject("contactData");
 
@@ -615,10 +614,10 @@ public class EmergencyActivity extends AppCompatActivity {
                         }
 
                     } else {
-                        displayDialog("", 1);
+                        displayDialog("No contact found. It is important to have at least 1 person to contact!" , 0);
                     }
                 } catch (JSONException e) {
-                    displayDialog("", 1);
+                    displayDialog("No contact found. It is important to have at least 1 person to contact!" , 0);
                     e.printStackTrace();
                 }
             }

@@ -202,16 +202,20 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
                 for (int i = 0; i < address.getMaxAddressLineIndex(); i++) {
                     sb.append(address.getAddressLine(i)).append(" ");
                 }
+
                 if (address.getLocality() != null) {
                     locality = address.getLocality();
                 } else {
                     locality = "Not Available";
                 }
-                this.addressWOcountry = sb.toString();
+
+                //Cannot solve.
                 if (address.getPostalCode() != (null)) {
-                    sb.append(address.getPostalCode()).append(" ");
+                    //sb.append(address.getPostalCode()).append(" ");
                 }
+
                 this.address = sb.toString();
+
                 country = address.getCountryName().toString();
 
                 if (address.getCountryCode() != null) {
@@ -226,16 +230,13 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
             if (address == null) {
                 address = "Not Available";
             }
-            if (addressWOcountry == null) {
-                addressWOcountry = "Not Available";
-            }
 
             String uname = preferences.getString("fbsession", "");
             java.util.Date date = new java.util.Date();
 
             editor = preferences.edit();
             editor.putString("Timestamp", parseDateToddMMyyyy(String.valueOf(new Timestamp(date.getTime()))));
-            editor.putString("Address", addressWOcountry);
+            editor.putString("Address", address);
             editor.putString("Country", country);
             editor.putString("CountryCode", countryCode);
             editor.putString("Locality", locality);
