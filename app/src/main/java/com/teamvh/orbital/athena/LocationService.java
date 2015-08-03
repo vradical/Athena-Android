@@ -203,7 +203,6 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
                     sb.append(address.getAddressLine(i)).append(" ");
                 }
                 if (address.getLocality() != null) {
-                    sb.append(address.getLocality()).append(" ");
                     locality = address.getLocality();
                 } else {
                     locality = "Not Available";
