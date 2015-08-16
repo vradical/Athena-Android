@@ -98,7 +98,7 @@ public class EmergencyActivity extends AppCompatActivity {
             }
         };
 
-        //startSiren();
+        startSiren();
     }
 
     @Override
@@ -106,7 +106,7 @@ public class EmergencyActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onStop() {
+    public void onDestroy() {
 
         if (!isFinishByMethod) {
             emStatus = "Disrupted";
@@ -119,11 +119,10 @@ public class EmergencyActivity extends AppCompatActivity {
         } catch (IllegalArgumentException e) {
             Log.d(TAG, "Receiver Not Registered");
         }
-        super.onStop();
+        super.onDestroy();
     }
 
     public void deactivateEmergency(View view) {
-
         LayoutInflater inflater = LayoutInflater.from(this);
         final View textEntryView = inflater.inflate(R.layout.activity_emergency_password, null);
         final Dialog dialog = new Dialog(this, 0);
@@ -146,10 +145,11 @@ public class EmergencyActivity extends AppCompatActivity {
                     mUserText.setError("Wrong Passcode");
                 } else {
                     isFinishByMethod = true;
-                    //stopSiren();
+                    stopSiren();
                     checkTrigger();
                     stopTracking();
                     startTracking("Standard");
+                    MainActivity.currentlyTracking = true;
                     dialog.cancel();
                 }
             }
@@ -673,13 +673,17 @@ public class EmergencyActivity extends AppCompatActivity {
         originalVolume = am.getStreamVolume(AudioManager.STREAM_MUSIC);
         maxVolume = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
 
-        //am.setStreamVolume(AudioManager.STREAM_MUSIC, maxVolume, 0);
+        am.setStreamVolume(AudioManager.STREAM_MUSIC, maxVolume, 0);
         am.setSpeakerphoneOn(true);
 
         sp = new SoundPool(1, AudioManager.STREAM_MUSIC, 0);
+        sp.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
+            @Override
+            public void onLoadComplete(SoundPool soundPool, int i, int i1) {
+                sp.play(soundID, maxVolume, maxVolume, 1, -1, 1f);
+            }
+        });
         soundID = sp.load(this, R.raw.siren, 1);
-
-        sp.play(soundID, 1, maxVolume, maxVolume, -1, 0.9f);
     }
 
     public void stopSiren(){

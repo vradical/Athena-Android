@@ -108,7 +108,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
     //--------------------------------------------Nearby----------------------------------------
 
-    private boolean currentlyTracking;
+    protected static boolean currentlyTracking;
     private AlarmManager alarmManager;
     private Intent gpsTrackerIntent;
     private PendingIntent pendingIntent;
@@ -204,22 +204,18 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
             @Override
             public void onClick(View view) {
 
-                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000){
+                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
                     return;
                 }
                 mLastClickTime = SystemClock.elapsedRealtime();
 
-                if(currentlyTracking && preferences.getString("Start Mode", "").equals("High Alert")){
-                    currentlyTracking = false;
-                    editor.putBoolean("currentlyTracking", false);
+                if (currentlyTracking && preferences.getString("Start Mode", "").equals("High Alert")) {
                     stopHighAlert();
                     mStartUpdatesButton.setBackgroundResource(R.drawable.track_button);
-                }else if(currentlyTracking){
-                    currentlyTracking = false;
-                    editor.putBoolean("currentlyTracking", false);
+                } else if (currentlyTracking) {
                     stopTracking();
                     mStartUpdatesButton.setBackgroundResource(R.drawable.track_button);
-                }else{
+                } else {
                     currentlyTracking = true;
                     editor.putBoolean("currentlyTracking", true);
                     startTracking("Standard");
@@ -469,6 +465,22 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
     @Override
     protected void onStop() {
+
+        /*
+        if(preferences.getBoolean("currentlyTracking", false)) {
+            stopTracking();
+        }*/
+
+        //stopTracking();
+
+
+        boolean alarmUp = (PendingIntent.getBroadcast(this, 0, new Intent(this, TrackServiceAlarmReceiver.class), 0) != null);
+
+        if(alarmUp){
+            stopTracking();
+        }
+
+        preferences.edit().remove("TrackData").commit();
         super.onStop();
     }
 
@@ -533,10 +545,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     public void onDestroy() {
         //CLEAR TRACKDATA FOR NEW UPDATES
         accessTokenTracker.stopTracking();
-        if(preferences.getBoolean("currentlyTracking", false)) {
-            stopTracking();
-        }
-        preferences.edit().remove("TrackData").commit();
+
         super.onDestroy();
     }
 
@@ -674,9 +683,12 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
     public void stopTracking() {
         editor = preferences.edit();
+        editor.putBoolean("currentlyTracking", false);
         editor.putString("Main Status", "IDLE");
         editor.commit();
         editor.apply();
+
+        currentlyTracking = false;
 
         cancelAlarmManager();
         //Intent intent = new Intent(this, LocationService.class);
@@ -705,6 +717,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                 SystemClock.elapsedRealtime(),
                 alarmInterval, pendingIntent);
     }
+
     private void cancelAlarmManager() {
         Log.d(TAG, "cancelAlarmManager");
         Context context = getBaseContext();
