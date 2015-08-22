@@ -82,6 +82,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     protected String TAG = "MainActivity";
     protected long mLastClickTime;
     protected Dialog safeAlert;
+    protected boolean exitApp;
 
     //menu
     protected FloatingActionMenu actionMenu;
@@ -108,7 +109,6 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
     //--------------------------------------------Nearby----------------------------------------
 
-    protected static boolean currentlyTracking;
     private AlarmManager alarmManager;
     private Intent gpsTrackerIntent;
     private PendingIntent pendingIntent;
@@ -159,8 +159,12 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
         bounds = new LatLngBounds.Builder();
         manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        editor.putString("NoGPS", "No").commit();
-        currentlyTracking = false;
+        editor.putString("NoGPS", "No");
+        editor.putString("currentlyTracking", "false");
+        editor.apply();
+        editor.commit();
+
+        exitApp = true;
 
         displayMain();
 
@@ -209,21 +213,16 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                 }
                 mLastClickTime = SystemClock.elapsedRealtime();
 
-                if (currentlyTracking && preferences.getString("Start Mode", "").equals("High Alert")) {
+                if (preferences.getString("currentlyTracking", "").equals("true")  && preferences.getString("Start Mode", "").equals("High Alert")) {
                     stopHighAlert();
                     mStartUpdatesButton.setBackgroundResource(R.drawable.track_button);
-                } else if (currentlyTracking) {
+                } else if (preferences.getString("currentlyTracking", "").equals("true") ) {
                     stopTracking();
                     mStartUpdatesButton.setBackgroundResource(R.drawable.track_button);
                 } else {
-                    currentlyTracking = true;
-                    editor.putBoolean("currentlyTracking", true);
                     startTracking("Standard");
                     mStartUpdatesButton.setBackgroundResource(R.drawable.track_stop);
                 }
-
-                editor.apply();
-                editor.commit();
 
                 /*
                 if (isMyServiceRunning(LocationService.class)) {
@@ -246,8 +245,6 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                 }
                 mLastClickTime = SystemClock.elapsedRealtime();
 
-                currentlyTracking = true;
-                editor.putBoolean("currentlyTracking", true);
                 startHighAlert();
                 mStartUpdatesButton.setBackgroundResource(R.drawable.alert_stop);
                 return false;
@@ -319,6 +316,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         helpAB.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                exitApp = false;
                 Intent i = new Intent(MainActivity.this, HelpInfo.class);
                 i.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                 startActivity(i);
@@ -332,6 +330,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         historyAB.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                exitApp = false;
                 Intent i = new Intent(MainActivity.this, EmergencyHistory.class);
                 i.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                 startActivity(i);
@@ -345,6 +344,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         settingAB.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                exitApp = false;
                 Intent i = new Intent(MainActivity.this, SettingActivity.class);
                 i.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                 startActivity(i);
@@ -358,6 +358,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         settingAB.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                exitApp = false;
                 Intent i = new Intent(MainActivity.this, SettingActivity.class);
                 i.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                 startActivity(i);
@@ -371,6 +372,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         dangerzoneAB.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                exitApp = false;
                 Intent i = new Intent(MainActivity.this, DangerZoneList.class);
                 i.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                 startActivity(i);
@@ -445,6 +447,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         dialog.positiveActionClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                exitApp = false;
                 startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
                 dialog.cancel();
             }
@@ -476,7 +479,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
         boolean alarmUp = (PendingIntent.getBroadcast(this, 0, new Intent(this, TrackServiceAlarmReceiver.class), 0) != null);
 
-        if(alarmUp){
+        if(alarmUp & exitApp){
             stopTracking();
         }
 
@@ -487,8 +490,11 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
     @Override
     public void onResume() {
 
+        exitApp = true;
+
         //CHECKS
         if (!isOnline()) {
+            exitApp = false;
             Intent intent = new Intent(this, OfflineActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
@@ -496,9 +502,12 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
         }
 
         //CHECK AND SHOW CORRECT STATUS
-        if (currentlyTracking && preferences.getString("Start Mode", "").equals("High Alert")) {
+
+        String test = preferences.getString("currentlyTracking", "");
+
+        if (preferences.getString("currentlyTracking", "").equals("true")  && preferences.getString("Start Mode", "").equals("High Alert")) {
             mStartUpdatesButton.setBackgroundResource(R.drawable.alert_stop);
-        }else if(currentlyTracking){
+        }else if(preferences.getString("currentlyTracking", "").equals("true") ){
             mStartUpdatesButton.setBackgroundResource(R.drawable.track_stop);
         }else{
             mStartUpdatesButton.setBackgroundResource(R.drawable.track_button);
@@ -673,6 +682,9 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
             editor.putString("Start Mode", "Emergency");
             editor.putString("emID", String.valueOf(emID));
         }
+
+        editor.putString("currentlyTracking", "true");
+
         editor.commit();
         editor.apply();
 
@@ -683,12 +695,10 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
 
     public void stopTracking() {
         editor = preferences.edit();
-        editor.putBoolean("currentlyTracking", false);
+        editor.putString("currentlyTracking", "false");
         editor.putString("Main Status", "IDLE");
         editor.commit();
         editor.apply();
-
-        currentlyTracking = false;
 
         cancelAlarmManager();
         //Intent intent = new Intent(this, LocationService.class);
@@ -810,6 +820,7 @@ public class MainActivity extends ActionBarActivity implements SharedPreferences
                     JSONObject obj = new JSONObject(response);
 
                     if (obj.getBoolean("status")) {
+                        exitApp = false;
                         startTracking("Emergency");
                         Intent i = new Intent(MainActivity.this, EmergencyActivity.class);
                         i.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);

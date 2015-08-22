@@ -149,7 +149,6 @@ public class EmergencyActivity extends AppCompatActivity {
                     checkTrigger();
                     stopTracking();
                     startTracking("Standard");
-                    MainActivity.currentlyTracking = true;
                     dialog.cancel();
                 }
             }
